@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 interface IMovie extends Document {
   title: string;
-  year: number;
+  release_date: string;
   plot: string;
   cast: string[];
   rating: number;
@@ -11,8 +11,8 @@ interface IMovie extends Document {
 
 const movieSchema: Schema = new Schema({
   title: { type: String, required: true },
-  year: { type: Number, required: true },
-  plot: { type: String, required: true },
+  release_date: { type: String, required: true },
+  plot: { type: String, default: "" },
   cast: [{ type: String }],
   rating: { type: Number, required: true },
   url: { type: String, required: true },

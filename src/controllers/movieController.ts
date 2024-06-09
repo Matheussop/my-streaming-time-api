@@ -26,7 +26,7 @@ export const getMovieById = async (req: Request, res: Response): Promise<void> =
 export const createMovie = async (req: Request, res: Response): Promise<void> => {
   const movie = new Movie({
     title: req.body.title,
-    year: req.body.year,
+    release_date: req.body.release_date,
     plot: req.body.plot,
     cast: req.body.cast,
     rating: req.body.rating,
