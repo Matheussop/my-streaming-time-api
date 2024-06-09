@@ -1,4 +1,5 @@
 import express from 'express';
+import streamingTypesRoutes from "./routes/movieRoutes";
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -24,3 +25,4 @@ mongoose.connect(process.env.MONGO_URI as string).then(() => {
 });
 
 app.use('/movies', movieRoutes);
+app.use('/streamingTypes', streamingTypesRoutes);
