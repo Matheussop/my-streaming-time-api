@@ -13,7 +13,7 @@ const router: Router = Router();
 router.get('/', getMovies);
 router.get('/external', getExternalMovies);
 router.post('/external', fetchAndSaveExternalMovies);
-router.get('/findOrAddMovie', findOrAddMovie);
+router.post('/findOrAddMovie', findOrAddMovie);
 router.get('/:id', getMovieById);
 router.post('/', createMovie);
 router.put('/:id', updateMovie);

@@ -73,19 +73,31 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
 
 // Novo método para verificar se um filme existe e adicioná-lo se não existir
 export const findOrAddMovie = async (req: Request, res: Response): Promise<void> => {
-  const title = req.body.title as string;
+  const { title, page = 1, limit = 10 } = req.body;
+  const skip = (page - 1) * limit;
 
   if (!title) {
-    res.status(400).json({ message: 'Title query parameter is required' });
+    res.status(400).json({ message: 'Title parameter is required' });
     return;
   }
 
   try {
     // Verificar se o filme existe no banco de dados
-    const existingMovie = await Movie.findOne({ title }).lean();
-    if (existingMovie) {
-      res.status(200).json(existingMovie);
-      console.log("Ja Existia o filme no banco")
+    const regex = new RegExp(title, 'i'); // 'i' para case-insensitive
+
+    const existingMovies = await Movie.find({ title: { $regex: regex } })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+    if (existingMovies.length > 0) {
+      res.status(200).json({
+        page,
+        limit,
+        total: existingMovies.length,
+        movies: existingMovies,
+      });
+      console.log("Ja Existia um filme no banco com o parâmetro")
       return;
     }
 
@@ -101,23 +113,36 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
       }
     };
     const response = await axios.get(url, options);
+    console.log("To consultando o TMDB")
 
     if (response.data.results.length > 0) {
-      const moviesToSave = response.data.results.map((externalMovie: any) => (
-        {
-          title: externalMovie.title,
-          release_date: externalMovie.release_date,
-          plot: externalMovie.overview,
-          rating: externalMovie.vote_average,
-          url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
+      // Filtrar filmes que já existem no banco de dados
+      const externalMovies = response.data.results.map((externalMovie: any) => ({
+        title: externalMovie.title,
+        release_date: externalMovie.release_date,
+        plot: externalMovie.overview,
+        rating: externalMovie.vote_average,
+        url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
       }));
-    
+      
+      const existingMovies = await Movie.find({ title: { $in: externalMovies.map((movie: any) => movie.title) } }, 'title').lean();
+      const existingTitles = existingMovies.map(movie => movie.title);
+      
+      const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
 
-      // Salvar o novo filme no banco de dados
-      const savedMovies = await Movie.insertMany(moviesToSave);
+      if (newMovies.length > 0) {
+        // Salvar os novos filmes no banco de dados
+        const savedMovies = await Movie.insertMany(newMovies);
+        res.status(200).json({
+          page,
+          limit,
+          total: savedMovies.length,
+          movies: savedMovies,
+        });
+      } else {
+        res.status(200).json({ externalMovies });
+      }
 
-      console.log("Eram filmes novos, pesquisado e baixado no banco de dados")
-      res.status(200).json(savedMovies);
     } else {
       res.status(404).json({ message: 'Movie not found' });
     }

@@ -11,7 +11,7 @@ interface IMovie extends Document {
 
 const movieSchema: Schema = new Schema({
   title: { type: String, required: true },
-  release_date: { type: String, required: true },
+  release_date: { type: String },
   plot: { type: String, default: "" },
   cast: [{ type: String }],
   rating: { type: Number, required: true },
