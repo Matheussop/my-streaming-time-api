@@ -2,8 +2,13 @@ import { Request, Response } from 'express';
 import Movie from '../models/movieModel';
 
 export const getMovies = async (req: Request, res: Response): Promise<void> => {
+  const { page = 1, limit = 10 } = req.body;
+  const skip = (page - 1) * limit;
+
   try {
-    const movies = await Movie.find();
+    const movies = await Movie.find()
+    .skip(skip)
+    .limit(limit);
     res.status(200).json(movies);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -12,7 +17,9 @@ export const getMovies = async (req: Request, res: Response): Promise<void> => {
 
 export const getMovieById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const movie = await Movie.findById(req.params.id);
+    const movie = await Movie.findById(req.params.id)
+
+
     if (!movie) {
       res.status(404).json({ message: 'Movie not found' });
       return;
