@@ -104,6 +104,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     const encodedQueryParams = encodeURIComponent(title.trim());
     // Se não estiver no banco de dados, verificar na API externa
     const url = `https://api.themoviedb.org/3/search/movie?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1`;
+    // const url = 'https://api.themoviedb.org/3/search/ multi ?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1'; Verificar o uso do multi ao inves do movie como parametro
 
     const options = {
       method: 'GET',

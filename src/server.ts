@@ -1,10 +1,12 @@
 import express from 'express';
+import userStreamingHistoryRoutes from "./routes/userStreamingHistoryRoutes";
 import streamingTypesRoutes from "./routes/movieRoutes";
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
 import movieRoutes from './routes/movieRoutes';
+import userRoutes from './routes/userRoutes';
 
 dotenv.config();
 
@@ -26,3 +28,5 @@ mongoose.connect(process.env.MONGO_URI as string).then(() => {
 
 app.use('/movies', movieRoutes);
 app.use('/streamingTypes', streamingTypesRoutes);
+app.use("/user", userRoutes); 
+app.use("/user-streaming-history", userStreamingHistoryRoutes);
