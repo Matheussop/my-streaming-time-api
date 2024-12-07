@@ -101,6 +101,11 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    if(!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === ''){
+      console.log("TMDB_Bearer_Token inválido");
+      return 
+    }
+    
     const encodedQueryParams = encodeURIComponent(title.trim());
     // Se não estiver no banco de dados, verificar na API externa
     const url = `https://api.themoviedb.org/3/search/movie?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1`;

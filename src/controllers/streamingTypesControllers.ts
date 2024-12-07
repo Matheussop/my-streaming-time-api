@@ -63,23 +63,3 @@ export const deleteStreamingType = async (req: Request, res: Response): Promise<
   }
 };
 
-export const updateCategoriesOfStreamingType = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const oldStreamingType = await StreamingTypes.findById(req.params.id)
-    if (!oldStreamingType) {
-      res.status(404).json({ message: 'Streaming Type not found' });
-      return;
-    }
-    const newStreamingType = oldStreamingType?.categories.concat(req.body.newCategory);
-    
-    const streamingType = await StreamingTypes.findByIdAndUpdate(oldStreamingType._id, newStreamingType, { new: true });
-    if (!streamingType) {
-      res.status(404).json({ message: 'Streaming Type not found' });
-      return;
-    }
-    res.status(200).json(streamingType);
-  } catch (err: any) {
-    res.status(400).json({ message: err.message });
-  }
-};
-
