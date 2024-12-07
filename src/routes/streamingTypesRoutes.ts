@@ -58,7 +58,7 @@ streamingTypesRoutes.get('/:id', getStreamingTypeById);
  *             properties:
  *               name:
  *                 type: string
- *               description:
+ *               categories:
  *                 type: string
  *     responses:
  *       201:
@@ -89,7 +89,7 @@ streamingTypesRoutes.post('/', createStreamingType);
  *             properties:
  *               name:
  *                 type: string
- *               description:
+ *               categories:
  *                 type: string
  *     responses:
  *       200:

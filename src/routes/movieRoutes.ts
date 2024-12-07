@@ -32,9 +32,15 @@ const router: Router = Router();
  *             properties:
  *               title:
  *                 type: string
- *               director:
+ *               plot:
  *                 type: string
- *               releaseDate:
+ *               cast:
+ *                 type: string
+ *               rating:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *               release_date:
  *                 type: string
  *                 format: date
  *     responses:
@@ -60,11 +66,11 @@ router.get('/', getMovies);
  * @swagger
  * /movies/external:
  *   get:
- *     summary: Retrieve a list of external movies
+ *     summary: Retrieve a list of external list of movies returned by TMDB
  *     tags: [Movies]
  *     responses:
  *       200:
- *         description: A list of external movies
+ *         description: A list of movies 
  */
 router.get('/external', getExternalMovies);
 
@@ -72,7 +78,7 @@ router.get('/external', getExternalMovies);
  * @swagger
  * /movies/external:
  *   post:
- *     summary: Fetch and save external movies
+ *     summary: Fetch and save external list of movies returned by TMDB
  *     tags: [Movies]
  *     responses:
  *       201:
@@ -95,11 +101,10 @@ router.post('/external', fetchAndSaveExternalMovies);
  *             properties:
  *               title:
  *                 type: string
- *               director:
- *                 type: string
- *               releaseDate:
- *                 type: string
- *                 format: date
+ *               page:
+ *                 type: number
+ *               limit:
+ *                 type: number
  *     responses:
  *       200:
  *         description: Movie found or added successfully
@@ -148,9 +153,15 @@ router.get('/:id', getMovieById);
  *             properties:
  *               title:
  *                 type: string
- *               director:
+ *               plot:
  *                 type: string
- *               releaseDate:
+ *               cast:
+ *                 type: string
+ *               rating:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *               release_date:
  *                 type: string
  *                 format: date
  *     responses:
