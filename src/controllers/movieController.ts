@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Movie from '../models/movieModel';
+import { validateRequest, validateRequiredFields } from '../util';
 
 export const getMovies = async (req: Request, res: Response): Promise<void> => {
   const { page = 1, limit = 10 } = req.body;
@@ -31,21 +32,26 @@ export const getMovieById = async (req: Request, res: Response): Promise<void> =
 };
 
 export const createMovie = async (req: Request, res: Response): Promise<void> => {
-  const movie = new Movie({
-    title: req.body.title,
-    release_date: req.body.release_date,
-    plot: req.body.plot,
-    cast: req.body.cast,
-    rating: req.body.rating,
-    url: req.body.url,
-  });
-
-  try {
-    const newMovie = await movie.save();
-    res.status(201).json(newMovie);
-  } catch (err: any) {
-    res.status(400).json({ message: err.message });
+  if (!req.body) {
+    res.status(400).json({ message: 'Request body is missing' });
+    return;
   }
+  const requiredFields = ['title', 'rating', 'url', 'genre'];
+  validateRequest(req, res, () => {
+    const movie = new Movie({
+      title: req.body.title,
+      release_date: req.body.release_date,
+      plot: req.body.plot,
+      cast: req.body.cast,
+      genre: req.body.genre,
+      rating: parseFloat(req.body.rating), // Converter rating para número
+      url: req.body.url,
+    });
+
+    movie.save()
+      .then(newMovie => res.status(201).json(newMovie))
+      .catch(err => res.status(400).json({ message: err.message }));
+  }, requiredFields); 
 };
 
 export const updateMovie = async (req: Request, res: Response): Promise<void> => {

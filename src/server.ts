@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import setupSwagger from './swagger';
 
 import userStreamingHistoryRoutes from "./routes/userStreamingHistoryRoutes";
-import streamingTypesRoutes from "./routes/movieRoutes";
+import streamingTypesRoutes from "./routes/streamingTypesRoutes";
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
 import { listUsers } from './controllers/userController';
