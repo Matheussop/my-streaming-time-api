@@ -55,11 +55,130 @@ router.post('/', createMovie);
  *         description: A list of movies
  */
 router.get('/', getMovies);
+
+/**
+ * @swagger
+ * /movies/external:
+ *   get:
+ *     summary: Retrieve a list of external movies
+ *     tags: [Movies]
+ *     responses:
+ *       200:
+ *         description: A list of external movies
+ */
 router.get('/external', getExternalMovies);
+
+/**
+ * @swagger
+ * /movies/external:
+ *   post:
+ *     summary: Fetch and save external movies
+ *     tags: [Movies]
+ *     responses:
+ *       201:
+ *         description: External movies fetched and saved successfully
+ */
 router.post('/external', fetchAndSaveExternalMovies);
+
+/**
+ * @swagger
+ * /movies/findOrAddMovie:
+ *   post:
+ *     summary: Find or add a movie
+ *     tags: [Movies]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               director:
+ *                 type: string
+ *               releaseDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Movie found or added successfully
+ *       400:
+ *         description: Invalid input
+ */
 router.post('/findOrAddMovie', findOrAddMovie);
+/**
+ * @swagger
+ * /movies/{id}:
+ *   get:
+ *     summary: Retrieve a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: movie_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A movie object
+ *       404:
+ *         description: Movie not found
+ */
 router.get('/:id', getMovieById);
+
+/**
+ * @swagger
+ * /movies/{id}:
+ *   put:
+ *     summary: Update a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: movie_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               director:
+ *                 type: string
+ *               releaseDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Movie updated successfully
+ *       404:
+ *         description: Movie not found
+ */
 router.put('/:id', updateMovie);
+
+/**
+ * @swagger
+ * /movies/{movie_id}:
+ *   delete:
+ *     summary: Delete a movie by ID
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: movie_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Movie deleted successfully
+ *       404:
+ *         description: Movie not found
+ */
 router.delete('/:id', deleteMovie);
 
 export default router;
