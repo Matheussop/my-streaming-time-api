@@ -84,13 +84,13 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
   try {
     // Verificar se o filme existe no banco de dados
     const regex = new RegExp(title, 'i'); // 'i' para case-insensitive
-
+    
     const existingMovies = await Movie.find({ title: { $regex: regex } })
     .skip(skip)
     .limit(limit)
     .lean();
 
-    if (existingMovies.length > 0) {
+    if (existingMovies.length > 5) {
       res.status(200).json({
         page,
         limit,
@@ -146,7 +146,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
           movies: savedMovies,
         });
       } else {
-        res.status(200).json({ externalMovies });
+        res.status(200).json({ movies: externalMovies });
       }
 
     } else {
