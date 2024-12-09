@@ -7,7 +7,7 @@ interface IMovie extends Document {
   plot: string;
   cast: string[];
   rating: number;
-  genre: string;
+  genre_ids: number[];
   url: string;
 }
 
@@ -17,14 +17,17 @@ const movieSchema: Schema = new Schema({
   plot: { type: String, default: "" },
   cast: [{ type: String }],
   rating: { type: Number, required: true },
-  genre: { type: String, required: true,
+  genre_ids: { type: Array<Number>, required: true,
     validate: {
-      validator: async function(value: string) {
-        const streamingTypes = await StreamingTypes.find();
-        const categories = streamingTypes.flatMap(type => type.categories);
-        return categories.includes(value);
+      validator: async function(categoriesIds: number[]) {
+        const result = await Promise.all(categoriesIds.map(async (category_id: number) => {
+          const streamingTypes = await StreamingTypes.find();
+          const categories = streamingTypes.flatMap(type => type.categories);
+          return categories.some((category: any) => category.id === category_id);
+        }));
+        return result.every(isValid => isValid === true);
       },
-      message: (props: any) => `${props.value} is not a valid genre!`
+      message: (props: any) => `The genre(s) ${props.value} is/are not valid or not registered in the database!`
     }
    },
   url: { type: String, required: true },
