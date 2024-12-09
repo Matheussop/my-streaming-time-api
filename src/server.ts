@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import setupSwagger from './swagger';
+import { errorHandler } from './middleware/errorHandler';
 
 import userStreamingHistoryRoutes from "./routes/userStreamingHistoryRoutes";
 import streamingTypesRoutes from "./routes/streamingTypesRoutes";
@@ -19,17 +20,7 @@ app.use(express.json());
  
 setupSwagger(app);
 
-const PORT = process.env.PORT || 5000;
-
-mongoose.connect(process.env.MONGO_URI as string).then(() => {
-  console.log('Connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}).catch(err => {
-  console.error('Database connection error', err);
-});
-
+// Routes
 app.use('/movies', movieRoutes);
 app.use('/streamingTypes', streamingTypesRoutes);
 app.use("/user", userRoutes); 
@@ -45,3 +36,16 @@ app.use("/user", userRoutes);
  */
 app.use("/users", listUsers); 
 app.use("/user-streaming-history", userStreamingHistoryRoutes);
+
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+mongoose.connect(process.env.MONGO_URI as string).then(() => {
+  console.log('Connected to MongoDB');
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}).catch(err => {
+  console.error('Database connection error', err);
+});

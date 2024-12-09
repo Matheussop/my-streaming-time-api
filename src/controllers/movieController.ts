@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Movie from '../models/movieModel';
-import { validateRequest, validateRequiredFields } from '../util';
+import { StreamingServiceError } from '../middleware/errorHandler';
+import { catchAsync } from '../util/catchAsync';
 
 export const getMovies = async (req: Request, res: Response): Promise<void> => {
   const { page = 1, limit = 10 } = req.body;
@@ -16,43 +17,41 @@ export const getMovies = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const getMovieById = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const movie = await Movie.findById(req.params.id)
+export const getMovieById = catchAsync(async (req: Request, res: Response) => {
+  const movie = await Movie.findById(req.params.id);
 
-
-    if (!movie) {
-      res.status(404).json({ message: 'Movie not found' });
-      return;
-    }
-    res.status(200).json(movie);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  if (!movie) {
+    throw new StreamingServiceError('Movie not found', 404);
   }
-};
 
-export const createMovie = async (req: Request, res: Response): Promise<void> => {
+  res.status(200).json(movie);
+});
+
+export const createMovie = catchAsync(async (req: Request, res: Response) => {
   if (!req.body) {
-    res.status(400).json({ message: 'Request body is missing' });
-    return;
+    throw new StreamingServiceError('Request body is missing', 400);
   }
-  const requiredFields = ['title', 'rating', 'url', 'genre'];
-  validateRequest(req, res, () => {
-    const movie = new Movie({
-      title: req.body.title,
-      release_date: req.body.release_date,
-      plot: req.body.plot,
-      cast: req.body.cast,
-      genre: req.body.genre,
-      rating: parseFloat(req.body.rating), // Converter rating para número
-      url: req.body.url,
-    });
 
-    movie.save()
-      .then(newMovie => res.status(201).json(newMovie))
-      .catch(err => res.status(400).json({ message: err.message }));
-  }, requiredFields); 
-};
+  const requiredFields = ['title', 'rating', 'url', 'genre'];
+  const missingFields = requiredFields.filter(field => !req.body[field]);
+  
+  if (missingFields.length > 0) {
+    throw new StreamingServiceError(`Missing required fields: ${missingFields.join(', ')}`, 400);
+  }
+
+  const movie = new Movie({
+    title: req.body.title,
+    release_date: req.body.release_date,
+    plot: req.body.plot,
+    cast: req.body.cast,
+    genre: req.body.genre,
+    rating: parseFloat(req.body.rating),
+    url: req.body.url,
+  });
+
+  const newMovie = await movie.save();
+  res.status(201).json(newMovie);
+});
 
 export const updateMovie = async (req: Request, res: Response): Promise<void> => {
   try {
