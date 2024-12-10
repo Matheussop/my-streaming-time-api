@@ -2,10 +2,20 @@ import { Request, Response } from 'express';
 import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { catchAsync } from '../util/catchAsync';
+import logger from '../config/logger';
 
 export const getMovies = async (req: Request, res: Response): Promise<void> => {
   const { page = 1, limit = 10 } = req.body;
   const skip = (page - 1) * limit;
+
+  logger.info({
+    message: 'Fetching movies list',
+    page,
+    limit,
+    skip,
+    method: req.method,
+    path: req.path
+  });
 
   try {
     const movies = await Movie.find()
@@ -18,9 +28,19 @@ export const getMovies = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const getMovieById = catchAsync(async (req: Request, res: Response) => {
+  logger.info({
+    message: 'Fetching movie by ID',
+    movieId: req.params.id,
+    method: req.method,
+    path: req.path
+  });
   const movie = await Movie.findById(req.params.id);
 
   if (!movie) {
+    logger.warn({
+      message: 'Movie not found',
+      movieId: req.params.id
+    });
     throw new StreamingServiceError('Movie not found', 404);
   }
 
@@ -28,7 +48,19 @@ export const getMovieById = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const createMovie = catchAsync(async (req: Request, res: Response) => {
+  logger.info({
+    message: 'Creating new movie',
+    movieData: req.body,
+    method: req.method,
+    path: req.path
+  });
+
   if (!req.body) {
+    logger.warn({
+      message: 'Request body is missing',
+      method: req.method,
+      path: req.path
+    });
     throw new StreamingServiceError('Request body is missing', 400);
   }
 
@@ -53,28 +85,33 @@ export const createMovie = catchAsync(async (req: Request, res: Response) => {
   res.status(201).json(newMovie);
 });
 
-export const updateMovie = async (req: Request, res: Response): Promise<void> => {
-  try {
+export const updateMovie = catchAsync(async (req: Request, res: Response): Promise<void> => {
     const movie = await Movie.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!movie) {
-      res.status(404).json({ message: 'Movie not found' });
-      return;
+      logger.warn({
+        message: 'Movie not found for update',
+        movieId: req.params.id
+      });
+      throw new StreamingServiceError('Movie not found', 404);
     }
     res.status(200).json(movie);
-  } catch (err: any) {
-    res.status(400).json({ message: err.message });
-  }
-};
+});
 
-export const deleteMovie = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const movie = await Movie.findByIdAndDelete(req.params.id);
-    if (!movie) {
-      res.status(404).json({ message: 'Movie not found' });
-      return;
-    }
-    res.status(200).json({ message: 'Movie deleted' });
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+export const deleteMovie = catchAsync(async (req: Request, res: Response): Promise<void> => {
+  logger.info({
+    message: 'Deleting movie',
+    movieId: req.params.id,
+    method: req.method,
+    path: req.path
+  });
+  const movie = await Movie.findByIdAndDelete(req.params.id);
+  if (!movie) {
+    logger.warn({
+      message: 'Movie not found for deletion',
+      movieId: req.params.id
+    });
+    throw new StreamingServiceError('Movie not found', 404);
   }
-};
+
+  res.status(200).json({ message: 'Movie deleted' });
+});
