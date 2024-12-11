@@ -185,10 +185,7 @@ router.get('/:id', movieController.getMovieById);
  *       200:
  *         description: Movie updated successfully
  */
-router.put('/:id',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'release_date']),
-  movieController.updateMovie
-);
+router.put('/:id', movieController.updateMovie);
 
 /**
  * @swagger

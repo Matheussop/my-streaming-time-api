@@ -52,7 +52,7 @@ export class MovieController {
       throw new StreamingServiceError('Invalid movie ID format', 400);
     }
 
-    const movie = this.movieService.getMovieById(id);
+    const movie = await this.movieService.getMovieById(id);
   
     res.status(200).json(movie);
   });
