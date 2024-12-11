@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '../controllers/movieTMDBController';
-import { validateRequest } from '../util';
+import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieController } from '../controllers/movieController';
 

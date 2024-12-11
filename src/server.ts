@@ -16,13 +16,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Primeiro conectar ao MongoDB
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log('Connected to MongoDB');
 
-    // Configuração dos middlewares
+
     app.use(cors());
     app.use(express.json());
     
@@ -47,7 +46,6 @@ const startServer = async () => {
 
     app.use(errorHandler);
 
-    // Iniciar o servidor apenas após a conexão com o banco
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

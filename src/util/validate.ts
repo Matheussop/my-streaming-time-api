@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { StreamingServiceError } from './middleware/errorHandler';
+import { StreamingServiceError } from '../middleware/errorHandler';
 
 export const validateRequiredFields = (body: any, requiredFields: string[]): string[] => {
   const missingFields: string[] = [];

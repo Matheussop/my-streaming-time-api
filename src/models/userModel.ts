@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 interface IUser extends Document {
   name: string;
   email: string;
-  password: string; // Vamos armazenar a senha, mas é uma boa prática sempre criptografar.
+  password: string; // We will store the password, but it's best practice to always encrypt it.
   createdAt: Date;
 }
 

@@ -41,10 +41,10 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Método para fazer a requisição à API externa, modificar o objeto e salvar no banco de dados
+// Method to make the external API request, modify the object and save to database
 export const fetchAndSaveExternalMovies = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Faça a requisição à API externa
+    // Make the external API request
     const url = 'https://api.themoviedb.org/3/movie/popular?language=pt-BR&page=1';
     const options = {
       method: 'GET',
@@ -55,14 +55,11 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
     };
     const response = await axios.get(url, options);
 
-    // Suponha que a resposta é uma lista de filmes
     const externalMovies = response.data.results;
 
-    // Buscar todos os títulos dos filmes existentes no banco de dados
     const existingMovies = await Movie.find({}, 'title').lean();
     const existingTitles = existingMovies.map(movie => movie.title);
 
-    // Filtrar e modificar os novos filmes
     const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
       .map((externalMovie: any) => ({
         title: externalMovie.title,
@@ -73,7 +70,6 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
       }));
 
-    // Salvar os novos filmes no banco de dados
     const savedMovies = await Movie.insertMany(newMovies);
 
     res.status(201).json(savedMovies);
@@ -82,8 +78,6 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
   }
 };
 
-
-// Novo método para verificar se um filme existe e adicioná-lo se não existir
 export const findOrAddMovie = async (req: Request, res: Response): Promise<void> => {
   const { title, page = 1, limit = 10 } = req.body;
   const skip = (page - 1) * limit;
@@ -94,8 +88,8 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
   }
 
   try {
-    // Verificar se o filme existe no banco de dados
-    const regex = new RegExp(title, 'i'); // 'i' para case-insensitive
+    
+    const regex = new RegExp(title, 'i'); // 'i' for case-insensitive
     
     const existingMovies = await Movie.find({ title: { $regex: regex } })
     .skip(skip)
@@ -109,7 +103,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         total: existingMovies.length,
         movies: existingMovies,
       });
-      console.log("Ja Existia um filme no banco com o parâmetro")
+      console.log("Movie already existed in database with this parameter")
       return;
     }
 
@@ -119,7 +113,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     }
     
     const encodedQueryParams = encodeURIComponent(title.trim());
-    // Se não estiver no banco de dados, verificar na API externa
+    // If not in database, check external API
     const url = `https://api.themoviedb.org/3/search/movie?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1`;
     // const url = 'https://api.themoviedb.org/3/search/ multi ?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1'; Verificar o uso do multi ao inves do movie como parametro
 
@@ -134,7 +128,6 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     console.log("To consultando o TMDB")
 
     if (response.data.results.length > 0) {
-      // Filtrar filmes que já existem no banco de dados
       const externalMovies = response.data.results.map((externalMovie: any) => ({
         title: externalMovie.title,
         release_date: externalMovie.release_date,
@@ -150,7 +143,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
       const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
 
       if (newMovies.length > 0) {
-        // Salvar os novos filmes no banco de dados
+        
         const savedMovies = await Movie.insertMany(newMovies);
         res.status(200).json({
           page,

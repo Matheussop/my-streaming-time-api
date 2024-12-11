@@ -1,13 +1,13 @@
 import winston from 'winston';
 
-// Os níveis de log em ordem de prioridade são:
-// error: Erros fatais
-// warn: Avisos importantes
-// info: Informações gerais
-// http: Requisições HTTP
-// verbose: Informações detalhadas
-// debug: Informações de debugging
-// silly: Informações muito detalhadas
+// Log levels in order of priority are:
+// error: Fatal errors
+// warn: Important warnings
+// info: General information
+// http: HTTP requests
+// verbose: Detailed information
+// debug: Debugging information
+// silly: Very detailed information
 
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',

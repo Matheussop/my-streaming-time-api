@@ -16,7 +16,7 @@ export const getUserStreamingHistory = async (req: Request, res: Response) => {
   }
 };
 
-// Adicionar um streaming ao histórico de um usuário
+// Add a streaming to user's history
 export const addStreamingToHistory = async (req: Request, res: Response) => {
   try {
     const { userId, streamingId, title, durationInMinutes } = req.body;
@@ -50,7 +50,7 @@ export const calculateTotalWatchTime = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User history not found" });
     }
 
-    // Apenas retorna o campo já calculado pelo hook
+    // Just returns the field already calculated by the hook
     res.json({ totalWatchTimeInMinutes: userHistory.totalWatchTimeInMinutes });
   } catch (error) {
     res.status(500).json({ error: "An error occurred while calculating total watch time" });

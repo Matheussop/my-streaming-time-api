@@ -30,7 +30,7 @@ export const errorHandler = (
   let error = err as StreamingServiceError;
   let statusCode = error.statusCode || 500;
   
-  // Log do erro
+  // Error logging
   logger.error({
     message: error.message,
     statusCode,

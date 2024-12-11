@@ -22,7 +22,7 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistory>({
   totalWatchTimeInMinutes: { type: Number, default: 0 },
 });
 
-// Hook para atualizar o total de horas de streaming do usuário automaticamente
+// Hook to automatically update the user's total streaming hours
 userStreamingHistorySchema.pre("save", function (next) {
   this.totalWatchTimeInMinutes = this.watchHistory.reduce(
     (total, item) => total + item.durationInMinutes,
