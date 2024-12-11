@@ -7,7 +7,7 @@ interface IMovie extends Document {
   plot: string;
   cast: string[];
   rating: number;
-  genre_ids: number[];
+  genre: number[];
   url: string;
 }
 
@@ -17,7 +17,7 @@ const movieSchema: Schema = new Schema({
   plot: { type: String, default: "" },
   cast: [{ type: String }],
   rating: { type: Number, required: true },
-  genre_ids: { type: Array<Number>, required: true,
+  genre: { type: Array<Number>, required: true,
     validate: {
       validator: async function(categoriesIds: number[]) {
         const result = await Promise.all(categoriesIds.map(async (category_id: number) => {

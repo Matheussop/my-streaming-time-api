@@ -3,10 +3,7 @@ import axios from 'axios';
 import Movie from '../models/movieModel';
 
 export interface Movie_TMDB {
-  genre_ids: [
-    27,
-    878
-  ],
+  genre_ids: number[],
   original_title: string,
   overview: string,
   poster_path: string,
@@ -32,7 +29,7 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
         title: movie.title,
         year: movie.release_date,
         plot: movie.overview,
-        genre_ids: movie.genre_ids,
+        genre: movie.genre_ids,
         rating: movie.vote_average,
         url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`
       }
@@ -70,7 +67,7 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
         title: externalMovie.title,
         release_date: externalMovie.release_date,
         plot: externalMovie.overview,
-        genre_ids: externalMovie.genre_ids,
+        genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
       }));
@@ -142,7 +139,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         release_date: externalMovie.release_date,
         plot: externalMovie.overview,
         rating: externalMovie.vote_average,
-        genre_ids: externalMovie.genre_ids,
+        genre: externalMovie.genre_ids,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
       }));
       
