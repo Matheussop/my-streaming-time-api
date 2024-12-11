@@ -71,6 +71,10 @@ export const errorHandler = (
     response.message = 'Duplicate field value entered';
   }
 
+  if(statusCode === 500){
+    response.message = 'Internal Server Error';
+  }
+
   // Add stack trace in development environment
   if (process.env.NODE_ENV === 'development') {
     response.stack = err.stack;

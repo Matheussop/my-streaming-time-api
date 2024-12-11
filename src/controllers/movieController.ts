@@ -29,13 +29,10 @@ export class MovieController {
     if (Number(limit) > 100) {
       throw new StreamingServiceError('Limit cannot exceed 100 items', 400);
     }
-  
-    try {
-      const movies = await this.movieService.getMovies(skip, limit);
-      res.status(200).json(movies);
-    } catch (err: any) {
-      res.status(500).json({ message: err.message });
-    }
+
+    const movies = await this.movieService.getMovies(skip, limit);
+    res.status(200).json(movies);
+
   });
 
   getMovieById = catchAsync(async (req: Request, res: Response): Promise<void> => {

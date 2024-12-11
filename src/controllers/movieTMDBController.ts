@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import Movie from '../models/movieModel';
+import { StreamingServiceError } from '../middleware/errorHandler';
 
 export interface Movie_TMDB {
   genre_ids: number[],
@@ -162,7 +163,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
       }
 
     } else {
-      res.status(404).json({ message: 'Movie not found' });
+      throw new StreamingServiceError('Movie not found', 404);
     }
   } catch (err: any) {
     res.status(500).json({ message: err.message });
