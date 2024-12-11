@@ -1,14 +1,13 @@
 import { Router } from 'express';
-import {
-  getMovies,
-  getMovieById,
-  createMovie,
-  updateMovie,
-  deleteMovie,
-} from '../controllers/movieController';
+
 import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '../controllers/movieTMDBController';
+import { validateRequest } from '../util';
+import { MovieRepository } from '../repositories/movieRepository';
+import { MovieController } from '../controllers/movieController';
 
 const router: Router = Router();
+const movieRepository = new MovieRepository();
+const movieController = new MovieController(movieRepository);
 
 /**
  * @swagger
@@ -35,9 +34,11 @@ const router: Router = Router();
  *               plot:
  *                 type: string
  *               cast:
- *                 type: string
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               rating:
- *                 type: string
+ *                 type: number
  *               url:
  *                 type: string
  *               release_date:
@@ -46,21 +47,34 @@ const router: Router = Router();
  *     responses:
  *       201:
  *         description: Movie created successfully
- *       400:
- *         description: Invalid input
  */
-router.post('/', createMovie);
+router.post('/',
+  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'release_date']),
+  movieController.createMovie
+);
+
 /**
  * @swagger
  * /movies:
  *   get:
  *     summary: Retrieve a list of movies
  *     tags: [Movies]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
  *     responses:
  *       200:
  *         description: A list of movies
  */
-router.get('/', getMovies);
+router.get('/', movieController.getMovies);
 
 /**
  * @swagger
@@ -111,7 +125,8 @@ router.post('/external', fetchAndSaveExternalMovies);
  *       400:
  *         description: Invalid input
  */
-router.post('/findOrAddMovie', findOrAddMovie);
+router.post('/findOrAddMovie',
+  (req, res, next) => validateRequest(req, res, next, ['title']), findOrAddMovie);
 /**
  * @swagger
  * /movies/{id}:
@@ -120,7 +135,7 @@ router.post('/findOrAddMovie', findOrAddMovie);
  *     tags: [Movies]
  *     parameters:
  *       - in: path
- *         name: movie_id
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
@@ -130,7 +145,7 @@ router.post('/findOrAddMovie', findOrAddMovie);
  *       404:
  *         description: Movie not found
  */
-router.get('/:id', getMovieById);
+router.get('/:id', movieController.getMovieById);
 
 /**
  * @swagger
@@ -140,7 +155,7 @@ router.get('/:id', getMovieById);
  *     tags: [Movies]
  *     parameters:
  *       - in: path
- *         name: movie_id
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
@@ -156,9 +171,11 @@ router.get('/:id', getMovieById);
  *               plot:
  *                 type: string
  *               cast:
- *                 type: string
+ *                 type: array
+ *                 items:
+ *                   type: string
  *               rating:
- *                 type: string
+ *                 type: number
  *               url:
  *                 type: string
  *               release_date:
@@ -167,29 +184,28 @@ router.get('/:id', getMovieById);
  *     responses:
  *       200:
  *         description: Movie updated successfully
- *       404:
- *         description: Movie not found
  */
-router.put('/:id', updateMovie);
+router.put('/:id',
+  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'release_date']),
+  movieController.updateMovie
+);
 
 /**
  * @swagger
- * /movies/{movie_id}:
+ * /movies/{id}:
  *   delete:
  *     summary: Delete a movie by ID
  *     tags: [Movies]
  *     parameters:
  *       - in: path
- *         name: movie_id
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Movie deleted successfully
- *       404:
- *         description: Movie not found
  */
-router.delete('/:id', deleteMovie);
+router.delete('/:id', movieController.deleteMovie);
 
 export default router;
