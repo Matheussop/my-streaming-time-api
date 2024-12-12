@@ -9,7 +9,6 @@ import userStreamingHistoryRoutes from "./routes/userStreamingHistoryRoutes";
 import streamingTypesRoutes from "./routes/streamingTypesRoutes";
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
-import { listUsers } from './controllers/userController';
 
 dotenv.config();
 
@@ -31,17 +30,6 @@ const startServer = async () => {
     app.use('/movies', movieRoutes);
     app.use('/streamingTypes', streamingTypesRoutes);
     app.use("/user", userRoutes); 
-    /**
-     * @swagger
-     * /users:
-     *   get:
-     *     summary: Retrieve a list of users
-     *     tags: [Users]
-     *     responses:
-     *       200:
-     *         description: A list of users
-     */
-    app.use("/users", listUsers); 
     app.use("/user-streaming-history", userStreamingHistoryRoutes);
 
     app.use(errorHandler);

@@ -1,13 +1,11 @@
 import { Router } from 'express';
-import {
-  registerUser,
-  loginUser,
-  updateUser,
-  deleteUser,
-  getUserById,
-} from '../controllers/userController';
+import { UserController } from '../controllers/userController';
+import { UserRepository } from '../repositories/userRepository';
+import { validateRequest } from '../util/validate';
 
 const userRoutes: Router = Router();
+const userRepository = new UserRepository();
+const userController = new UserController(userRepository);
 
 /**
  * @swagger
@@ -41,7 +39,10 @@ const userRoutes: Router = Router();
  *       400:
  *         description: Invalid input
  */
-userRoutes.post('/register', registerUser);
+userRoutes.post('/register',
+  (req, res, next) => validateRequest(req, res, next, ['name', 'email', 'password']),
+  userController.registerUser
+);
 
 /**
  * @swagger
@@ -66,7 +67,10 @@ userRoutes.post('/register', registerUser);
  *       401:
  *         description: Invalid credentials
  */
-userRoutes.post('/login', loginUser);
+userRoutes.post('/login',
+  (req, res, next) => validateRequest(req, res, next, ['email', 'password']),
+  userController.loginUser
+);
 
 /**
  * @swagger
@@ -86,7 +90,7 @@ userRoutes.post('/login', loginUser);
  *       404:
  *         description: User not found
  */
-userRoutes.get('/:id', getUserById);
+userRoutes.get('/:id', userController.getUserById);
 
 /**
  * @swagger
@@ -119,7 +123,10 @@ userRoutes.get('/:id', getUserById);
  *       404:
  *         description: User not found
  */
-userRoutes.put('/:id', updateUser);
+userRoutes.put('/:id',
+  (req, res, next) => validateRequest(req, res, next, ['name', 'email']),
+  userController.updateUser
+);
 
 /**
  * @swagger
@@ -139,6 +146,18 @@ userRoutes.put('/:id', updateUser);
  *       404:
  *         description: User not found
  */
-userRoutes.delete('/:id', deleteUser);
+userRoutes.delete('/:id', userController.deleteUser);
+
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Retrieve a list of users
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: A list of users
+ */
+userRoutes.get('/', userController.listUsers); 
 
 export default userRoutes;

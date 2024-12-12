@@ -1,77 +1,100 @@
-import { Request, Response } from "express";
-import User from "../models/userModel";
+import { Request, Response } from 'express';
+import { UserService } from '../services/userService';
+import { IUserRepository } from '../interfaces/repositories';
+import { catchAsync } from '../util/catchAsync';
+import logger from '../config/logger';
+import { StreamingServiceError } from '../middleware/errorHandler';
 
-export const registerUser = async (req: Request, res: Response) => {
-  try {
-    const { name, email, password } = req.body;
-    const newUser = new User({ name, email, password });
-    await newUser.save();
-    res.status(201).json({ message: "User created successfully", user: newUser });
-  } catch (err) {
-    res.status(500).json({ message: "Error creating user", error: err });
+export class UserController {
+  private userService: UserService;
+
+  constructor(private userRepository: IUserRepository) {
+    this.userService = new UserService(userRepository);
   }
-};
 
-export const loginUser = async (req: Request, res: Response)=> {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email, password });
+  registerUser = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Registering new user',
+      email: req.body.email,
+      method: req.method,
+      path: req.path
+    });
 
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!req.body || Object.keys(req.body).length === 0) {
+      logger.warn({
+        message: 'Request body is missing',
+        method: req.method,
+        path: req.path
+      });
+      throw new StreamingServiceError('Request body is missing', 400);
     }
 
-    res.status(200).json({ message: "Login successful", user });
-  } catch (err) {
-    res.status(500).json({ message: "Error logging in", error: err });
-  }
-};
+    const user = await this.userService.registerUser(req.body);
+    res.status(201).json({ message: 'User created successfully', user });
+  });
 
-export const getUserById = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (user) {
-      res.status(200).json(user);
-    } else {
-      res.status(404).json({ message: 'User not found' });
+  loginUser = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'User login attempt',
+      email: req.body.email,
+      method: req.method,
+      path: req.path
+    });
+
+    const user = await this.userService.loginUser(req.body.email, req.body.password);
+    res.status(200).json({ message: 'Login successful', user });
+  });
+
+  getUserById = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    logger.info({
+      message: 'Fetching user by ID',
+      userId: req.params.id,
+      method: req.method,
+      path: req.path
+    });
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      throw new StreamingServiceError('Invalid user ID format', 400);
     }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
-export const listUsers = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const users = await User.find();
+    const user = await this.userService.getUserById(req.params.id);
+    res.status(200).json(user);
+  });
+
+  updateUser = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Updating user',
+      userId: req.params.id,
+      method: req.method,
+      path: req.path
+    });
+
+    const user = await this.userService.updateUser(req.params.id, req.body);
+    res.status(200).json(user);
+  });
+
+  deleteUser = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Deleting user',
+      userId: req.params.id,
+      method: req.method,
+      path: req.path
+    });
+
+    await this.userService.deleteUser(req.params.id);
+    res.status(200).json({ message: 'User deleted successfully' });
+  });
+
+  listUsers = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'List users',
+      userId: req.params.id,
+      method: req.method,
+      path: req.path
+    });
+
+    const users = await this.userService.getAllUsers();
     res.status(200).json(users);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const updateUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (user) {
-      res.status(200).json(user);
-    } else {
-      res.status(404).json({ message: 'User not found' });
-    }
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (user) {
-      res.status(200).json({ message: 'User deleted successfully' });
-    } else {
-      res.status(404).json({ message: 'User not found' });
-    }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
+  });
 }
-

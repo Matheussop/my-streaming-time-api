@@ -5,7 +5,7 @@ import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieController } from '../controllers/movieController';
 
-const router: Router = Router();
+const movieRouter: Router = Router();
 const movieRepository = new MovieRepository();
 const movieController = new MovieController(movieRepository);
 
@@ -48,7 +48,7 @@ const movieController = new MovieController(movieRepository);
  *       201:
  *         description: Movie created successfully
  */
-router.post('/',
+movieRouter.post('/',
   (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'release_date']),
   movieController.createMovie
 );
@@ -74,7 +74,7 @@ router.post('/',
  *       200:
  *         description: A list of movies
  */
-router.get('/', movieController.getMovies);
+movieRouter.get('/', movieController.getMovies);
 
 /**
  * @swagger
@@ -86,7 +86,7 @@ router.get('/', movieController.getMovies);
  *       200:
  *         description: A list of movies 
  */
-router.get('/external', getExternalMovies);
+movieRouter.get('/external', getExternalMovies);
 
 /**
  * @swagger
@@ -98,7 +98,7 @@ router.get('/external', getExternalMovies);
  *       201:
  *         description: External movies fetched and saved successfully
  */
-router.post('/external', fetchAndSaveExternalMovies);
+movieRouter.post('/external', fetchAndSaveExternalMovies);
 
 /**
  * @swagger
@@ -125,7 +125,7 @@ router.post('/external', fetchAndSaveExternalMovies);
  *       400:
  *         description: Invalid input
  */
-router.post('/findOrAddMovie',
+movieRouter.post('/findOrAddMovie',
   (req, res, next) => validateRequest(req, res, next, ['title']), findOrAddMovie);
 /**
  * @swagger
@@ -145,7 +145,7 @@ router.post('/findOrAddMovie',
  *       404:
  *         description: Movie not found
  */
-router.get('/:id', movieController.getMovieById);
+movieRouter.get('/:id', movieController.getMovieById);
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ router.get('/:id', movieController.getMovieById);
  *       200:
  *         description: Movie updated successfully
  */
-router.put('/:id', movieController.updateMovie);
+movieRouter.put('/:id', movieController.updateMovie);
 
 /**
  * @swagger
@@ -203,6 +203,6 @@ router.put('/:id', movieController.updateMovie);
  *       200:
  *         description: Movie deleted successfully
  */
-router.delete('/:id', movieController.deleteMovie);
+movieRouter.delete('/:id', movieController.deleteMovie);
 
-export default router;
+export default movieRouter;
