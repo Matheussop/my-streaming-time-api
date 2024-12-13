@@ -13,6 +13,19 @@ export class MovieController {
     this.movieService = new MovieService(movieRepository);
   }
 
+  getMoviesByTitle = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const { title } = req.body;
+    logger.info({
+      message: 'Fetching movies by title',
+      title,
+      method: req.method,
+      path: req.path
+    });
+
+    const movies = await this.movieService.getMoviesByTitle(title);
+    res.status(200).json(movies);
+  });
+
   getMovies = catchAsync(async (req: Request, res: Response): Promise<void> =>{
     const { page = 1, limit = 10 } = req.body;
     const skip = (Number(page) - 1) * Number(limit);

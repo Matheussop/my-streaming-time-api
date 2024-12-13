@@ -23,10 +23,7 @@ export class MovieRepository implements IMovieRepository {
     return Movie.findByIdAndDelete(id);
   }
 
-  async findByTitle(title: string, skip: number, limit: number): Promise<IMovie[] | null> {
-    const regex = new RegExp(title, 'i');
-    return Movie.find({ title: { $regex: regex } })
-      .skip(skip)
-      .limit(limit)
+  async findByTitle(title: string): Promise<IMovie | null> {
+    return Movie.findByTitle(title);
   }
 } 

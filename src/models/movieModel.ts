@@ -41,6 +41,10 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>({
   url: { type: String, required: true },
 });
 
+movieSchema.static('findByTitle', function(title: string) {
+  return this.findOne({ title: new RegExp(title, 'i') });
+});
+
 const Movie = mongoose.model<IMovie, IMovieModel>('Movie', movieSchema);
 
 export default Movie;

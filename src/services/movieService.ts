@@ -70,9 +70,13 @@ export class MovieService {
     return movie;
   }
 
+  async getMoviesByTitle(title: string) {
+    return this.movieRepository.findByTitle(title);
+  }
+
   // Private validation and processing methods
   private async checkDuplicateTitle(title: string) {
-    const movies = await this.movieRepository.findByTitle(title, 0, 1);
+    const movies = await this.movieRepository.findByTitle(title);
     if (movies) {
       throw new StreamingServiceError('Movie with this title already exists', 400);
     }

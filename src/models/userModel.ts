@@ -53,6 +53,10 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
+userSchema.static('findByEmail', function(email: string) {
+  return this.findOne({ email: new RegExp(email, 'i') });
+});
+
 const User = mongoose.model<IUser, IUserModel>("User", userSchema);
 
 export default User;
