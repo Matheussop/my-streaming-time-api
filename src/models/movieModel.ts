@@ -1,7 +1,8 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 import StreamingTypes from './streamingTypesModel';
 
-interface IMovie extends Document {
+export interface IMovie extends Document {
+  _id: string;
   title: string;
   release_date: string;
   plot: string;
@@ -11,13 +12,20 @@ interface IMovie extends Document {
   url: string;
 }
 
-const movieSchema: Schema = new Schema({
-  title: { type: String, required: true },
+export interface IMovieMethods {}
+
+export interface IMovieModel extends Model<IMovie, {}, IMovieMethods> {
+  findByTitle(email: string): Promise<IMovie | null>;
+}
+
+
+const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>({
+  title: { type: String, required: [true, 'Title is required'] },
   release_date: { type: String },
   plot: { type: String, default: "" },
   cast: [{ type: String }],
   rating: { type: Number, required: true },
-  genre: { type: Array<Number>, required: true,
+  genre: { type: [Number], required: true,
     validate: {
       validator: async function(categoriesIds: number[]) {
         const result = await Promise.all(categoriesIds.map(async (category_id: number) => {
@@ -33,6 +41,6 @@ const movieSchema: Schema = new Schema({
   url: { type: String, required: true },
 });
 
-const Movie = mongoose.model<IMovie>('Movie', movieSchema);
+const Movie = mongoose.model<IMovie, IMovieModel>('Movie', movieSchema);
 
 export default Movie;

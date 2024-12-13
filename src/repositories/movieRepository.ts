@@ -1,5 +1,5 @@
 import { IMovieRepository } from '../interfaces/repositories';
-import Movie from '../models/movieModel';
+import Movie, { IMovie } from '../models/movieModel';
 
 export class MovieRepository implements IMovieRepository {
   async findAll(skip: number, limit: number) {
@@ -10,7 +10,7 @@ export class MovieRepository implements IMovieRepository {
     return Movie.findById(id);
   }
 
-  async create(data: any) {
+  async create(data: any): Promise<IMovie> {
     const movie = new Movie(data);
     return movie.save();
   }
@@ -23,11 +23,10 @@ export class MovieRepository implements IMovieRepository {
     return Movie.findByIdAndDelete(id);
   }
 
-  async findByTitle(title: string, skip: number, limit: number) {
+  async findByTitle(title: string, skip: number, limit: number): Promise<IMovie[] | null> {
     const regex = new RegExp(title, 'i');
     return Movie.find({ title: { $regex: regex } })
       .skip(skip)
       .limit(limit)
-      .lean();
   }
 } 

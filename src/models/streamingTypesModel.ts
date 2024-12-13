@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-interface IStreamingType extends Document {
+export interface IStreamingType extends Document {
   name: string;
   categories: Array<{
     id: Number;

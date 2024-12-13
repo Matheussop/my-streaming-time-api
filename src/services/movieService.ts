@@ -73,7 +73,7 @@ export class MovieService {
   // Private validation and processing methods
   private async checkDuplicateTitle(title: string) {
     const movies = await this.movieRepository.findByTitle(title, 0, 1);
-    if (movies.length > 0) {
+    if (movies) {
       throw new StreamingServiceError('Movie with this title already exists', 400);
     }
   }
@@ -86,7 +86,7 @@ export class MovieService {
     return numRating;
   }
 
-  private validateReleaseDate(date: string): Date {
+  private validateReleaseDate(date: string): string {
     const releaseDate = new Date(date);
     if (isNaN(releaseDate.getTime())) {
       throw new StreamingServiceError('Invalid release date', 400);
@@ -95,7 +95,8 @@ export class MovieService {
       // TODO This may need to be removed in the future, as we will accept upcoming movie releases.
       throw new StreamingServiceError('Release date cannot be in the future', 400);
     }
-    return releaseDate;
+    //Return date without time
+    return releaseDate.toISOString().split('T')[0];
   }
 
   private validateURL(url: string): string {
