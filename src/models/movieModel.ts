@@ -15,7 +15,7 @@ export interface IMovie extends Document {
 export interface IMovieMethods {}
 
 export interface IMovieModel extends Model<IMovie, {}, IMovieMethods> {
-  findByTitle(email: string): Promise<IMovie | null>;
+  findByTitle(title: string, skip: number, limit: number): Promise<IMovie[] | null>;
 }
 
 
@@ -41,8 +41,8 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>({
   url: { type: String, required: true },
 });
 
-movieSchema.static('findByTitle', function(title: string) {
-  return this.findOne({ title: new RegExp(title, 'i') });
+movieSchema.static('findByTitle', function(title: string, skip: number, limit: number): Promise<IMovie[] | null> {
+  return this.find({ title: new RegExp(title, 'i') }).skip(skip).limit(limit);
 });
 
 const Movie = mongoose.model<IMovie, IMovieModel>('Movie', movieSchema);

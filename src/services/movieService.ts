@@ -70,13 +70,22 @@ export class MovieService {
     return movie;
   }
 
-  async getMoviesByTitle(title: string) {
-    return this.movieRepository.findByTitle(title);
+  async getMoviesByTitle(title: string, skip?: number, limit?: number) {
+    const movies =  await this.movieRepository.findByTitle(title, skip, limit);
+    if (!movies || movies.length <= 0) {
+      logger.warn({
+        message: 'Movie not found',
+        title: title	
+      });
+      throw new StreamingServiceError('Movie not found', 404);
+    }
+
+    return movies;
   }
 
   // Private validation and processing methods
   private async checkDuplicateTitle(title: string) {
-    const movies = await this.movieRepository.findByTitle(title);
+    const movies = await this.movieRepository.findByTitle(title, 0, 1);
     if (movies) {
       throw new StreamingServiceError('Movie with this title already exists', 400);
     }

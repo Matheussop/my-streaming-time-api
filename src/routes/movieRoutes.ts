@@ -16,6 +16,26 @@ const movieController = new MovieController(movieRepository);
  *   description: Movie management
  */
 
+
+/**
+ * @swagger
+ * /movies/title:
+ *   get:
+ *     summary: Get movies by title
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: query
+ *         name: title
+ *         type: string
+ *         description: The title of the movie
+ *     responses:
+ *       200:
+ *         description: A movie object
+ *       404:
+ *         description: Movie not found
+ */
+movieRouter.get('/title', (req,res,next) => validateRequest(req, res, next, ['title']), movieController.getMoviesByTitle);
+
 /**
  * @swagger
  * /movies:

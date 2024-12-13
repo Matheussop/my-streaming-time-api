@@ -14,7 +14,8 @@ export class MovieController {
   }
 
   getMoviesByTitle = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    const { title } = req.body;
+    const { title, page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
     logger.info({
       message: 'Fetching movies by title',
       title,
@@ -22,7 +23,7 @@ export class MovieController {
       path: req.path
     });
 
-    const movies = await this.movieService.getMoviesByTitle(title);
+    const movies = await this.movieService.getMoviesByTitle(title, skip, limit);
     res.status(200).json(movies);
   });
 

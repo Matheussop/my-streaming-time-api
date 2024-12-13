@@ -23,7 +23,7 @@ export class MovieRepository implements IMovieRepository {
     return Movie.findByIdAndDelete(id);
   }
 
-  async findByTitle(title: string): Promise<IMovie | null> {
-    return Movie.findByTitle(title);
+  async findByTitle(title: string, skip: number, limit: number): Promise<IMovie[] | null> {
+    return Movie.findByTitle(title, skip, limit);
   }
 } 
