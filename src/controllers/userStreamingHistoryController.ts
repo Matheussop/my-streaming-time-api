@@ -9,10 +9,8 @@ import { MovieRepository } from '../repositories/movieRepository';
 export class UserStreamingHistoryController {
   private service: UserStreamingHistoryService;
 
-  constructor() {
-    const repository = new UserStreamingHistoryRepository();
-    const movieRepository = new MovieRepository();
-    this.service = new UserStreamingHistoryService(repository, movieRepository);
+  constructor(userStreamingHistoryRepository: UserStreamingHistoryRepository, movieRepository: MovieRepository) {
+    this.service = new UserStreamingHistoryService(userStreamingHistoryRepository, movieRepository);
   }
 
   getUserStreamingHistory = catchAsync(async (req: Request, res: Response) => {

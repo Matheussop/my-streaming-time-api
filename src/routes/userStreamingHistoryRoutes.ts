@@ -1,10 +1,16 @@
 import { Router } from "express";
 import { UserStreamingHistoryController } from "../controllers/userStreamingHistoryController";
 import { validateRequest } from "../util/validate";
+import { UserStreamingHistoryRepository } from "../repositories/userStreamingHistoryRepository";
+import { MovieRepository } from "../repositories/movieRepository";
 
 const router: Router = Router();
-const controller = new UserStreamingHistoryController();
-
+const userStreamingHistoryRepository = new UserStreamingHistoryRepository();
+const movieRepository = new MovieRepository();
+const controller = new UserStreamingHistoryController(
+  userStreamingHistoryRepository,
+  movieRepository
+);
 /**
  * @swagger
  * tags:
