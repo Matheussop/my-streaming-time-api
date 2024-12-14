@@ -39,6 +39,15 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>({
     }
    },
   url: { type: String, required: true },
+},
+{
+  timestamps: true,
+  toJSON: { 
+    transform: (_, ret) => {
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 movieSchema.static('findByTitle', function(title: string, skip: number, limit: number): Promise<IMovie[] | null> {
