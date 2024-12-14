@@ -1,26 +1,59 @@
 import { Schema, model, Document } from "mongoose";
 
+export interface StreamingHistoryEntry {
+  streamingId: string;
+  title: string;
+  durationInMinutes: number;
+}
 export interface IUserStreamingHistory extends Document {
   userId: string;
-  watchHistory: Array<{
-    streamingId: string;
-    title: string;
-    durationInMinutes: number;
-  }>;
-  totalWatchTimeInMinutes: number,
+  watchHistory: StreamingHistoryEntry[];
+  totalWatchTimeInMinutes: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const userStreamingHistorySchema = new Schema<IUserStreamingHistory>({
-  userId: { type: String, required: true },
-  watchHistory: [
-    {
-      streamingId: { type: String, required: true },
-      title: { type: String, required: true },
-      durationInMinutes: { type: Number, required: true },
+const userStreamingHistorySchema = new Schema<IUserStreamingHistory>(
+  {
+    userId: { 
+      type: String, 
+      required: [true, 'User ID is required'],
+      index: true // Melhora performance de busca
     },
-  ],
-  totalWatchTimeInMinutes: { type: Number, default: 0 },
-});
+    watchHistory: [
+      {
+        streamingId: { 
+          type: String, 
+          required: [true, 'Streaming ID is required'] 
+        },
+        title: { 
+          type: String, 
+          required: [true, 'Title is required'],
+          trim: true 
+        },
+        durationInMinutes: { 
+          type: Number, 
+          required: [true, 'Duration is required'],
+          min: [0, 'Duration cannot be negative'] 
+        },
+      },
+    ],
+    totalWatchTimeInMinutes: { 
+      type: Number, 
+      default: 0,
+      min: [0, 'Total watch time cannot be negative']
+    },
+  },
+  { 
+    timestamps: true,
+    toJSON: { 
+      transform: (_, ret) => {
+        delete ret.__v;
+        return ret;
+      }
+    }
+  }
+);
 
 // Hook to automatically update the user's total streaming hours
 userStreamingHistorySchema.pre("save", function (next) {
@@ -32,7 +65,7 @@ userStreamingHistorySchema.pre("save", function (next) {
 });
 
 const UserStreamingHistory = model<IUserStreamingHistory>(
-  "UserStreamingHistory",
+  'UserStreamingHistory',
   userStreamingHistorySchema
 );
 

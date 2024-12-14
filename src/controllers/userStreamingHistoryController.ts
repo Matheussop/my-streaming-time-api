@@ -1,59 +1,98 @@
-import { Request, Response } from "express";
-import UserStreamingHistory from "../models/userStreamingHistoryModel";
+import { Request, Response } from 'express';
+import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
+import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
+import { catchAsync } from '../util/catchAsync';
+import logger from '../config/logger';
+import { StreamingServiceError } from '../middleware/errorHandler';
+import { MovieRepository } from '../repositories/movieRepository';
 
-export const getUserStreamingHistory = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-    const userHistory = await UserStreamingHistory.findOne({ userId });
+export class UserStreamingHistoryController {
+  private service: UserStreamingHistoryService;
 
-    if (!userHistory) {
-      return res.status(404).json({ error: "User history not found" });
-    }
-
-    res.json(userHistory);
-  } catch (error) {
-    res.status(500).json({ error: "An error occurred while retrieving user history" });
+  constructor() {
+    const repository = new UserStreamingHistoryRepository();
+    const movieRepository = new MovieRepository();
+    this.service = new UserStreamingHistoryService(repository, movieRepository);
   }
-};
 
-// Add a streaming to user's history
-export const addStreamingToHistory = async (req: Request, res: Response) => {
-  try {
+  getUserStreamingHistory = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.params.userId;
+    logger.info({
+      message: 'Fetching user streaming history',
+      userId: userId,
+      method: req.method,
+      path: req.path
+    });
+
+    validateIdFormat(userId, 'user');
+    
+    const history = await this.service.getUserHistory(userId);
+    res.status(200).json({ history });
+  });
+
+  addStreamingToHistory = catchAsync(async (req: Request, res: Response) => {
     const { userId, streamingId, title, durationInMinutes } = req.body;
 
-    let userHistory = await UserStreamingHistory.findOne({ userId });
+    logger.info({
+      message: 'Adding streaming to history',
+      userId,
+      streamingId,
+      method: req.method,
+      path: req.path
+    });
+    
 
-    if (!userHistory) {
-      userHistory = new UserStreamingHistory({
-        userId,
-        watchHistory: [],
+    if (!req.body || Object.keys(req.body).length === 0) {
+      logger.warn({
+        message: 'Request body is missing',
+        method: req.method,
+        path: req.path
       });
+      throw new StreamingServiceError('Request body is missing', 400);
     }
 
-    userHistory.watchHistory.push({ streamingId, title, durationInMinutes });
+    validateIdFormat(userId, 'user');
+    validateIdFormat(streamingId, 'streaming');
 
-    await userHistory.save();
+    const history = await this.service.addStreamingToHistory(userId, {
+      streamingId,
+      title,
+      durationInMinutes
+    });
 
-    res.status(201).json(userHistory);
-  } catch (error) {
-    res.status(500).json({ error: "An error occurred while adding streaming to history" });
+    res.status(201).json({ message: 'Streaming entry added successfully', history });
+  });
+
+  removeStreamingFromHistory = catchAsync(async (req: Request, res: Response) => {
+    const { userId, streamingId } = req.body;
+    
+    validateIdFormat(userId, 'user');
+    validateIdFormat(streamingId, 'streaming');
+
+    const history = await this.service.removeStreamingFromHistory(userId, streamingId);
+
+    res.status(200).json({ message: 'Streaming entry removed successfully', history });
+  });
+
+  calculateTotalWatchTime = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.params.userId;
+
+    logger.info({
+      message: 'Calculating total watch time',
+      userId: userId,
+      method: req.method,
+      path: req.path
+    });
+  
+    validateIdFormat(userId, 'user');
+
+    const totalTime = await this.service.getTotalWatchTime(userId);
+    res.status(200).json({ totalWatchTimeInMinutes: totalTime });
+  });
+}
+
+const validateIdFormat = (id: string, type: string) => {
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    throw new StreamingServiceError(`Invalid ${type} ID format`, 400);
   }
-};
-
-export const calculateTotalWatchTime = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    const userHistory = await UserStreamingHistory.findOne({ userId });
-
-    if (!userHistory) {
-      return res.status(404).json({ error: "User history not found" });
-    }
-
-    // Just returns the field already calculated by the hook
-    res.json({ totalWatchTimeInMinutes: userHistory.totalWatchTimeInMinutes });
-  } catch (error) {
-    res.status(500).json({ error: "An error occurred while calculating total watch time" });
-  }
-};
-
+}
