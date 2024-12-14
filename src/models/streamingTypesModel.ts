@@ -1,22 +1,50 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IStreamingType extends Document {
+export interface ICategory {
+  id: number;
   name: string;
-  categories: Array<{
-    id: Number;
-    name: string;
-  }>;
 }
 
-const streamingTypesSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  categories: [
-    {
-      id: { type: Number, required: true },
-      name: { type: String, required: true },
-    },
-  ], 
+export interface IStreamingType extends Document {
+  _id: string;
+  name: string;
+  categories:ICategory[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const categorySchema = new Schema<ICategory>({
+  id: { 
+    type: Number, 
+    required: [true, 'Category ID is required'],
+  },
+  name: { 
+    type: String, 
+    required: [true, 'Category name is required'],
+    trim: true 
+  }
 });
+
+const streamingTypesSchema = new Schema<IStreamingType>(
+  {
+    name: { 
+      type: String, 
+      required: [true, 'Name is required'],
+      unique: true,
+      trim: true 
+    },
+    categories: [categorySchema]
+  },
+  { 
+    timestamps: true,
+    toJSON: { 
+      transform: (_, ret) => {
+        delete ret.__v;
+        return ret;
+      }
+    }
+  }
+);
 
 const StreamingTypes = mongoose.model<IStreamingType>('StreamingType', streamingTypesSchema);
 

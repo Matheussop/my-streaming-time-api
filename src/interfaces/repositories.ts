@@ -1,7 +1,7 @@
 import { IUser } from '../models/userModel';
 import { IMovie } from '../models/movieModel';
-import { IStreamingType } from '../models/streamingTypesModel';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
+import { ICategory, IStreamingTypeResponse } from './streamingTypes';
 
 export interface IBaseRepository<T> {
   findAll(skip?: number, limit?: number): Promise<T[]>;
@@ -25,4 +25,8 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
   removeFromHistory(userId: string, streamingId: string, durationToSubtract: number): Promise<IUserStreamingHistory | null>;
 }
 
-export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType> {} 
+export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse> {
+  findByName(name: string): Promise<IStreamingTypeResponse | null>;
+  addCategory(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
+  removeCategory(id: string, categoryId: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null>;
+} 

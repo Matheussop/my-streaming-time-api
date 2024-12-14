@@ -6,7 +6,7 @@ import setupSwagger from './swagger';
 import { errorHandler } from './middleware/errorHandler';
 
 import userStreamingHistoryRoutes from "./routes/userStreamingHistoryRoutes";
-import streamingTypesRoutes from "./routes/streamingTypesRoutes";
+import streamingTypeRoutes from "./routes/streamingTypeRoutes";
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
 
@@ -28,7 +28,7 @@ const startServer = async () => {
 
     // Routes
     app.use('/movies', movieRoutes);
-    app.use('/streamingTypes', streamingTypesRoutes);
+    app.use('/streamingTypes', streamingTypeRoutes);
     app.use("/user", userRoutes); 
     app.use("/user-streaming-history", userStreamingHistoryRoutes);
 
