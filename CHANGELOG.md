@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance optimizations
 - Additional TMDB features
 
+## Release Process
+1. Code freeze and testing
+2. Version bump in package.json
+3. Update CHANGELOG.md
+4. Create release tag
+5. Deploy to production
+
 ## [1.0.0] - 2024-12-15
 ### Added
 - Basic CRUD operations for movies
@@ -24,10 +31,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 - Initial release
-  
-## Release Process
-1. Code freeze and testing
-2. Version bump in package.json
-3. Update CHANGELOG.md
-4. Create release tag
-5. Deploy to production

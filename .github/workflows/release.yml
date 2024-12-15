@@ -1,0 +1,40 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get code
+      uses: actions/checkout@v3
+
+    - name: Set version from tag
+      id: set_version
+      run: |
+        VERSION=${GITHUB_REF_NAME#v} 
+        echo "VERSION=$VERSION" >> $GITHUB_ENV 
+
+    # Generate release body from CHANGELOG.md
+    - name: Get Changelog
+      id: changelog_reader
+      uses: mindsers/changelog-reader-action@v1
+      with:
+        version: ${{ env.VERSION }}
+        path: ./CHANGELOG.md
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        body: ${{ steps.changelog_reader.outputs.log_entry }}
+        draft: false
+        prerelease: false
