@@ -79,9 +79,9 @@ The API documentation is available via Swagger UI at `/api-docs` when the server
 
 Example request using curl:
 ```bash
-curl -X POST http://localhost:5000/api/auth \
+curl -X POST http://localhost:5000/user/login \
 -H "Content-Type: application/json" \
--d '{"username": "test", "password": "test"}'
+-d '{"email": "test@test.com", "password": "test"}'
 ```
 
 ### Main Endpoints
