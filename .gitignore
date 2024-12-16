@@ -2,3 +2,8 @@
 /node_modules
 /.vscode
 /logs
+
+# Test coverage
+/coverage
+*.lcov
+.nyc_output
