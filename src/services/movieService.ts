@@ -22,7 +22,7 @@ export class MovieService {
   }
 
   async createMovie(movieData: any) {
-    await this.checkDuplicateTitle(movieData.title);
+    await this.checkDuplicateTitle(movieData.title.trim());
 
     const processedData = {
       title: movieData.title.trim(),
@@ -40,6 +40,7 @@ export class MovieService {
   async updateMovie(id: string, updateData: any) {
 
     const existingMovie = await this.movieRepository.findById(id);
+    
     if (!existingMovie) {
       logger.warn({
         message: 'Movie not found for update',
@@ -86,7 +87,7 @@ export class MovieService {
   // Private validation and processing methods
   private async checkDuplicateTitle(title: string) {
     const movies = await this.movieRepository.findByTitle(title, 0, 1);
-    if (movies) {
+    if (movies && movies.length > 0) {
       throw new StreamingServiceError('Movie with this title already exists', 400);
     }
   }
