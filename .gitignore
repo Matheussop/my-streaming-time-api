@@ -2,6 +2,10 @@
 /node_modules
 /.vscode
 /logs
+.env
+.env.docker
+.env.local
+dist/
 
 # Test coverage
 /coverage
