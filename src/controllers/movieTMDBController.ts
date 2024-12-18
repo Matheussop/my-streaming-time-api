@@ -108,8 +108,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     }
 
     if(!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === ''){
-      console.log("TMDB_Bearer_Token inválido");
-      return 
+      throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
     }
     
     const encodedQueryParams = encodeURIComponent(title.trim());
