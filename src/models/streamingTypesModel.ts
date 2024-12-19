@@ -8,42 +8,42 @@ export interface ICategory {
 export interface IStreamingType extends Document {
   _id: string;
   name: string;
-  categories:ICategory[];
+  categories: ICategory[];
   createdAt: Date;
   updatedAt: Date;
 }
 
 const categorySchema = new Schema<ICategory>({
-  id: { 
-    type: Number, 
+  id: {
+    type: Number,
     required: [true, 'Category ID is required'],
   },
-  name: { 
-    type: String, 
+  name: {
+    type: String,
     required: [true, 'Category name is required'],
-    trim: true 
-  }
+    trim: true,
+  },
 });
 
 const streamingTypesSchema = new Schema<IStreamingType>(
   {
-    name: { 
-      type: String, 
+    name: {
+      type: String,
       required: [true, 'Name is required'],
       unique: true,
-      trim: true 
+      trim: true,
     },
-    categories: [categorySchema]
+    categories: [categorySchema],
   },
-  { 
+  {
     timestamps: true,
-    toJSON: { 
+    toJSON: {
       transform: (_, ret) => {
         delete ret.__v;
         return ret;
-      }
-    }
-  }
+      },
+    },
+  },
 );
 
 const StreamingTypes = mongoose.model<IStreamingType>('StreamingType', streamingTypesSchema);

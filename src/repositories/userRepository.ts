@@ -3,10 +3,7 @@ import User, { IUser } from '../models/userModel';
 
 export class UserRepository implements IUserRepository {
   async findAll(skip = 0, limit = 10): Promise<IUser[]> {
-    return User.find()
-      .skip(skip)
-      .limit(limit)
-      .select('-password'); 
+    return User.find().skip(skip).limit(limit).select('-password');
   }
 
   async findById(id: string): Promise<IUser | null> {
@@ -26,14 +23,14 @@ export class UserRepository implements IUserRepository {
     return User.findByIdAndUpdate(
       id,
       { $set: data }, // Using $set to update only the provided fields
-      { 
+      {
         new: true,
-        runValidators: true
-      }
+        runValidators: true,
+      },
     ).select('-password');
   }
 
   async delete(id: string): Promise<IUser | null> {
     return User.findByIdAndDelete(id);
   }
-} 
+}

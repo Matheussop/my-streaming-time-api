@@ -4,13 +4,13 @@ import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
 
 export interface Movie_TMDB {
-  genre_ids: number[],
-  original_title: string,
-  overview: string,
-  poster_path: string,
-  release_date: string,
-  title: string,
-  vote_average: number,
+  genre_ids: number[];
+  original_title: string;
+  overview: string;
+  poster_path: string;
+  release_date: string;
+  title: string;
+  vote_average: number;
 }
 
 export const getExternalMovies = async (req: Request, res: Response): Promise<void> => {
@@ -20,8 +20,8 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
       method: 'GET',
       headers: {
         accept: 'application/json',
-        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`
-      }
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+      },
     };
     const response = await axios.get(url, options);
     const myResponse = response.data.results.map((movie: any, index: number) => {
@@ -32,8 +32,8 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
         plot: movie.overview,
         genre: movie.genre_ids,
         rating: movie.vote_average,
-        url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-      }
+        url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
+      };
     });
     res.status(200).json(myResponse.splice(0, 8));
   } catch (err: any) {
@@ -50,24 +50,25 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
       method: 'GET',
       headers: {
         accept: 'application/json',
-        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`
-      }
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+      },
     };
     const response = await axios.get(url, options);
 
     const externalMovies = response.data.results;
 
     const existingMovies = await Movie.find({}, 'title').lean();
-    const existingTitles = existingMovies.map(movie => movie.title);
+    const existingTitles = existingMovies.map((movie) => movie.title);
 
-    const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
+    const newMovies = externalMovies
+      .filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
       .map((externalMovie: any) => ({
         title: externalMovie.title,
         release_date: externalMovie.release_date,
         plot: externalMovie.overview,
         genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
-        url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
+        url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
 
     const savedMovies = await Movie.insertMany(newMovies);
@@ -88,13 +89,12 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
   }
 
   try {
-    
     const regex = new RegExp(title, 'i'); // 'i' for case-insensitive
-    
+
     const existingMovies = await Movie.find({ title: { $regex: regex } })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     if (existingMovies.length > 5) {
       res.status(200).json({
@@ -103,14 +103,14 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         total: existingMovies.length,
         movies: existingMovies,
       });
-      console.log("Movie already existed in database with this parameter")
+      console.log('Movie already existed in database with this parameter');
       return;
     }
 
-    if(!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === ''){
+    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
       throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
     }
-    
+
     const encodedQueryParams = encodeURIComponent(title.trim());
     // If not in database, check external API
     const url = `https://api.themoviedb.org/3/search/movie?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1`;
@@ -120,11 +120,11 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
       method: 'GET',
       headers: {
         accept: 'application/json',
-        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`
-      }
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+      },
     };
     const response = await axios.get(url, options);
-    console.log("To consultando o TMDB")
+    console.log('To consultando o TMDB');
 
     if (response.data.results.length > 0) {
       const externalMovies = response.data.results.map((externalMovie: any) => ({
@@ -133,16 +133,18 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         plot: externalMovie.overview,
         rating: externalMovie.vote_average,
         genre: externalMovie.genre_ids,
-        url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`
+        url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
-      
-      const existingMovies = await Movie.find({ title: { $in: externalMovies.map((movie: any) => movie.title) } }, 'title').lean();
-      const existingTitles = existingMovies.map(movie => movie.title);
-      
-      const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
+
+      const existingMovies = await Movie.find(
+        { title: { $in: externalMovies.map((movie: any) => movie.title) } },
+        'title',
+      ).lean();
+      const existingTitles = existingMovies.map((movie) => movie.title);
+
+      const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title));
 
       if (newMovies.length > 0) {
-        
         const savedMovies = await Movie.insertMany(newMovies);
         res.status(200).json({
           page,
@@ -153,7 +155,6 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
       } else {
         res.status(200).json({ movies: externalMovies });
       }
-
     } else {
       throw new StreamingServiceError('Movie not found', 404);
     }

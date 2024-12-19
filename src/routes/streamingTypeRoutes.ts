@@ -3,7 +3,6 @@ import { StreamingTypeRepository } from '../repositories/streamingTypeRepository
 import { StreamingTypeController } from '../controllers/streamingTypeController';
 import { validateRequest } from '../util/validate';
 
-
 const router = Router();
 const repository = new StreamingTypeRepository();
 const controller = new StreamingTypeController(repository);
@@ -69,7 +68,7 @@ router.get('/:id', controller.getStreamingTypeById);
  *       400:
  *         description: Invalid input
  */
-router.post('/', (req, res, next) => validateRequest(req, res, next, ["name"]), controller.createStreamingType);
+router.post('/', (req, res, next) => validateRequest(req, res, next, ['name']), controller.createStreamingType);
 
 /**
  * @swagger
@@ -100,7 +99,7 @@ router.post('/', (req, res, next) => validateRequest(req, res, next, ["name"]), 
  *       404:
  *         description: Streaming type not found
  */
-router.put('/:id', (req, res, next) => validateRequest(req, res, next, ["categories"]), controller.updateStreamingType);
+router.put('/:id', (req, res, next) => validateRequest(req, res, next, ['categories']), controller.updateStreamingType);
 
 /**
  * @swagger
@@ -141,7 +140,11 @@ router.put('/:id', (req, res, next) => validateRequest(req, res, next, ["categor
  *       404:
  *         description: Streaming type not found
  */
-router.put('/addCategory/:id', (req, res, next) => validateRequest(req, res, next, ["categories"]), controller.addCategoryToStreamingType);
+router.put(
+  '/addCategory/:id',
+  (req, res, next) => validateRequest(req, res, next, ['categories']),
+  controller.addCategoryToStreamingType,
+);
 
 /**
  * @swagger
@@ -177,7 +180,11 @@ router.put('/addCategory/:id', (req, res, next) => validateRequest(req, res, nex
  *       404:
  *         description: Streaming type or categories not found
  */
-router.put('/removeCategory/:id', (req, res, next) => validateRequest(req, res, next, ["categories"]), controller.removeCategoryFromStreamingType);
+router.put(
+  '/removeCategory/:id',
+  (req, res, next) => validateRequest(req, res, next, ['categories']),
+  controller.removeCategoryFromStreamingType,
+);
 
 /**
  * @swagger

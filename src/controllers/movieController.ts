@@ -20,24 +20,24 @@ export class MovieController {
       message: 'Fetching movies by title',
       title,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     const movies = await this.movieService.getMoviesByTitle(title, skip, limit);
     res.status(200).json(movies);
   });
 
-  getMovies = catchAsync(async (req: Request, res: Response): Promise<void> =>{
+  getMovies = catchAsync(async (req: Request, res: Response): Promise<void> => {
     const { page = 1, limit = 10 } = req.body;
     const skip = (Number(page) - 1) * Number(limit);
-  
+
     logger.info({
       message: 'Fetching movies list',
       page,
       limit,
       skip,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     if (Number(limit) > 100) {
@@ -46,7 +46,6 @@ export class MovieController {
 
     const movies = await this.movieService.getMovies(skip, limit);
     res.status(200).json(movies);
-
   });
 
   getMovieById = catchAsync(async (req: Request, res: Response): Promise<void> => {
@@ -56,7 +55,7 @@ export class MovieController {
       message: 'Fetching movie by ID',
       movieId: req.params.id,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -64,7 +63,7 @@ export class MovieController {
     }
 
     const movie = await this.movieService.getMovieById(id);
-  
+
     res.status(200).json(movie);
   });
 
@@ -73,19 +72,18 @@ export class MovieController {
       message: 'Creating new movie',
       movieData: req.body,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
-  
 
     if (!req.body || Object.keys(req.body).length === 0) {
       logger.warn({
         message: 'Request body is missing',
         method: req.method,
-        path: req.path
+        path: req.path,
       });
       throw new StreamingServiceError('Request body is missing', 400);
     }
-  
+
     const movie = new Movie({
       title: req.body.title,
       release_date: req.body.release_date,
@@ -95,7 +93,7 @@ export class MovieController {
       rating: parseFloat(req.body.rating),
       url: req.body.url,
     });
-  
+
     const newMovie = await this.movieService.createMovie(movie);
     res.status(201).json(newMovie);
   });
@@ -108,7 +106,7 @@ export class MovieController {
       movieId: id,
       updateData: req.body,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -130,10 +128,8 @@ export class MovieController {
       message: 'Deleting movie',
       movieId: req.params.id,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
-    
-
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new StreamingServiceError('Invalid movie ID format', 400);
@@ -142,5 +138,5 @@ export class MovieController {
     await this.movieService.deleteMovie(id);
 
     res.status(200).json({ message: 'Movie deleted successfully' });
-  })
+  });
 }

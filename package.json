@@ -16,7 +16,8 @@
     "dev": "ts-node-dev src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "prettier:write": "prettier --write \"src/**/*.ts\""
   },
   "keywords": [],
   "author": "Matheus Spindula",

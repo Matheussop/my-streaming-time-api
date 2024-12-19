@@ -14,7 +14,7 @@ export class MovieService {
     if (!movie) {
       logger.warn({
         message: 'Movie not found',
-        movieId: id
+        movieId: id,
       });
       throw new StreamingServiceError('Movie not found', 404);
     }
@@ -38,13 +38,12 @@ export class MovieService {
   }
 
   async updateMovie(id: string, updateData: any) {
-
     const existingMovie = await this.movieRepository.findById(id);
-    
+
     if (!existingMovie) {
       logger.warn({
         message: 'Movie not found for update',
-        movieId: id
+        movieId: id,
       });
       throw new StreamingServiceError('Movie not found', 404);
     }
@@ -64,7 +63,7 @@ export class MovieService {
     if (!movie) {
       logger.warn({
         message: 'Movie not found for deletion',
-        movieId: id
+        movieId: id,
       });
       throw new StreamingServiceError('Movie not found', 404);
     }
@@ -72,11 +71,11 @@ export class MovieService {
   }
 
   async getMoviesByTitle(title: string, skip?: number, limit?: number) {
-    const movies =  await this.movieRepository.findByTitle(title, skip, limit);
+    const movies = await this.movieRepository.findByTitle(title, skip, limit);
     if (!movies || movies.length <= 0) {
       logger.warn({
         message: 'Movie not found',
-        title: title	
+        title: title,
       });
       throw new StreamingServiceError('Movie not found', 404);
     }
@@ -126,12 +125,12 @@ export class MovieService {
     if (!Array.isArray(cast)) {
       throw new StreamingServiceError('Cast must be an array', 400);
     }
-    return cast.map(actor => actor.trim());
+    return cast.map((actor) => actor.trim());
   }
 
   private async processUpdateData(data: any) {
     const processed: any = {};
-    
+
     if (data.title) processed.title = data.title.trim();
     if (data.rating) processed.rating = this.validateRating(data.rating);
     if (data.release_date) processed.release_date = this.validateReleaseDate(data.release_date);

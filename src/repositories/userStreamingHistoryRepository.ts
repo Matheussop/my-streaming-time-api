@@ -1,11 +1,12 @@
 import { IUserStreamingHistoryRepository } from '../interfaces/repositories';
-import UserStreamingHistory, { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
+import UserStreamingHistory, {
+  IUserStreamingHistory,
+  StreamingHistoryEntry,
+} from '../models/userStreamingHistoryModel';
 
 export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepository {
   async findAll(skip = 0, limit = 10): Promise<IUserStreamingHistory[]> {
-    return UserStreamingHistory.find()
-      .skip(skip)
-      .limit(limit);
+    return UserStreamingHistory.find().skip(skip).limit(limit);
   }
 
   async findById(id: string): Promise<IUserStreamingHistory | null> {
@@ -28,7 +29,7 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
       history = await this.create({
         userId,
         watchHistory: [],
-        totalWatchTimeInMinutes: 0
+        totalWatchTimeInMinutes: 0,
       });
     }
 
@@ -37,28 +38,22 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
   }
 
   async update(id: string, data: Partial<IUserStreamingHistory>): Promise<IUserStreamingHistory | null> {
-    return UserStreamingHistory.findByIdAndUpdate(
-      id,
-      { $set: data },
-      { new: true, runValidators: true }
-    );
+    return UserStreamingHistory.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 
   async delete(id: string): Promise<IUserStreamingHistory | null> {
     return UserStreamingHistory.findByIdAndDelete(id);
   }
 
-  async removeFromHistory(userId: string, 
-    streamingId: string, 
-    durationToSubtract: number
+  async removeFromHistory(
+    userId: string,
+    streamingId: string,
+    durationToSubtract: number,
   ): Promise<IUserStreamingHistory | null> {
-
     return UserStreamingHistory.findOneAndUpdate(
       { userId },
-      { $pull: { watchHistory: { streamingId } },
-        $inc: { totalWatchTimeInMinutes: -durationToSubtract }
-    },  
-      { new: true }
+      { $pull: { watchHistory: { streamingId } }, $inc: { totalWatchTimeInMinutes: -durationToSubtract } },
+      { new: true },
     );
   }
-} 
+}

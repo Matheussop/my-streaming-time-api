@@ -1,16 +1,13 @@
-import { Router } from "express";
-import { UserStreamingHistoryController } from "../controllers/userStreamingHistoryController";
-import { validateRequest } from "../util/validate";
-import { UserStreamingHistoryRepository } from "../repositories/userStreamingHistoryRepository";
-import { MovieRepository } from "../repositories/movieRepository";
+import { Router } from 'express';
+import { UserStreamingHistoryController } from '../controllers/userStreamingHistoryController';
+import { validateRequest } from '../util/validate';
+import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
+import { MovieRepository } from '../repositories/movieRepository';
 
 const router: Router = Router();
 const userStreamingHistoryRepository = new UserStreamingHistoryRepository();
 const movieRepository = new MovieRepository();
-const controller = new UserStreamingHistoryController(
-  userStreamingHistoryRepository,
-  movieRepository
-);
+const controller = new UserStreamingHistoryController(userStreamingHistoryRepository, movieRepository);
 /**
  * @swagger
  * tags:
@@ -37,9 +34,9 @@ const controller = new UserStreamingHistoryController(
  *       404:
  *         description: User history not found
  *       500:
- *         description: Server error 
+ *         description: Server error
  */
-router.get("/:userId", controller.getUserStreamingHistory);
+router.get('/:userId', controller.getUserStreamingHistory);
 
 /**
  * @swagger
@@ -75,9 +72,10 @@ router.get("/:userId", controller.getUserStreamingHistory);
  *       500:
  *         description: Server error
  */
-router.post("/",
-  (req, res, next) => validateRequest(req, res, next, ["userId", "streamingId", "title", "durationInMinutes"]),
-  controller.addStreamingToHistory
+router.post(
+  '/',
+  (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId', 'title', 'durationInMinutes']),
+  controller.addStreamingToHistory,
 );
 
 /**
@@ -98,15 +96,18 @@ router.post("/",
  *     responses:
  *       200:
  *         description: Streaming entry removed successfully
- *       404: 
+ *       404:
  *         description: Streaming entry not found or Failed to update history
  *       400:
  *         description: Invalid request data
  *       500:
  *         description: Server error
  */
-router.delete("/", (req, res, next) => validateRequest(req, res, next, ["userId", "streamingId"]), controller.removeStreamingFromHistory);
-
+router.delete(
+  '/',
+  (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId']),
+  controller.removeStreamingFromHistory,
+);
 
 /**
  * @swagger
@@ -129,6 +130,6 @@ router.delete("/", (req, res, next) => validateRequest(req, res, next, ["userId"
  *       500:
  *         description: Server error
  */
-router.get("/:userId/total-watch-time", controller.calculateTotalWatchTime);
+router.get('/:userId/total-watch-time', controller.calculateTotalWatchTime);
 
 export default router;

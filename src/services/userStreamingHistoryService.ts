@@ -4,8 +4,9 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
 
 export class UserStreamingHistoryService {
-  constructor(private repository: IUserStreamingHistoryRepository,
-    private movieRepository: IMovieRepository
+  constructor(
+    private repository: IUserStreamingHistoryRepository,
+    private movieRepository: IMovieRepository,
   ) {}
 
   async getUserHistory(userId: string): Promise<IUserStreamingHistory> {
@@ -13,17 +14,14 @@ export class UserStreamingHistoryService {
     if (!history) {
       logger.warn({
         message: 'User history not found',
-        userId
+        userId,
       });
       throw new StreamingServiceError('User history not found', 404);
     }
     return history;
   }
 
-  async addStreamingToHistory(
-    userId: string,
-    streamingData: StreamingHistoryEntry 
-  ): Promise<IUserStreamingHistory> {
+  async addStreamingToHistory(userId: string, streamingData: StreamingHistoryEntry): Promise<IUserStreamingHistory> {
     this.validateStreamingData(streamingData);
 
     const streaming = await this.movieRepository.findById(streamingData.streamingId);
@@ -31,7 +29,7 @@ export class UserStreamingHistoryService {
       logger.warn({
         message: 'Streaming not found',
         streamingId: streamingData.streamingId,
-        userId
+        userId,
       });
       throw new StreamingServiceError('Streaming not found', 404);
     }
@@ -41,14 +39,14 @@ export class UserStreamingHistoryService {
         message: 'Streaming title mismatch',
         providedTitle: streamingData.title,
         actualTitle: streaming.title,
-        streamingId: streamingData.streamingId
+        streamingId: streamingData.streamingId,
       });
       throw new StreamingServiceError('Invalid streaming title', 400);
     }
 
     const history = await this.getUserHistory(userId);
 
-    const streamingInHistory = history.watchHistory.find(entry => entry.streamingId === streamingData.streamingId);
+    const streamingInHistory = history.watchHistory.find((entry) => entry.streamingId === streamingData.streamingId);
     if (streamingInHistory) {
       throw new StreamingServiceError('Streaming already in history', 400);
     }
@@ -61,17 +59,17 @@ export class UserStreamingHistoryService {
 
     const history = await this.getUserHistory(userId);
 
-    const streaming = history.watchHistory.find(entry => entry.streamingId === streamingId);
+    const streaming = history.watchHistory.find((entry) => entry.streamingId === streamingId);
     if (!streaming) {
       logger.warn({
         message: 'Streaming not found in history',
         streamingId,
-        userId
+        userId,
       });
       throw new StreamingServiceError('Streaming not found in history', 404);
     }
     const durationToSubtract = streaming.durationInMinutes || 0;
-    
+
     const updatedHistory = await this.repository.removeFromHistory(userId, streamingId, durationToSubtract);
     if (!history) {
       throw new StreamingServiceError('Failed to update history', 404);
@@ -96,5 +94,4 @@ export class UserStreamingHistoryService {
       throw new StreamingServiceError('Invalid duration', 400);
     }
   }
-  
-} 
+}

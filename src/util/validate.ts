@@ -3,7 +3,7 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 
 export const validateRequiredFields = (body: any, requiredFields: string[]): string[] => {
   const missingFields: string[] = [];
-  requiredFields.forEach(field => {
+  requiredFields.forEach((field) => {
     if (!body[field]) {
       missingFields.push(field);
     }

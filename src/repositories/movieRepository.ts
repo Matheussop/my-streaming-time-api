@@ -26,4 +26,4 @@ export class MovieRepository implements IMovieRepository {
   async findByTitle(title: string, skip: number, limit: number): Promise<IMovie[] | null> {
     return Movie.findByTitle(title, skip, limit);
   }
-} 
+}

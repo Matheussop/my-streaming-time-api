@@ -17,14 +17,14 @@ export class UserController {
       message: 'Registering new user',
       email: req.body.email,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     if (!req.body || Object.keys(req.body).length === 0) {
       logger.warn({
         message: 'Request body is missing',
         method: req.method,
-        path: req.path
+        path: req.path,
       });
       throw new StreamingServiceError('Request body is missing', 400);
     }
@@ -38,7 +38,7 @@ export class UserController {
       message: 'User login attempt',
       email: req.body.email,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     const user = await this.userService.loginUser(req.body.email, req.body.password);
@@ -51,7 +51,7 @@ export class UserController {
       message: 'Fetching user by ID',
       userId: req.params.id,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -67,7 +67,7 @@ export class UserController {
       message: 'Updating user',
       userId: req.params.id,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     const user = await this.userService.updateUser(req.params.id, req.body);
@@ -79,7 +79,7 @@ export class UserController {
       message: 'Deleting user',
       userId: req.params.id,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     await this.userService.deleteUser(req.params.id);
@@ -91,7 +91,7 @@ export class UserController {
       message: 'List users',
       userId: req.params.id,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     const users = await this.userService.getAllUsers();

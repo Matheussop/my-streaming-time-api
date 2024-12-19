@@ -39,9 +39,10 @@ const userController = new UserController(userRepository);
  *       400:
  *         description: Invalid input
  */
-userRoutes.post('/register',
+userRoutes.post(
+  '/register',
   (req, res, next) => validateRequest(req, res, next, ['name', 'email', 'password']),
-  userController.registerUser
+  userController.registerUser,
 );
 
 /**
@@ -67,9 +68,10 @@ userRoutes.post('/register',
  *       401:
  *         description: Invalid credentials
  */
-userRoutes.post('/login',
+userRoutes.post(
+  '/login',
   (req, res, next) => validateRequest(req, res, next, ['email', 'password']),
-  userController.loginUser
+  userController.loginUser,
 );
 
 /**
@@ -123,9 +125,10 @@ userRoutes.get('/:id', userController.getUserById);
  *       404:
  *         description: User not found
  */
-userRoutes.put('/:id',
+userRoutes.put(
+  '/:id',
   (req, res, next) => validateRequest(req, res, next, ['name', 'email']),
-  userController.updateUser
+  userController.updateUser,
 );
 
 /**
@@ -158,6 +161,6 @@ userRoutes.delete('/:id', userController.deleteUser);
  *       200:
  *         description: A list of users
  */
-userRoutes.get('/', userController.listUsers); 
+userRoutes.get('/', userController.listUsers);
 
 export default userRoutes;

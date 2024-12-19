@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
   _id: string;
@@ -19,45 +19,45 @@ export interface IUserModel extends Model<IUser, {}, IUserMethods> {
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
-    name: { 
-      type: String, 
+    name: {
+      type: String,
       required: [true, 'Name is required'],
-      trim: true
+      trim: true,
     },
-    email: { 
-      type: String, 
+    email: {
+      type: String,
       required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
-      trim: true
+      trim: true,
     },
-    password: { 
-      type: String, 
+    password: {
+      type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters long'],
-      select: false
+      select: false,
     },
-    createdAt: { 
-      type: Date, 
-      default: Date.now 
-    }
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { 
+  {
     timestamps: true,
-    toJSON: { 
+    toJSON: {
       transform: (_, ret) => {
         delete ret.__v;
         delete ret.password;
         return ret;
-      }
-    }
-  }
+      },
+    },
+  },
 );
 
-userSchema.static('findByEmail', function(email: string) {
+userSchema.static('findByEmail', function (email: string) {
   return this.findOne({ email: new RegExp(email, 'i') });
 });
 
-const User = mongoose.model<IUser, IUserModel>("User", userSchema);
+const User = mongoose.model<IUser, IUserModel>('User', userSchema);
 
 export default User;

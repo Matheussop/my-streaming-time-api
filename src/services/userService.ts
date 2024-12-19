@@ -21,7 +21,7 @@ export class UserService {
     await this.checkDuplicateEmail(userData.email);
 
     // const hashedPassword = await bcrypt.hash(userData.password, 10); // TODO: Implement bcrypt
-    
+
     const newUser = await this.userRepository.create({
       ...userData,
       // password: hashedPassword
@@ -93,4 +93,4 @@ export class UserService {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
-} 
+}

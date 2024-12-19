@@ -16,7 +16,6 @@ const movieController = new MovieController(movieRepository);
  *   description: Movie management
  */
 
-
 /**
  * @swagger
  * /movies/title:
@@ -34,7 +33,11 @@ const movieController = new MovieController(movieRepository);
  *       404:
  *         description: Movie not found
  */
-movieRouter.get('/title', (req,res,next) => validateRequest(req, res, next, ['title']), movieController.getMoviesByTitle);
+movieRouter.get(
+  '/title',
+  (req, res, next) => validateRequest(req, res, next, ['title']),
+  movieController.getMoviesByTitle,
+);
 
 /**
  * @swagger
@@ -68,9 +71,10 @@ movieRouter.get('/title', (req,res,next) => validateRequest(req, res, next, ['ti
  *       201:
  *         description: Movie created successfully
  */
-movieRouter.post('/',
+movieRouter.post(
+  '/',
   (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'release_date']),
-  movieController.createMovie
+  movieController.createMovie,
 );
 
 /**
@@ -104,7 +108,7 @@ movieRouter.get('/', movieController.getMovies);
  *     tags: [Movies]
  *     responses:
  *       200:
- *         description: A list of movies 
+ *         description: A list of movies
  */
 movieRouter.get('/external', getExternalMovies);
 
@@ -145,8 +149,7 @@ movieRouter.post('/external', fetchAndSaveExternalMovies);
  *       400:
  *         description: Invalid input
  */
-movieRouter.post('/findOrAddMovie',
-  (req, res, next) => validateRequest(req, res, next, ['title']), findOrAddMovie);
+movieRouter.post('/findOrAddMovie', (req, res, next) => validateRequest(req, res, next, ['title']), findOrAddMovie);
 /**
  * @swagger
  * /movies/{id}:

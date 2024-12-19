@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document } from 'mongoose';
 
 export interface StreamingHistoryEntry {
   streamingId: string;
@@ -15,58 +15,52 @@ export interface IUserStreamingHistory extends Document {
 
 const userStreamingHistorySchema = new Schema<IUserStreamingHistory>(
   {
-    userId: { 
-      type: String, 
+    userId: {
+      type: String,
       required: [true, 'User ID is required'],
-      index: true // Melhora performance de busca
+      index: true, // Melhora performance de busca
     },
     watchHistory: [
       {
-        streamingId: { 
-          type: String, 
-          required: [true, 'Streaming ID is required'] 
+        streamingId: {
+          type: String,
+          required: [true, 'Streaming ID is required'],
         },
-        title: { 
-          type: String, 
+        title: {
+          type: String,
           required: [true, 'Title is required'],
-          trim: true 
+          trim: true,
         },
-        durationInMinutes: { 
-          type: Number, 
+        durationInMinutes: {
+          type: Number,
           required: [true, 'Duration is required'],
-          min: [0, 'Duration cannot be negative'] 
+          min: [0, 'Duration cannot be negative'],
         },
       },
     ],
-    totalWatchTimeInMinutes: { 
-      type: Number, 
+    totalWatchTimeInMinutes: {
+      type: Number,
       default: 0,
-      min: [0, 'Total watch time cannot be negative']
+      min: [0, 'Total watch time cannot be negative'],
     },
   },
-  { 
+  {
     timestamps: true,
-    toJSON: { 
+    toJSON: {
       transform: (_, ret) => {
         delete ret.__v;
         return ret;
-      }
-    }
-  }
+      },
+    },
+  },
 );
 
 // Hook to automatically update the user's total streaming hours
-userStreamingHistorySchema.pre("save", function (next) {
-  this.totalWatchTimeInMinutes = this.watchHistory.reduce(
-    (total, item) => total + item.durationInMinutes,
-    0
-  );
+userStreamingHistorySchema.pre('save', function (next) {
+  this.totalWatchTimeInMinutes = this.watchHistory.reduce((total, item) => total + item.durationInMinutes, 0);
   next();
 });
 
-const UserStreamingHistory = model<IUserStreamingHistory>(
-  'UserStreamingHistory',
-  userStreamingHistorySchema
-);
+const UserStreamingHistory = model<IUserStreamingHistory>('UserStreamingHistory', userStreamingHistorySchema);
 
 export default UserStreamingHistory;

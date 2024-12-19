@@ -21,15 +21,10 @@ interface ErrorResponse {
   errors?: any;
 }
 
-export const errorHandler = (
-  err: Error | StreamingServiceError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const errorHandler = (err: Error | StreamingServiceError, req: Request, res: Response, next: NextFunction) => {
   let error = err as StreamingServiceError;
   let statusCode = error.statusCode || 500;
-  
+
   // Error logging
   logger.error({
     message: error.message,
@@ -41,21 +36,21 @@ export const errorHandler = (
     params: req.params,
     query: req.query,
     ip: req.ip,
-    userId: (req as any).user?.id 
+    userId: (req as any).user?.id,
   });
 
   const response: ErrorResponse = {
     status: 'error',
-    message: error.message || 'Internal Server Error'
+    message: error.message || 'Internal Server Error',
   };
 
   // Mongoose Validation Error
   if (err instanceof mongoose.Error.ValidationError) {
     statusCode = 400;
     response.message = 'Validation Error';
-    response.errors = Object.values(err.errors).map(e => ({
+    response.errors = Object.values(err.errors).map((e) => ({
       field: e.path,
-      message: e.message
+      message: e.message,
     }));
   }
 
@@ -71,7 +66,7 @@ export const errorHandler = (
     response.message = 'Duplicate field value entered';
   }
 
-  if(statusCode === 500){
+  if (statusCode === 500) {
     response.message = 'Internal Server Error';
   }
 
@@ -81,4 +76,4 @@ export const errorHandler = (
   }
 
   res.status(statusCode).json(response);
-}; 
+};

@@ -1,7 +1,7 @@
-import { IUserRepository } from "../../interfaces/repositories";
-import { StreamingServiceError } from "../../middleware/errorHandler";
-import { IUser } from "../../models/userModel";
-import { UserService } from "../userService";
+import { IUserRepository } from '../../interfaces/repositories';
+import { StreamingServiceError } from '../../middleware/errorHandler';
+import { IUser } from '../../models/userModel';
+import { UserService } from '../userService';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -75,7 +75,7 @@ describe('UserService', () => {
 
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(userData.email);
       expect(mockUserRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'John Doe', email: 'john@example.com' })
+        expect.objectContaining({ name: 'John Doe', email: 'john@example.com' }),
       );
       expect(result).toEqual({ id: '1', name: 'John Doe', email: 'john@example.com' });
     });
@@ -91,16 +91,18 @@ describe('UserService', () => {
     it('should throw an error if email is not valid', async () => {
       const userData = { name: 'John Doe', email: 'john-example.com', password: 'password123' };
 
-      await expect(userService.registerUser(userData)).rejects
-      .toThrow(new StreamingServiceError('Invalid email format', 400));
+      await expect(userService.registerUser(userData)).rejects.toThrow(
+        new StreamingServiceError('Invalid email format', 400),
+      );
       expect(mockUserRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw an error if password is not valid', async () => {
       const userData = { name: 'John Doe', email: 'john@example.com', password: '12345' };
 
-      await expect(userService.registerUser(userData)).rejects
-      .toThrow(new StreamingServiceError('Password must be at least 6 characters long', 400));
+      await expect(userService.registerUser(userData)).rejects.toThrow(
+        new StreamingServiceError('Password must be at least 6 characters long', 400),
+      );
 
       expect(mockUserRepository.create).not.toHaveBeenCalled();
     });
@@ -125,8 +127,9 @@ describe('UserService', () => {
     it('should throw an error if email is not found', async () => {
       mockUserRepository.findByEmail.mockResolvedValue(null);
 
-      await expect(userService.loginUser('john@example.com', 'password123')).rejects
-      .toThrow(new StreamingServiceError('Invalid credentials', 401));
+      await expect(userService.loginUser('john@example.com', 'password123')).rejects.toThrow(
+        new StreamingServiceError('Invalid credentials', 401),
+      );
     });
   });
 
@@ -153,14 +156,19 @@ describe('UserService', () => {
     it('should throw an error if user is not found', async () => {
       mockUserRepository.update.mockResolvedValue(null);
 
-      await expect(userService.updateUser('1', { email: 'updated@example.com' })).rejects
-      .toThrow(new StreamingServiceError('User not found', 404));
+      await expect(userService.updateUser('1', { email: 'updated@example.com' })).rejects.toThrow(
+        new StreamingServiceError('User not found', 404),
+      );
     });
   });
 
   describe('deleteUser', () => {
     it('should delete a user successfully', async () => {
-      mockUserRepository.delete.mockResolvedValue({ id: '1', name: 'John Doe', email: 'john@example.com' } as unknown as IUser);
+      mockUserRepository.delete.mockResolvedValue({
+        id: '1',
+        name: 'John Doe',
+        email: 'john@example.com',
+      } as unknown as IUser);
 
       const result = await userService.deleteUser('1');
 
@@ -171,8 +179,7 @@ describe('UserService', () => {
     it('should throw an error if user is not found', async () => {
       mockUserRepository.delete.mockResolvedValue(null);
 
-      await expect(userService.deleteUser('1')).rejects
-      .toThrow(new StreamingServiceError('User not found', 404));
+      await expect(userService.deleteUser('1')).rejects.toThrow(new StreamingServiceError('User not found', 404));
     });
   });
 });

@@ -1,13 +1,15 @@
 import { IStreamingTypeRepository } from '../interfaces/repositories';
-import { IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate, ICategory } from '../interfaces/streamingTypes';
+import {
+  IStreamingTypeResponse,
+  IStreamingTypeCreate,
+  IStreamingTypeUpdate,
+  ICategory,
+} from '../interfaces/streamingTypes';
 import StreamingTypes from '../models/streamingTypesModel';
 
 export class StreamingTypeRepository implements IStreamingTypeRepository {
   async findAll(skip = 0, limit = 10): Promise<IStreamingTypeResponse[]> {
-    return StreamingTypes.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    return StreamingTypes.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
   }
 
   async findById(id: string): Promise<IStreamingTypeResponse | null> {
@@ -15,8 +17,8 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
   }
 
   async findByName(name: string): Promise<IStreamingTypeResponse | null> {
-    return StreamingTypes.findOne({ 
-      name: new RegExp(`^${name}$`, 'i') 
+    return StreamingTypes.findOne({
+      name: new RegExp(`^${name}$`, 'i'),
     });
   }
 
@@ -26,11 +28,7 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
   }
 
   async update(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse | null> {
-    return StreamingTypes.findByIdAndUpdate(
-      id,
-      { $set: data },
-      { new: true, runValidators: true }
-    );
+    return StreamingTypes.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 
   async delete(id: string): Promise<IStreamingTypeResponse | null> {
@@ -38,21 +36,16 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
   }
 
   async addCategory(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null> {
-    
     return StreamingTypes.findByIdAndUpdate(
       id,
       { $addToSet: { categories: category } },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
   }
 
   async removeCategory(id: string, categories: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null> {
-    const categoryIds = categories.map(category => category.id);
+    const categoryIds = categories.map((category) => category.id);
 
-    return StreamingTypes.findByIdAndUpdate(
-      id,
-      { $pull: { categories: { id: { $in: categoryIds } } } },
-      { new: true }
-    );
+    return StreamingTypes.findByIdAndUpdate(id, { $pull: { categories: { id: { $in: categoryIds } } } }, { new: true });
   }
-} 
+}

@@ -19,11 +19,11 @@ export class UserStreamingHistoryController {
       message: 'Fetching user streaming history',
       userId: userId,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     validateIdFormat(userId, 'user');
-    
+
     const history = await this.service.getUserHistory(userId);
     res.status(200).json({ history });
   });
@@ -36,15 +36,14 @@ export class UserStreamingHistoryController {
       userId,
       streamingId,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
-    
 
     if (!req.body || Object.keys(req.body).length === 0) {
       logger.warn({
         message: 'Request body is missing',
         method: req.method,
-        path: req.path
+        path: req.path,
       });
       throw new StreamingServiceError('Request body is missing', 400);
     }
@@ -55,7 +54,7 @@ export class UserStreamingHistoryController {
     const history = await this.service.addStreamingToHistory(userId, {
       streamingId,
       title,
-      durationInMinutes
+      durationInMinutes,
     });
 
     res.status(201).json({ message: 'Streaming entry added successfully', history });
@@ -63,7 +62,7 @@ export class UserStreamingHistoryController {
 
   removeStreamingFromHistory = catchAsync(async (req: Request, res: Response) => {
     const { userId, streamingId } = req.body;
-    
+
     validateIdFormat(userId, 'user');
     validateIdFormat(streamingId, 'streaming');
 
@@ -79,9 +78,9 @@ export class UserStreamingHistoryController {
       message: 'Calculating total watch time',
       userId: userId,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
-  
+
     validateIdFormat(userId, 'user');
 
     const totalTime = await this.service.getTotalWatchTime(userId);
@@ -93,4 +92,4 @@ const validateIdFormat = (id: string, type: string) => {
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
     throw new StreamingServiceError(`Invalid ${type} ID format`, 400);
   }
-}
+};

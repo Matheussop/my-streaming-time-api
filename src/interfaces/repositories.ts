@@ -22,11 +22,15 @@ export interface IUserRepository extends IBaseRepository<IUser> {
 export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserStreamingHistory> {
   findByUserId(userId: string): Promise<IUserStreamingHistory | null>;
   addToHistory(userId: string, streamingData: StreamingHistoryEntry): Promise<IUserStreamingHistory>;
-  removeFromHistory(userId: string, streamingId: string, durationToSubtract: number): Promise<IUserStreamingHistory | null>;
+  removeFromHistory(
+    userId: string,
+    streamingId: string,
+    durationToSubtract: number,
+  ): Promise<IUserStreamingHistory | null>;
 }
 
 export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse> {
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
   addCategory(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
   removeCategory(id: string, categoryId: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null>;
-} 
+}

@@ -1,6 +1,11 @@
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { IStreamingTypeRepository } from '../interfaces/repositories';
-import { IStreamingTypeCreate, IStreamingTypeUpdate, ICategory, IStreamingTypeResponse } from '../interfaces/streamingTypes';
+import {
+  IStreamingTypeCreate,
+  IStreamingTypeUpdate,
+  ICategory,
+  IStreamingTypeResponse,
+} from '../interfaces/streamingTypes';
 import logger from '../config/logger';
 import { IStreamingType } from '../models/streamingTypesModel';
 
@@ -16,7 +21,7 @@ export class StreamingTypeService {
     if (!streamingType) {
       logger.warn({
         message: 'Streaming type not found',
-        streamingTypeId: id
+        streamingTypeId: id,
       });
       throw new StreamingServiceError('Streaming type not found', 404);
     }
@@ -26,7 +31,7 @@ export class StreamingTypeService {
   async createStreamingType(data: Partial<IStreamingType>): Promise<IStreamingTypeCreate> {
     await this.validateStreamingTypeData(data);
     await this.checkDuplicateName(data.name!);
-    
+
     return this.repository.create(data);
   }
 
@@ -50,32 +55,34 @@ export class StreamingTypeService {
     }
     return result;
   }
-  
+
   async addCategoryToStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null> {
     const streamingType = await this.getStreamingTypeById(id);
 
-    const existingIds = new Set(streamingType.categories.map(c => c.id));
-    const newCategories = category.filter(category => !existingIds.has(category.id));
-    
+    const existingIds = new Set(streamingType.categories.map((c) => c.id));
+    const newCategories = category.filter((category) => !existingIds.has(category.id));
+
     if (newCategories.length === 0) {
       throw new StreamingServiceError('Categories already exist', 400);
     }
     return this.repository.addCategory(id, newCategories);
   }
 
-  async removeCategoryFromStreamingType(id: string, categoriesIds: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null> {
+  async removeCategoryFromStreamingType(
+    id: string,
+    categoriesIds: Partial<ICategory>[],
+  ): Promise<IStreamingTypeResponse | null> {
     const streamingType = await this.getStreamingTypeById(id);
-    
-    const invalidCategories = categoriesIds.filter(categoryToRemove => 
-      !streamingType.categories.some(existingCategory => 
-        existingCategory.id === categoryToRemove.id
-      )
+
+    const invalidCategories = categoriesIds.filter(
+      (categoryToRemove) =>
+        !streamingType.categories.some((existingCategory) => existingCategory.id === categoryToRemove.id),
     );
 
     if (invalidCategories.length > 0) {
       throw new StreamingServiceError(
-        `Categories not found in streaming type: ${invalidCategories.map(c => c.id).join(', ')}`,
-        404
+        `Categories not found in streaming type: ${invalidCategories.map((c) => c.id).join(', ')}`,
+        404,
       );
     }
 
@@ -96,28 +103,26 @@ export class StreamingTypeService {
     }
   }
 
-
   private validateCategories(categories: ICategory[]): void {
     const ids = new Set();
-    
-    categories.forEach(category => {
+
+    categories.forEach((category) => {
       if (!category.id || !category.name) {
         throw new StreamingServiceError('Invalid category data', 400);
       }
-      
+
       if (ids.has(category.id)) {
         throw new StreamingServiceError('Duplicate category ID', 400);
       }
-      
+
       ids.add(category.id);
     });
   }
 
   private async checkDuplicateName(name: string, excludeId?: string): Promise<void> {
-    const existing = await this.repository.findByName(name) as IStreamingType | null;
+    const existing = (await this.repository.findByName(name)) as IStreamingType | null;
     if (existing && (!excludeId || existing._id.toString() !== excludeId)) {
       throw new StreamingServiceError('Streaming type name already exists', 400);
     }
   }
-
-} 
+}
