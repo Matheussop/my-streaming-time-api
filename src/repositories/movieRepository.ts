@@ -6,7 +6,7 @@ export class MovieRepository implements IMovieRepository {
     return Movie.find().skip(skip).limit(limit);
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<IMovie | null> {
     return Movie.findById(id);
   }
 

@@ -71,7 +71,7 @@ export class UserStreamingHistoryService {
     const durationToSubtract = streaming.durationInMinutes || 0;
 
     const updatedHistory = await this.repository.removeFromHistory(userId, streamingId, durationToSubtract);
-    if (!history) {
+    if (!updatedHistory) {
       throw new StreamingServiceError('Failed to update history', 404);
     }
     return updatedHistory;
