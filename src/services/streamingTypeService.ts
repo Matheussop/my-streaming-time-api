@@ -43,18 +43,16 @@ export class StreamingTypeService {
     return updatedType;
   }
 
-  async deleteStreamingType(id: string): Promise<void> {
+  async deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null> {
     const result = await this.repository.delete(id);
     if (!result) {
       throw new StreamingServiceError('Streaming type not found', 404);
     }
+    return result;
   }
   
   async addCategoryToStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null> {
     const streamingType = await this.getStreamingTypeById(id);
-    if (!streamingType) {
-      throw new StreamingServiceError('Streaming type not found', 404);
-    }
 
     const existingIds = new Set(streamingType.categories.map(c => c.id));
     const newCategories = category.filter(category => !existingIds.has(category.id));
@@ -67,9 +65,6 @@ export class StreamingTypeService {
 
   async removeCategoryFromStreamingType(id: string, categoriesIds: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null> {
     const streamingType = await this.getStreamingTypeById(id);
-    if (!streamingType) {
-      throw new StreamingServiceError('Streaming type not found', 404);
-    }
     
     const invalidCategories = categoriesIds.filter(categoryToRemove => 
       !streamingType.categories.some(existingCategory => 
