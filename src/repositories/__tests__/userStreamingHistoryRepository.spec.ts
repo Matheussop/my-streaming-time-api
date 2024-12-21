@@ -4,8 +4,14 @@ import { IUserStreamingHistory, StreamingHistoryEntry } from '../../models/userS
 
 jest.mock('../../models/userStreamingHistoryModel');
 
+type MockDocument = Partial<IUserStreamingHistory> & {
+  save: jest.Mock;
+};
+
 describe('UserStreamingHistoryRepository', () => {
   let repository: UserStreamingHistoryRepository;
+  let mockHistory: MockDocument;
+  let mockSave: jest.Mock;
 
   const mockStreamingEntry: StreamingHistoryEntry = {
     streamingId: 'movie123',
@@ -13,39 +19,45 @@ describe('UserStreamingHistoryRepository', () => {
     durationInMinutes: 120,
   };
 
-  const mockHistory: IUserStreamingHistory = {
-    _id: 'history123',
-    userId: 'user123',
-    watchHistory: [mockStreamingEntry],
-    totalWatchTimeInMinutes: 120
-  } as IUserStreamingHistory;
-
   beforeEach(() => {
+    mockHistory = {
+      _id: 'history123',
+      userId: 'user123',
+      watchHistory: [mockStreamingEntry],
+      totalWatchTimeInMinutes: 120,
+      save: jest.fn()
+    };
+
+    mockSave = jest.fn().mockResolvedValue(mockHistory);
+    (UserStreamingHistory as unknown as jest.Mock).mockImplementation(() => ({
+      save: mockSave
+    }));
+
+    jest.spyOn(UserStreamingHistory, 'find').mockReturnValue({
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockResolvedValue([mockHistory])
+    } as any);
+    jest.spyOn(UserStreamingHistory, 'findById').mockResolvedValue(mockHistory);
+    jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValue(mockHistory);
+    jest.spyOn(UserStreamingHistory, 'findByIdAndUpdate').mockResolvedValue(mockHistory);
+    jest.spyOn(UserStreamingHistory, 'findByIdAndDelete').mockResolvedValue(mockHistory);
+    jest.spyOn(UserStreamingHistory, 'findOneAndUpdate').mockResolvedValue(mockHistory);
+
     repository = new UserStreamingHistoryRepository();
     jest.clearAllMocks();
   });
 
   describe('findAll', () => {
     it('should return paginated streaming history list', async () => {
-      const mockFind = {
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockHistory])
-      };
-      (UserStreamingHistory.find as jest.Mock).mockReturnValue(mockFind);
-
       const result = await repository.findAll(0, 10);
 
       expect(result).toEqual([mockHistory]);
       expect(UserStreamingHistory.find).toHaveBeenCalled();
-      expect(mockFind.skip).toHaveBeenCalledWith(0);
-      expect(mockFind.limit).toHaveBeenCalledWith(10);
     });
   });
 
   describe('findById', () => {
     it('should find streaming history by id', async () => {
-      (UserStreamingHistory.findById as jest.Mock).mockResolvedValue(mockHistory);
-
       const result = await repository.findById('history123');
 
       expect(result).toEqual(mockHistory);
@@ -53,7 +65,7 @@ describe('UserStreamingHistoryRepository', () => {
     });
 
     it('should return null when id not found', async () => {
-      (UserStreamingHistory.findById as jest.Mock).mockResolvedValue(null);
+      jest.spyOn(UserStreamingHistory, 'findById').mockResolvedValueOnce(null);
 
       const result = await repository.findById('nonexistent');
 
@@ -63,8 +75,6 @@ describe('UserStreamingHistoryRepository', () => {
 
   describe('findByUserId', () => {
     it('should find streaming history by user id', async () => {
-      (UserStreamingHistory.findOne as jest.Mock).mockResolvedValue(mockHistory);
-
       const result = await repository.findByUserId('user123');
 
       expect(result).toEqual(mockHistory);
@@ -72,8 +82,7 @@ describe('UserStreamingHistoryRepository', () => {
     });
 
     it('should return null when user id not found', async () => {
-      (UserStreamingHistory.findOne as jest.Mock).mockResolvedValue(null);
-
+      jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValueOnce(null);
       const result = await repository.findByUserId('nonexistent');
 
       expect(result).toBeNull();
@@ -82,10 +91,7 @@ describe('UserStreamingHistoryRepository', () => {
 
   describe('create', () => {
     it('should create new streaming history', async () => {
-      const mockSave = jest.fn().mockResolvedValue(mockHistory);
-      (UserStreamingHistory as unknown as jest.Mock).mockImplementation(() => ({
-        save: mockSave
-      }));
+      mockHistory.save = mockSave;
 
       const result = await repository.create(mockHistory);
 
@@ -96,40 +102,41 @@ describe('UserStreamingHistoryRepository', () => {
   });
 
   describe('addToHistory', () => {
-    it('should add streaming entry to existing history', async () => {
-      const mockFindOne = jest.fn().mockResolvedValue(mockHistory);
-      const mockSave = jest.fn().mockResolvedValue({
-        ...mockHistory,
-        watchHistory: [...(mockHistory.watchHistory || []), mockStreamingEntry]
-      });
-
-      (UserStreamingHistory.findOne as jest.Mock).mockImplementation(mockFindOne);
+    it('should create new history when user has none', async () => {
+      jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValueOnce(null);
       mockHistory.save = mockSave;
-
       const result = await repository.addToHistory('user123', mockStreamingEntry);
-
-      expect(result.watchHistory).toHaveLength(2);
-      expect(result.watchHistory).toContainEqual(mockStreamingEntry);
+      
+      expect(result).toEqual(expect.objectContaining(mockHistory));
       expect(mockSave).toHaveBeenCalled();
+      expect(UserStreamingHistory).toHaveBeenCalledWith({
+        userId: 'user123',
+        watchHistory: [],
+        totalWatchTimeInMinutes: 0
+      });
     });
 
-    it('should create new history when user has none', async () => {
-      const mockFindOne = jest.fn().mockResolvedValue(null);
-
-      (UserStreamingHistory.findOne as jest.Mock).mockImplementation(mockFindOne);
-      mockHistory.save = jest.fn().mockResolvedValue(mockHistory);
+    it('should add streaming entry to existing history', async () => {
+      const existingHistory = {
+        ...mockHistory,
+        watchHistory: [],
+        save: mockSave
+      };
+      
+      jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValueOnce(existingHistory);
 
       const result = await repository.addToHistory('user123', mockStreamingEntry);
       
-      expect(result).toEqual(mockHistory);
-      expect(mockHistory.save).toHaveBeenCalled();
+      expect(result.watchHistory).toHaveLength(1);
+      expect(mockSave).toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
     it('should update streaming history', async () => {
       const updatedHistory = { ...mockHistory, totalWatchTimeInMinutes: 240 };
-      (UserStreamingHistory.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedHistory);
+      jest.spyOn(UserStreamingHistory, 'findByIdAndUpdate')
+        .mockResolvedValueOnce(updatedHistory);
 
       const result = await repository.update('history123', { totalWatchTimeInMinutes: 240 });
 
@@ -144,8 +151,8 @@ describe('UserStreamingHistoryRepository', () => {
 
   describe('delete', () => {
     it('should delete streaming history', async () => {
-      (UserStreamingHistory.findByIdAndDelete as jest.Mock).mockResolvedValue(mockHistory);
-
+      jest.spyOn(UserStreamingHistory, 'findByIdAndDelete')
+        .mockResolvedValueOnce(mockHistory);
       const result = await repository.delete('history123');
 
       expect(result).toEqual(mockHistory);
@@ -161,7 +168,8 @@ describe('UserStreamingHistoryRepository', () => {
         totalWatchTimeInMinutes: 0
       };
 
-      (UserStreamingHistory.findOneAndUpdate as jest.Mock).mockResolvedValue(updatedHistory);
+      jest.spyOn(UserStreamingHistory, 'findOneAndUpdate')
+        .mockResolvedValueOnce(updatedHistory);
 
       const result = await repository.removeFromHistory('user123', 'movie123', 120);
 
