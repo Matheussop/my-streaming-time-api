@@ -16,7 +16,7 @@ export class MovieRepository implements IMovieRepository {
   }
 
   async update(id: string, data: any) {
-    return Movie.findByIdAndUpdate(id, data, { new: true });
+    return Movie.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 
   async delete(id: string) {
