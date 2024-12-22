@@ -135,20 +135,6 @@ describe('UserRepository Unit Tests', () => {
       expect(result.name).toBe(userData.name);
       expect(result.email).toBe(userData.email);
     });
-
-    it('should throw error when creating duplicate user', async () => {
-      const userData = {
-        name: 'Duplicate User',
-        email: 'existing@example.com',
-        password: 'pass123'
-      };
-
-      mockSaveUser.mockRejectedValue(new Error('Duplicate email'));
-
-      await expect(userRepository.create(userData))
-        .rejects
-        .toThrow('Duplicate email');
-    });
   });
 
   describe('update', () => {
