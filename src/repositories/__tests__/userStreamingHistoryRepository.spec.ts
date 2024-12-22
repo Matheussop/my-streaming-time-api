@@ -25,17 +25,17 @@ describe('UserStreamingHistoryRepository', () => {
       userId: 'user123',
       watchHistory: [mockStreamingEntry],
       totalWatchTimeInMinutes: 120,
-      save: jest.fn()
+      save: jest.fn(),
     };
 
     mockSave = jest.fn().mockResolvedValue(mockHistory);
     (UserStreamingHistory as unknown as jest.Mock).mockImplementation(() => ({
-      save: mockSave
+      save: mockSave,
     }));
 
     jest.spyOn(UserStreamingHistory, 'find').mockReturnValue({
       skip: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockResolvedValue([mockHistory])
+      limit: jest.fn().mockResolvedValue([mockHistory]),
     } as any);
     jest.spyOn(UserStreamingHistory, 'findById').mockResolvedValue(mockHistory);
     jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValue(mockHistory);
@@ -106,13 +106,13 @@ describe('UserStreamingHistoryRepository', () => {
       jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValueOnce(null);
       mockHistory.save = mockSave;
       const result = await repository.addToHistory('user123', mockStreamingEntry);
-      
+
       expect(result).toEqual(expect.objectContaining(mockHistory));
       expect(mockSave).toHaveBeenCalled();
       expect(UserStreamingHistory).toHaveBeenCalledWith({
         userId: 'user123',
         watchHistory: [],
-        totalWatchTimeInMinutes: 0
+        totalWatchTimeInMinutes: 0,
       });
     });
 
@@ -120,13 +120,13 @@ describe('UserStreamingHistoryRepository', () => {
       const existingHistory = {
         ...mockHistory,
         watchHistory: [],
-        save: mockSave
+        save: mockSave,
       };
-      
+
       jest.spyOn(UserStreamingHistory, 'findOne').mockResolvedValueOnce(existingHistory);
 
       const result = await repository.addToHistory('user123', mockStreamingEntry);
-      
+
       expect(result.watchHistory).toHaveLength(1);
       expect(mockSave).toHaveBeenCalled();
     });
@@ -135,8 +135,7 @@ describe('UserStreamingHistoryRepository', () => {
   describe('update', () => {
     it('should update streaming history', async () => {
       const updatedHistory = { ...mockHistory, totalWatchTimeInMinutes: 240 };
-      jest.spyOn(UserStreamingHistory, 'findByIdAndUpdate')
-        .mockResolvedValueOnce(updatedHistory);
+      jest.spyOn(UserStreamingHistory, 'findByIdAndUpdate').mockResolvedValueOnce(updatedHistory);
 
       const result = await repository.update('history123', { totalWatchTimeInMinutes: 240 });
 
@@ -144,15 +143,14 @@ describe('UserStreamingHistoryRepository', () => {
       expect(UserStreamingHistory.findByIdAndUpdate).toHaveBeenCalledWith(
         'history123',
         { $set: { totalWatchTimeInMinutes: 240 } },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
     });
   });
 
   describe('delete', () => {
     it('should delete streaming history', async () => {
-      jest.spyOn(UserStreamingHistory, 'findByIdAndDelete')
-        .mockResolvedValueOnce(mockHistory);
+      jest.spyOn(UserStreamingHistory, 'findByIdAndDelete').mockResolvedValueOnce(mockHistory);
       const result = await repository.delete('history123');
 
       expect(result).toEqual(mockHistory);
@@ -165,22 +163,21 @@ describe('UserStreamingHistoryRepository', () => {
       const updatedHistory = {
         ...mockHistory,
         watchHistory: [],
-        totalWatchTimeInMinutes: 0
+        totalWatchTimeInMinutes: 0,
       };
 
-      jest.spyOn(UserStreamingHistory, 'findOneAndUpdate')
-        .mockResolvedValueOnce(updatedHistory);
+      jest.spyOn(UserStreamingHistory, 'findOneAndUpdate').mockResolvedValueOnce(updatedHistory);
 
       const result = await repository.removeFromHistory('user123', 'movie123', 120);
 
       expect(result).toEqual(updatedHistory);
       expect(UserStreamingHistory.findOneAndUpdate).toHaveBeenCalledWith(
         { userId: 'user123' },
-        { 
+        {
           $pull: { watchHistory: { streamingId: 'movie123' } },
-          $inc: { totalWatchTimeInMinutes: -120 }
+          $inc: { totalWatchTimeInMinutes: -120 },
         },
-        { new: true }
+        { new: true },
       );
     });
   });

@@ -13,7 +13,7 @@ describe('UserRepository Integration Tests', () => {
     name: 'Test User',
     email: 'test@example.com',
     password: 'password123',
-    role: 'user'
+    role: 'user',
   };
 
   beforeAll(async () => {
@@ -29,7 +29,7 @@ describe('UserRepository Integration Tests', () => {
 
   beforeEach(async () => {
     await User.deleteMany({});
-    
+
     testUser = await User.create(testUserData);
 
     userRepository = new UserRepository();
@@ -46,26 +46,25 @@ describe('UserRepository Integration Tests', () => {
         name: 'Another User',
         email: 'another@example.com',
         password: 'password456',
-      }
-      
+      };
+
       await User.create(anotherUser);
 
       const users = await userRepository.findAll();
       expect(users).toHaveLength(2);
-      users.forEach(user => {
+      users.forEach((user) => {
         expect(user).toHaveProperty('name');
         expect(user).toHaveProperty('email');
         expect(user.password).toBeUndefined();
       });
       expect(normalizeUser(users[1])).toEqual(normalizeUser(anotherUser));
-
     });
 
     it('should respect pagination parameters', async () => {
       const users = await Promise.all([
-        User.create({ name: 'User 1', email: 'user1@example.com', password: 'password1'}),
-        User.create({ name: 'User 2', email: 'user2@example.com', password: 'password2'}),
-        User.create({ name: 'User 3', email: 'user3@example.com', password: 'password3'})
+        User.create({ name: 'User 1', email: 'user1@example.com', password: 'password1' }),
+        User.create({ name: 'User 2', email: 'user2@example.com', password: 'password2' }),
+        User.create({ name: 'User 3', email: 'user3@example.com', password: 'password3' }),
       ]);
 
       const result = await userRepository.findAll(1, 2);
@@ -121,7 +120,7 @@ describe('UserRepository Integration Tests', () => {
       const newUserData = {
         name: 'New User',
         email: 'new@example.com',
-        password: 'newpass123'
+        password: 'newpass123',
       };
 
       const newUser = await userRepository.create(newUserData);
@@ -143,9 +142,7 @@ describe('UserRepository Integration Tests', () => {
         password: 'password123',
       };
 
-      await expect(userRepository.create(duplicateUserData))
-        .rejects
-        .toThrow();
+      await expect(userRepository.create(duplicateUserData)).rejects.toThrow();
     });
   });
 
@@ -153,7 +150,7 @@ describe('UserRepository Integration Tests', () => {
     it('should update user data', async () => {
       const updateData = {
         name: 'Updated Name',
-        email: 'updated@example.com'
+        email: 'updated@example.com',
       };
 
       const updatedUser = await userRepository.update(testUser._id, updateData);
@@ -194,4 +191,4 @@ describe('UserRepository Integration Tests', () => {
       expect(result).toBeNull();
     });
   });
-}); 
+});

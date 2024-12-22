@@ -7,10 +7,10 @@ jest.mock('../../models/streamingTypesModel');
 
 describe('StreamingTypeRepository', () => {
   let repository: StreamingTypeRepository;
-  
+
   const mockCategory: ICategory = {
     id: 1,
-    name: 'Ação'
+    name: 'Ação',
   };
 
   const mockStreamingType: IStreamingTypeResponse = {
@@ -18,12 +18,12 @@ describe('StreamingTypeRepository', () => {
     name: 'Netflix',
     categories: [mockCategory],
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
   const mockCreateData: IStreamingTypeCreate = {
     name: 'Netflix',
-    categories: [mockCategory]
+    categories: [mockCategory],
   };
 
   beforeEach(() => {
@@ -36,7 +36,7 @@ describe('StreamingTypeRepository', () => {
       const mockFind = {
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockStreamingType])
+        limit: jest.fn().mockResolvedValue([mockStreamingType]),
       };
 
       (StreamingTypes.find as jest.Mock).mockReturnValue(mockFind);
@@ -78,7 +78,7 @@ describe('StreamingTypeRepository', () => {
 
       expect(result).toEqual(mockStreamingType);
       expect(StreamingTypes.findOne).toHaveBeenCalledWith({
-        name: new RegExp('^Netflix$', 'i')
+        name: new RegExp('^Netflix$', 'i'),
       });
     });
 
@@ -95,7 +95,7 @@ describe('StreamingTypeRepository', () => {
     it('should create a new streaming type', async () => {
       const mockSave = jest.fn().mockResolvedValue(mockStreamingType);
       (StreamingTypes as unknown as jest.Mock).mockImplementation(() => ({
-        save: mockSave
+        save: mockSave,
       }));
 
       const result = await repository.create(mockCreateData);
@@ -111,7 +111,7 @@ describe('StreamingTypeRepository', () => {
       const updateData = { name: 'Netflix Updated' };
       (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue({
         ...mockStreamingType,
-        ...updateData
+        ...updateData,
       });
 
       const result = await repository.update('123', updateData);
@@ -120,7 +120,7 @@ describe('StreamingTypeRepository', () => {
       expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
         '123',
         { $set: updateData },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
     });
   });
@@ -149,7 +149,7 @@ describe('StreamingTypeRepository', () => {
       const newCategory: ICategory = { id: 2, name: 'Drama' };
       const updatedStreamingType = {
         ...mockStreamingType,
-        categories: [...mockStreamingType.categories, newCategory]
+        categories: [...mockStreamingType.categories, newCategory],
       };
 
       (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedStreamingType);
@@ -160,7 +160,7 @@ describe('StreamingTypeRepository', () => {
       expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
         '123',
         { $addToSet: { categories: [newCategory] } },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
     });
   });
@@ -170,7 +170,7 @@ describe('StreamingTypeRepository', () => {
       const categoriesToRemove: Partial<ICategory>[] = [{ id: 1 }];
       const updatedStreamingType = {
         ...mockStreamingType,
-        categories: []
+        categories: [],
       };
 
       (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedStreamingType);
@@ -181,8 +181,8 @@ describe('StreamingTypeRepository', () => {
       expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
         '123',
         { $pull: { categories: { id: { $in: [1] } } } },
-        { new: true }
+        { new: true },
       );
     });
   });
-}); 
+});

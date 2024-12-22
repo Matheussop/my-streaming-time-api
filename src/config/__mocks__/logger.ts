@@ -5,5 +5,5 @@ export default {
   http: jest.fn(),
   verbose: jest.fn(),
   debug: jest.fn(),
-  silly: jest.fn()
+  silly: jest.fn(),
 };
