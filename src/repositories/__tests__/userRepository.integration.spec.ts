@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { connect, closeDatabase, clearDatabase } from './mongooseSetup';
 import { UserRepository } from '../userRepository';
 import User from '../../models/userModel';
 import { IUser } from '../../models/userModel';
 
 describe('UserRepository Integration Tests', () => {
-  let mongoServer: MongoMemoryServer;
   let userRepository: UserRepository;
   let testUser: IUser;
 
@@ -17,19 +16,15 @@ describe('UserRepository Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
+    await connect();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await closeDatabase();
   });
 
   beforeEach(async () => {
-    await User.deleteMany({});
-
+    await clearDatabase();
     testUser = await User.create(testUserData);
 
     userRepository = new UserRepository();

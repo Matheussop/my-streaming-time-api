@@ -1,31 +1,25 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { connect, closeDatabase, clearDatabase } from './mongooseSetup';
 import { StreamingTypeRepository } from '../streamingTypeRepository';
 import StreamingType, { ICategory } from '../../models/streamingTypesModel';
 import { IStreamingType } from '../../models/streamingTypesModel';
 import { IStreamingTypeResponse } from '../../interfaces/streamingTypes';
 
 describe('StreamingTypeRepository Integration Tests', () => {
-  let mongoServer: MongoMemoryServer;
   let streamingTypeRepository: StreamingTypeRepository;
   let testStreamingType: IStreamingType;
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
+    await connect();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await closeDatabase();
   });
 
   beforeEach(async () => {
+    await clearDatabase();
     streamingTypeRepository = new StreamingTypeRepository();
-    await StreamingType.deleteMany({}); // Limpar a coleção antes de cada teste
-
-    // Criar um tipo de streaming de teste
     testStreamingType = await StreamingType.create({
       name: 'Netflix',
       categories: [{ id: 1, name: 'Movies' }]
@@ -126,7 +120,6 @@ describe('StreamingTypeRepository Integration Tests', () => {
     const updatedStreamingType = await streamingTypeRepository.addCategory(testStreamingType._id.toString(), updatedCategory);
 
     expect(updatedStreamingType).toBeDefined();
-    console.log(updatedStreamingType);
     expect(updatedStreamingType?.categories[1]).toEqual(expect.objectContaining(updatedCategory[0]));
    })
   })
@@ -137,7 +130,6 @@ describe('StreamingTypeRepository Integration Tests', () => {
     const updatedStreamingType = await streamingTypeRepository.removeCategory(testStreamingType._id.toString(), testStreamingType?.categories);
 
     expect(updatedStreamingType).toBeDefined();
-    console.log(updatedStreamingType);
     expect(updatedStreamingType?.categories.length).toBe(0);
    })
   })
