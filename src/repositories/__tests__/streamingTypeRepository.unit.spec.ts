@@ -5,7 +5,7 @@ import { IStreamingTypeCreate, IStreamingTypeResponse, ICategory } from '../../i
 // Mock do mongoose
 jest.mock('../../models/streamingTypesModel');
 
-describe('StreamingTypeRepository', () => {
+describe('StreamingTypeRepository Unit', () => {
   let repository: StreamingTypeRepository;
 
   const mockCategory: ICategory = {
