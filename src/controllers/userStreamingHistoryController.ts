@@ -1,17 +1,11 @@
 import { Request, Response } from 'express';
-import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
-import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { MovieRepository } from '../repositories/movieRepository';
+import { IUserStreamingHistoryService } from '../interfaces/services';
 
 export class UserStreamingHistoryController {
-  private service: UserStreamingHistoryService;
-
-  constructor(userStreamingHistoryRepository: UserStreamingHistoryRepository, movieRepository: MovieRepository) {
-    this.service = new UserStreamingHistoryService(userStreamingHistoryRepository, movieRepository);
-  }
+  constructor(private service: IUserStreamingHistoryService) {}
 
   getUserStreamingHistory = catchAsync(async (req: Request, res: Response) => {
     const userId = req.params.userId;

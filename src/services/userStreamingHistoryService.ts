@@ -1,9 +1,10 @@
 import logger from '../config/logger';
 import { IMovieRepository, IUserStreamingHistoryRepository } from '../interfaces/repositories';
+import { IUserStreamingHistoryService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
 
-export class UserStreamingHistoryService {
+export class UserStreamingHistoryService implements IUserStreamingHistoryService {
   constructor(
     private repository: IUserStreamingHistoryRepository,
     private movieRepository: IMovieRepository,
