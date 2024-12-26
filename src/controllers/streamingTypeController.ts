@@ -1,16 +1,11 @@
 import { Request, Response } from 'express';
-import { StreamingTypeService } from '../services/streamingTypeService';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { IStreamingTypeRepository } from '../interfaces/repositories';
+import { StreamingTypeService } from '../services/streamingTypeService';
 
 export class StreamingTypeController {
-  private service: StreamingTypeService;
-
-  constructor(private repository: IStreamingTypeRepository) {
-    this.service = new StreamingTypeService(repository);
-  }
+  constructor(private service: StreamingTypeService) {}
 
   getStreamingTypes = catchAsync(async (req: Request, res: Response) => {
     const { page = 1, limit = 10 } = req.query;

@@ -2,10 +2,12 @@ import { Router } from 'express';
 import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
 import { StreamingTypeController } from '../controllers/streamingTypeController';
 import { validateRequest } from '../util/validate';
+import { StreamingTypeService } from '../services/streamingTypeService';
 
 const router = Router();
 const repository = new StreamingTypeRepository();
-const controller = new StreamingTypeController(repository);
+const service = new StreamingTypeService(repository);
+const controller = new StreamingTypeController(service);
 /**
  * @swagger
  * tags:

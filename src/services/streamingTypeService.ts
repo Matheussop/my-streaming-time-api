@@ -1,5 +1,4 @@
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { IStreamingTypeRepository } from '../interfaces/repositories';
 import {
   IStreamingTypeCreate,
   IStreamingTypeUpdate,
@@ -8,9 +7,11 @@ import {
 } from '../interfaces/streamingTypes';
 import logger from '../config/logger';
 import { IStreamingType } from '../models/streamingTypesModel';
+import { IStreamingTypeService } from '../interfaces/services';
+import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
 
-export class StreamingTypeService {
-  constructor(private repository: IStreamingTypeRepository) {}
+export class StreamingTypeService implements IStreamingTypeService {
+  constructor(private repository: StreamingTypeRepository) {}
 
   async getAllStreamingTypes(skip = 0, limit = 10): Promise<IStreamingTypeResponse[]> {
     return this.repository.findAll(skip, limit);
@@ -28,14 +29,15 @@ export class StreamingTypeService {
     return streamingType;
   }
 
-  async createStreamingType(data: Partial<IStreamingType>): Promise<IStreamingTypeCreate> {
+  async createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate> {
     await this.validateStreamingTypeData(data);
     await this.checkDuplicateName(data.name!);
 
-    return this.repository.create(data);
+     const dataResponse = await this.repository.create(data);
+     return dataResponse;
   }
 
-  async updateStreamingType(id: string, data: Partial<IStreamingType>): Promise<IStreamingTypeUpdate> {
+  async updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeUpdate> {
     if (data.name) {
       await this.checkDuplicateName(data.name, id);
     }
