@@ -2,7 +2,7 @@ import { StreamingTypeService } from '../streamingTypeService';
 import { IStreamingTypeRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IStreamingType } from '../../models/streamingTypesModel';
-import { ICategory, IStreamingTypeResponse } from '../../interfaces/streamingTypes';
+import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse } from '../../interfaces/streamingTypes';
 
 describe('StreamingTypeService', () => {
   let streamingTypeService: StreamingTypeService;
@@ -65,7 +65,7 @@ describe('StreamingTypeService', () => {
 
   describe('createStreamingType', () => {
     it('should create streaming type with valid data', async () => {
-      const newType: Partial<IStreamingType> = {
+      const newType: IStreamingTypeCreate = {
         name: 'Disney+',
         categories: [{ id: 1, name: 'Movies' }],
       };
@@ -79,7 +79,7 @@ describe('StreamingTypeService', () => {
     });
 
     it('should throw error if name already exists', async () => {
-      const newType: Partial<IStreamingType> = {
+      const newType: IStreamingTypeCreate = {
         name: 'Netflix',
         categories: [{ id: 1, name: 'Movies' }],
       };
@@ -90,35 +90,35 @@ describe('StreamingTypeService', () => {
     });
 
     it('should throw error if name is missing', async () => {
-      const invalidType: Partial<IStreamingType> = {
+      const invalidType: IStreamingTypeCreate = {
         categories: [{ id: 1, name: 'Movies' }],
-      };
+      } as IStreamingTypeCreate;
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
         new StreamingServiceError('Name is required', 400),
       );
     });
 
     it('should throw error if categories are missing', async () => {
-      const invalidType: Partial<IStreamingType> = {
+      const invalidType: IStreamingTypeCreate = {
         name: 'Netflix',
-      };
+      } as IStreamingTypeCreate;
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
         new StreamingServiceError('At least one category is required', 400),
       );
     });
 
-    it('should throw error if categories are empty', async () => {
-      const invalidType: Partial<IStreamingType> = {
+    it('should throw error if a category name is empty', async () => {
+      const invalidType: IStreamingTypeCreate = {
         name: 'Netflix',
         categories: [{ id: 1 }],
-      } as Partial<IStreamingType>;
+      } as IStreamingTypeCreate;
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
         new StreamingServiceError('Invalid category data', 400),
       );
     });
 
     it('should throw error if has two categories with the same id', async () => {
-      const invalidType: Partial<IStreamingType> = {
+      const invalidType: IStreamingTypeCreate = {
         name: 'Netflix',
         categories: [
           { id: 1, name: 'Movies' },

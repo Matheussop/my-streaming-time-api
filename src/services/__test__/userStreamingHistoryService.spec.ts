@@ -28,6 +28,7 @@ describe('UserStreamingHistoryService', () => {
 
   beforeEach(() => {
     mockRepository = {
+      create: jest.fn(),
       findByUserId: jest.fn(),
       addToHistory: jest.fn(),
       removeFromHistory: jest.fn(),
@@ -77,6 +78,25 @@ describe('UserStreamingHistoryService', () => {
       expect(result.watchHistory).toContain(mockStreamingEntry);
       expect(mockMovieRepository.findById).toHaveBeenCalledWith(mockStreamingEntry.streamingId);
       expect(mockRepository.addToHistory).toHaveBeenCalledWith(mockUserId, mockStreamingEntry);
+    });
+
+    it('should add streaming to empty history successfully', async () => {
+      mockMovieRepository.findById.mockResolvedValue({
+        _id: mockStreamingEntry.streamingId,
+        title: mockStreamingEntry.title,
+      });
+      const mockStreamingHistoryData = {
+        userId: mockUserId,
+        watchHistory: [mockStreamingEntry],
+      }
+      mockRepository.findByUserId.mockResolvedValue(null);
+      mockRepository.create.mockResolvedValue(mockStreamingHistoryData);
+
+      const result = await service.addStreamingToHistory(mockUserId, mockStreamingEntry);
+
+      expect(result.watchHistory).toContain(mockStreamingEntry);
+      expect(mockMovieRepository.findById).toHaveBeenCalledWith(mockStreamingEntry.streamingId);
+      expect(mockRepository.create).toHaveBeenCalledWith(mockStreamingHistoryData);
     });
 
     it('should throw error when streaming not found', async () => {
