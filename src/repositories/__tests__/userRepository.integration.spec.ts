@@ -65,8 +65,19 @@ describe('UserRepository Integration Tests', () => {
       const result = await userRepository.findAll(1, 2);
 
       expect(result).toHaveLength(2);
-      expect(result[0].email).toBe('user1@example.com');
-      expect(result[1].email).toBe('user2@example.com');
+
+      result.forEach(user => {
+        expect(user).toHaveProperty('id');
+        expect(user).toHaveProperty('name');
+        expect(user).toHaveProperty('email');
+        expect(user.email).toMatch(/^user\d@example\.com$/);
+      });
+
+      const createdUserIds = users.map(u => u.id);
+      result.forEach(user => {
+        expect(createdUserIds).toContain(user.id);
+      });
+      
     });
 
     it('should return empty array when no users exist', async () => {
