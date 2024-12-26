@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { UserStreamingHistoryService } from '../../services/userStreamingHistoryService';
-import { IUserStreamingHistoryService } from '../../interfaces/services';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { generateValidObjectId } from '../../util/test/generateValidObjectId';
 import { UserStreamingHistoryController } from '../userStreamingHistoryController';
@@ -12,7 +11,7 @@ jest.mock('../../services/userStreamingHistoryService');
 
 describe('UserStreamingHistoryController', () => {
   let controller: UserStreamingHistoryController;
-  let mockService: jest.Mocked<IUserStreamingHistoryService>;
+  let mockService: jest.Mocked<UserStreamingHistoryService>;
   let mockUserStreamingHistoryRepository: jest.Mocked<IUserStreamingHistoryRepository>;
   let mockMovieRepository: jest.Mocked<IMovieRepository>;
   let mockReq: Partial<Request>;
@@ -132,6 +131,45 @@ describe('UserStreamingHistoryController', () => {
         history: mockResult
       });
     });
+
+    it('should create a new history if user does not have one', async () => {      
+      const validPayload = {
+        userId: validUserId,
+        streamingId: generateValidObjectId(),
+        title: 'Test Movie 3',
+        durationInMinutes: 120
+      };
+
+      mockReq = {
+        body: validPayload,
+        method: 'POST',
+        path: '/history',
+      };
+      const { userId, ...validPayloadWithoutUserId } = validPayload;
+      const mockResult = { userId, watchHistory: [validPayloadWithoutUserId] } as IUserStreamingHistory;
+      mockService.addStreamingToHistory.mockResolvedValue(mockResult);
+
+      await controller.addStreamingToHistory(
+        mockReq as Request,
+        mockRes as Response,
+        mockNext
+      );
+
+      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(
+        validPayload.userId,
+        {
+          streamingId: validPayload.streamingId,
+          title: validPayload.title,
+          durationInMinutes: validPayload.durationInMinutes,
+        }
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(201);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: 'Streaming entry added successfully',
+        history: mockResult
+      });
+    });
+        
 
     it('should throw error for missing request body', async () => {
       mockReq = {

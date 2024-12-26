@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { IUserStreamingHistoryService } from '../interfaces/services';
+import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
 
 export class UserStreamingHistoryController {
-  constructor(private service: IUserStreamingHistoryService) {}
+  constructor(private service: UserStreamingHistoryService) {}
 
   getUserStreamingHistory = catchAsync(async (req: Request, res: Response) => {
     const userId = req.params.userId;
