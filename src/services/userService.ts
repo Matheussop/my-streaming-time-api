@@ -1,7 +1,8 @@
 import { IUserRepository } from '../interfaces/repositories';
+import { IUserService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
 
-export class UserService {
+export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
 
   async getAllUsers() {
@@ -69,7 +70,7 @@ export class UserService {
     if (!user) {
       throw new StreamingServiceError('User not found', 404);
     }
-    return { message: 'User deleted successfully' };
+    return user;
   }
 
   private async validateUserData(data: any) {

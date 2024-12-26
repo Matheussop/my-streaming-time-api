@@ -1,16 +1,11 @@
 import { Request, Response } from 'express';
-import { UserService } from '../services/userService';
-import { IUserRepository } from '../interfaces/repositories';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { IUserService } from '../interfaces/services';
 
 export class UserController {
-  private userService: UserService;
-
-  constructor(private userRepository: IUserRepository) {
-    this.userService = new UserService(userRepository);
-  }
+  constructor(private userService: IUserService) {}
 
   registerUser = catchAsync(async (req: Request, res: Response) => {
     logger.info({
@@ -82,8 +77,8 @@ export class UserController {
       path: req.path,
     });
 
-    await this.userService.deleteUser(req.params.id);
-    res.status(200).json({ message: 'User deleted successfully' });
+    const deletedUser =  await this.userService.deleteUser(req.params.id);
+    res.status(200).json({ message: 'User deleted successfully', deletedUser });
   });
 
   listUsers = catchAsync(async (req: Request, res: Response) => {

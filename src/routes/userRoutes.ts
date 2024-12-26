@@ -1,3 +1,4 @@
+import { UserService } from './../services/userService';
 import { Router } from 'express';
 import { UserController } from '../controllers/userController';
 import { UserRepository } from '../repositories/userRepository';
@@ -5,7 +6,8 @@ import { validateRequest } from '../util/validate';
 
 const userRoutes: Router = Router();
 const userRepository = new UserRepository();
-const userController = new UserController(userRepository);
+const userService = new UserService(userRepository);
+const userController = new UserController(userService);
 
 /**
  * @swagger

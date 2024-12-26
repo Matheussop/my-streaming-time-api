@@ -164,16 +164,17 @@ describe('UserService', () => {
 
   describe('deleteUser', () => {
     it('should delete a user successfully', async () => {
-      mockUserRepository.delete.mockResolvedValue({
+      const mockUserData = {
         id: '1',
         name: 'John Doe',
         email: 'john@example.com',
-      } as unknown as IUser);
+      } as unknown as IUser
+      mockUserRepository.delete.mockResolvedValue(mockUserData);
 
       const result = await userService.deleteUser('1');
 
       expect(mockUserRepository.delete).toHaveBeenCalledWith('1');
-      expect(result).toEqual({ message: 'User deleted successfully' });
+      expect(result).toEqual(mockUserData);
     });
 
     it('should throw an error if user is not found', async () => {
