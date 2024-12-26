@@ -77,7 +77,7 @@ export class UserController {
       path: req.path,
     });
 
-    const deletedUser =  await this.userService.deleteUser(req.params.id);
+    const deletedUser = await this.userService.deleteUser(req.params.id);
     res.status(200).json({ message: 'User deleted successfully', deletedUser });
   });
 

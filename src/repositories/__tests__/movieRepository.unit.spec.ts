@@ -13,7 +13,7 @@ describe('MovieRepository Unit Tests', () => {
     plot: 'Test plot',
     genre: [1, 2],
     rating: 8.5,
-    url: 'http://test.com'
+    url: 'http://test.com',
   };
 
   const mockSaveMovie = jest.fn().mockResolvedValue(mockMovie);
@@ -48,7 +48,7 @@ describe('MovieRepository Unit Tests', () => {
 
       const findSpy = jest.spyOn(Movie, 'find').mockReturnValue({
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([])
+        limit: jest.fn().mockResolvedValue([]),
       } as any);
 
       await movieRepository.findAll(skip, limit);
@@ -61,7 +61,7 @@ describe('MovieRepository Unit Tests', () => {
 
   describe('findById', () => {
     it('should find movie by id', async () => {
-      const findByIdSpy = jest.spyOn(Movie, 'findById').mockResolvedValue(mockMovie)
+      const findByIdSpy = jest.spyOn(Movie, 'findById').mockResolvedValue(mockMovie);
 
       const result = await movieRepository.findById(mockMovie._id.toString());
 
@@ -70,7 +70,7 @@ describe('MovieRepository Unit Tests', () => {
     });
 
     it('should return null for non-existent movie', async () => {
-      const findByIdSpy = jest.spyOn(Movie, 'findById').mockResolvedValue(null)
+      const findByIdSpy = jest.spyOn(Movie, 'findById').mockResolvedValue(null);
 
       const result = await movieRepository.findById('nonexistent-id');
 
@@ -81,11 +81,11 @@ describe('MovieRepository Unit Tests', () => {
 
   describe('findByTitle', () => {
     it('should find movies by title', async () => {
-      const findSpy = jest.spyOn(Movie, 'findByTitle').mockResolvedValue([mockMovie] as IMovie[])
+      const findSpy = jest.spyOn(Movie, 'findByTitle').mockResolvedValue([mockMovie] as IMovie[]);
 
       const result = await movieRepository.findByTitle('Test', 0, 10);
 
-      expect(findSpy).toHaveBeenCalledWith('Test', 0, 10 );
+      expect(findSpy).toHaveBeenCalledWith('Test', 0, 10);
       expect(result).toHaveLength(1);
       expect(result?.[0]?.title).toBe('Test Movie');
     });
@@ -107,19 +107,19 @@ describe('MovieRepository Unit Tests', () => {
       const updateData = { title: 'Updated Movie' };
       const updatedMovie = { ...mockMovie, ...updateData };
 
-      const findByIdAndUpdateSpy = jest.spyOn(Movie, 'findByIdAndUpdate').mockResolvedValue(updatedMovie)
+      const findByIdAndUpdateSpy = jest.spyOn(Movie, 'findByIdAndUpdate').mockResolvedValue(updatedMovie);
       const result = await movieRepository.update(mockMovie._id.toString(), updateData);
 
       expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(
         mockMovie._id.toString(),
         { $set: updateData },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
       expect(result).toEqual(updatedMovie);
     });
 
     it('should return null when updating non-existent movie', async () => {
-      const findByIdAndUpdateSpy = jest.spyOn(Movie, 'findByIdAndUpdate').mockResolvedValue(null)
+      const findByIdAndUpdateSpy = jest.spyOn(Movie, 'findByIdAndUpdate').mockResolvedValue(null);
 
       const result = await movieRepository.update('nonexistent-id', { title: 'Updated' });
 
@@ -130,8 +130,7 @@ describe('MovieRepository Unit Tests', () => {
 
   describe('delete', () => {
     it('should delete an existing movie', async () => {
-      const findByIdAndDeleteSpy = jest.spyOn(Movie, 'findByIdAndDelete')
-        .mockResolvedValue(mockMovie);
+      const findByIdAndDeleteSpy = jest.spyOn(Movie, 'findByIdAndDelete').mockResolvedValue(mockMovie);
 
       const result = await movieRepository.delete(mockMovie._id.toString());
 
@@ -140,8 +139,7 @@ describe('MovieRepository Unit Tests', () => {
     });
 
     it('should return null when deleting non-existent movie', async () => {
-      const findByIdAndDeleteSpy = jest.spyOn(Movie, 'findByIdAndDelete')
-        .mockResolvedValue(null);
+      const findByIdAndDeleteSpy = jest.spyOn(Movie, 'findByIdAndDelete').mockResolvedValue(null);
 
       const result = await movieRepository.delete('nonexistent-id');
 
@@ -149,4 +147,4 @@ describe('MovieRepository Unit Tests', () => {
       expect(result).toBeNull();
     });
   });
-}); 
+});

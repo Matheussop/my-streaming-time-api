@@ -8,4 +8,3 @@ export const generateValidObjectId = (): string => {
   const hexString = randomBytes(12).toString('hex');
   return hexString;
 };
-

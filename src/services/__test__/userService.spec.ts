@@ -168,7 +168,7 @@ describe('UserService', () => {
         id: '1',
         name: 'John Doe',
         email: 'john@example.com',
-      } as unknown as IUser
+      } as unknown as IUser;
       mockUserRepository.delete.mockResolvedValue(mockUserData);
 
       const result = await userService.deleteUser('1');

@@ -37,7 +37,7 @@ describe('StreamingTypeController', () => {
     it('should return paginated streaming types', async () => {
       const mockStreamingTypes: IStreamingTypeResponse[] = [
         { _id: 1, name: 'Movie' },
-        { _id: 2, name: 'Series' }
+        { _id: 2, name: 'Series' },
       ] as unknown as IStreamingTypeResponse[];
 
       mockReq = {
@@ -67,7 +67,6 @@ describe('StreamingTypeController', () => {
   });
 
   describe('getStreamingTypeById', () => {
-
     it('should return streaming type for valid ID', async () => {
       const mockStreamingType = { _id: validId, name: 'Movie' } as IStreamingTypeResponse;
       mockReq = {
@@ -88,7 +87,7 @@ describe('StreamingTypeController', () => {
         params: { id: 'invalid-id' },
       };
 
-      await controller.getStreamingTypeById(mockReq as Request, mockRes as Response, mockNext)
+      await controller.getStreamingTypeById(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid streamingType ID format', 400));
     });
@@ -96,10 +95,13 @@ describe('StreamingTypeController', () => {
 
   describe('createStreamingType', () => {
     it('should create new streaming type successfully', async () => {
-      const mockStreamingTypeData = { name: 'New Type', categories: [
-        { id: 1, name: 'Action' },
-        { id: 2, name: 'Drama' }
-      ] } as IStreamingTypeCreate;
+      const mockStreamingTypeData = {
+        name: 'New Type',
+        categories: [
+          { id: 1, name: 'Action' },
+          { id: 2, name: 'Drama' },
+        ],
+      } as IStreamingTypeCreate;
       const mockCreatedType = { id: '1', ...mockStreamingTypeData };
       mockReq = {
         body: mockStreamingTypeData,
@@ -144,17 +146,20 @@ describe('StreamingTypeController', () => {
       await controller.deleteStreamingType(mockReq as Request, mockRes as Response, mockNext);
       expect(mockService.deleteStreamingType).toHaveBeenCalledWith(validId);
       expect(mockRes.status).toHaveBeenCalledWith(204);
-      expect(mockRes.send).toHaveBeenCalledWith("Streaming type deleted");
+      expect(mockRes.send).toHaveBeenCalledWith('Streaming type deleted');
     });
   });
 
   describe('addCategoryToStreamingType', () => {
     it('should add category to streaming type successfully', async () => {
       const categories = ['Action'];
-      const mockUpdatedType = { _id: validId, categories: [
-        { id: 1, name: 'Action' },
-        { id: 2, name: 'Drama' }
-      ] } as IStreamingTypeResponse;
+      const mockUpdatedType = {
+        _id: validId,
+        categories: [
+          { id: 1, name: 'Action' },
+          { id: 2, name: 'Drama' },
+        ],
+      } as IStreamingTypeResponse;
       mockReq = {
         params: { id: validId },
         body: { categories },
@@ -173,9 +178,7 @@ describe('StreamingTypeController', () => {
   describe('removeCategoryFromStreamingType', () => {
     it('should remove category from streaming type successfully', async () => {
       const categories = [{ id: 1 }];
-      const mockUpdatedType = { _id: validId, categories: [
-        { id: 2, name: 'Drama' }
-      ] } as IStreamingTypeResponse;
+      const mockUpdatedType = { _id: validId, categories: [{ id: 2, name: 'Drama' }] } as IStreamingTypeResponse;
       mockReq = {
         params: { id: validId },
         body: { categories },
@@ -190,5 +193,4 @@ describe('StreamingTypeController', () => {
       expect(mockRes.json).toHaveBeenCalledWith(mockUpdatedType);
     });
   });
-
 });

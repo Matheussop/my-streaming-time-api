@@ -22,7 +22,7 @@ describe('StreamingTypeRepository Integration Tests', () => {
     streamingTypeRepository = new StreamingTypeRepository();
     testStreamingType = await StreamingType.create({
       name: 'Netflix',
-      categories: [{ id: 1, name: 'Movies' }]
+      categories: [{ id: 1, name: 'Movies' }],
     });
   });
 
@@ -56,8 +56,8 @@ describe('StreamingTypeRepository Integration Tests', () => {
       const foundStreamingType = await streamingTypeRepository.findByName('Netflix');
 
       expect(foundStreamingType).toBeDefined();
-      expect(foundStreamingType?.categories[0].id).toBe(1)
-      expect(foundStreamingType?.categories[0].name).toBe("Movies")
+      expect(foundStreamingType?.categories[0].id).toBe(1);
+      expect(foundStreamingType?.categories[0].name).toBe('Movies');
     });
   });
 
@@ -65,8 +65,8 @@ describe('StreamingTypeRepository Integration Tests', () => {
     it('should create a new streaming type', async () => {
       const newStreamingTypeData: IStreamingTypeResponse = {
         name: 'Disney+',
-        categories: [{ id: 1, name: 'Series' }]
-      } as unknown as IStreamingTypeResponse ;
+        categories: [{ id: 1, name: 'Series' }],
+      } as unknown as IStreamingTypeResponse;
 
       const newStreamingType = await streamingTypeRepository.create(newStreamingTypeData);
 
@@ -113,24 +113,29 @@ describe('StreamingTypeRepository Integration Tests', () => {
     });
   });
 
-  describe("addCategory", () => {
-   it('should update an existing streaming type with news categories', async () => {
-    const updatedCategory: ICategory[] = [{ id: 2, name: "cat3" }];
+  describe('addCategory', () => {
+    it('should update an existing streaming type with news categories', async () => {
+      const updatedCategory: ICategory[] = [{ id: 2, name: 'cat3' }];
 
-    const updatedStreamingType = await streamingTypeRepository.addCategory(testStreamingType._id.toString(), updatedCategory);
+      const updatedStreamingType = await streamingTypeRepository.addCategory(
+        testStreamingType._id.toString(),
+        updatedCategory,
+      );
 
-    expect(updatedStreamingType).toBeDefined();
-    expect(updatedStreamingType?.categories[1]).toEqual(expect.objectContaining(updatedCategory[0]));
-   })
-  })
-  
-  describe("removeCategory", () => {
-   it('should update an existing streaming type with news categories', async () => {
+      expect(updatedStreamingType).toBeDefined();
+      expect(updatedStreamingType?.categories[1]).toEqual(expect.objectContaining(updatedCategory[0]));
+    });
+  });
 
-    const updatedStreamingType = await streamingTypeRepository.removeCategory(testStreamingType._id.toString(), testStreamingType?.categories);
+  describe('removeCategory', () => {
+    it('should update an existing streaming type with news categories', async () => {
+      const updatedStreamingType = await streamingTypeRepository.removeCategory(
+        testStreamingType._id.toString(),
+        testStreamingType?.categories,
+      );
 
-    expect(updatedStreamingType).toBeDefined();
-    expect(updatedStreamingType?.categories.length).toBe(0);
-   })
-  })
-}); 
+      expect(updatedStreamingType).toBeDefined();
+      expect(updatedStreamingType?.categories.length).toBe(0);
+    });
+  });
+});

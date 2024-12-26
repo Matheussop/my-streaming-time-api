@@ -31,25 +31,28 @@ describe('UserStreamingHistoryController', () => {
         streamingId: generateValidObjectId(),
         title: 'Test Movie 2',
         durationInMinutes: 30,
-      }
-    ]
+      },
+    ];
     mockHistory = {
       userId: validUserId,
       watchHistory: streamingHistoryEntry,
       totalWatchTimeInMinutes: 90,
     } as IUserStreamingHistory;
-  })
+  });
 
   beforeEach(() => {
     validUserId = generateValidObjectId();
     mockUserStreamingHistoryRepository = {} as jest.Mocked<IUserStreamingHistoryRepository>;
     mockMovieRepository = {} as jest.Mocked<IMovieRepository>;
-    mockService = new UserStreamingHistoryService(mockUserStreamingHistoryRepository, mockMovieRepository) as jest.Mocked<UserStreamingHistoryService>;
+    mockService = new UserStreamingHistoryService(
+      mockUserStreamingHistoryRepository,
+      mockMovieRepository,
+    ) as jest.Mocked<UserStreamingHistoryService>;
     controller = new UserStreamingHistoryController(mockService);
     mockReq = {};
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
     };
     mockNext = jest.fn();
   });
@@ -63,11 +66,7 @@ describe('UserStreamingHistoryController', () => {
       };
       mockService.getUserHistory.mockResolvedValue(mockHistory);
 
-      await controller.getUserStreamingHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.getUserStreamingHistory(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockService.getUserHistory).toHaveBeenCalledWith(validUserId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
@@ -82,12 +81,7 @@ describe('UserStreamingHistoryController', () => {
         path: '/history',
       };
 
-
-      await controller.getUserStreamingHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.getUserStreamingHistory(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
     });
@@ -99,7 +93,7 @@ describe('UserStreamingHistoryController', () => {
         userId: validUserId,
         streamingId: generateValidObjectId(),
         title: 'Test Movie 3',
-        durationInMinutes: 120
+        durationInMinutes: 120,
       };
 
       mockReq = {
@@ -108,36 +102,33 @@ describe('UserStreamingHistoryController', () => {
         path: '/history',
       };
       const { userId, ...validPayloadWithoutUserId } = validPayload;
-      const mockResult = { ...mockHistory, watchHistory: [...mockHistory.watchHistory, validPayloadWithoutUserId], totalWatchTimeInMinutes: mockHistory.totalWatchTimeInMinutes + validPayload.durationInMinutes } as IUserStreamingHistory;
+      const mockResult = {
+        ...mockHistory,
+        watchHistory: [...mockHistory.watchHistory, validPayloadWithoutUserId],
+        totalWatchTimeInMinutes: mockHistory.totalWatchTimeInMinutes + validPayload.durationInMinutes,
+      } as IUserStreamingHistory;
       mockService.addStreamingToHistory.mockResolvedValue(mockResult);
 
-      await controller.addStreamingToHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.addStreamingToHistory(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(
-        validPayload.userId,
-        {
-          streamingId: validPayload.streamingId,
-          title: validPayload.title,
-          durationInMinutes: validPayload.durationInMinutes,
-        }
-      );
+      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(validPayload.userId, {
+        streamingId: validPayload.streamingId,
+        title: validPayload.title,
+        durationInMinutes: validPayload.durationInMinutes,
+      });
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         message: 'Streaming entry added successfully',
-        history: mockResult
+        history: mockResult,
       });
     });
 
-    it('should create a new history if user does not have one', async () => {      
+    it('should create a new history if user does not have one', async () => {
       const validPayload = {
         userId: validUserId,
         streamingId: generateValidObjectId(),
         title: 'Test Movie 3',
-        durationInMinutes: 120
+        durationInMinutes: 120,
       };
 
       mockReq = {
@@ -149,27 +140,19 @@ describe('UserStreamingHistoryController', () => {
       const mockResult = { userId, watchHistory: [validPayloadWithoutUserId] } as IUserStreamingHistory;
       mockService.addStreamingToHistory.mockResolvedValue(mockResult);
 
-      await controller.addStreamingToHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.addStreamingToHistory(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(
-        validPayload.userId,
-        {
-          streamingId: validPayload.streamingId,
-          title: validPayload.title,
-          durationInMinutes: validPayload.durationInMinutes,
-        }
-      );
+      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(validPayload.userId, {
+        streamingId: validPayload.streamingId,
+        title: validPayload.title,
+        durationInMinutes: validPayload.durationInMinutes,
+      });
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         message: 'Streaming entry added successfully',
-        history: mockResult
+        history: mockResult,
       });
     });
-        
 
     it('should throw error for missing request body', async () => {
       mockReq = {
@@ -178,14 +161,9 @@ describe('UserStreamingHistoryController', () => {
         path: '/history',
       };
 
-      await controller.addStreamingToHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      )
+      await controller.addStreamingToHistory(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Request body is missing', 400));
-
     });
   });
 
@@ -201,25 +179,24 @@ describe('UserStreamingHistoryController', () => {
         path: '/history',
       };
 
-      const mockResult = { ...mockHistory, watchHistory: mockHistory.watchHistory.filter(entry => entry.streamingId !== validPayload.streamingId), totalWatchTimeInMinutes: mockHistory.totalWatchTimeInMinutes - mockHistory.watchHistory[0].durationInMinutes } as IUserStreamingHistory;
+      const mockResult = {
+        ...mockHistory,
+        watchHistory: mockHistory.watchHistory.filter((entry) => entry.streamingId !== validPayload.streamingId),
+        totalWatchTimeInMinutes: mockHistory.totalWatchTimeInMinutes - mockHistory.watchHistory[0].durationInMinutes,
+      } as IUserStreamingHistory;
       mockService.removeStreamingFromHistory.mockResolvedValue(mockResult);
 
-      await controller.removeStreamingFromHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.removeStreamingFromHistory(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockService.removeStreamingFromHistory).toHaveBeenCalledWith(
         validPayload.userId,
-        validPayload.streamingId
+        validPayload.streamingId,
       );
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         message: 'Streaming entry removed successfully',
-        history: mockResult
+        history: mockResult,
       });
-
     });
 
     it('should throw error for invalid user id', async () => {
@@ -232,11 +209,7 @@ describe('UserStreamingHistoryController', () => {
         path: '/history',
       };
 
-      await controller.removeStreamingFromHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.removeStreamingFromHistory(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
     });
@@ -251,11 +224,7 @@ describe('UserStreamingHistoryController', () => {
         path: '/history',
       };
 
-      await controller.removeStreamingFromHistory(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.removeStreamingFromHistory(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid streaming ID format', 400));
     });
@@ -271,16 +240,12 @@ describe('UserStreamingHistoryController', () => {
       const mockTotalTime = 90;
       mockService.getTotalWatchTime.mockResolvedValue(mockTotalTime);
 
-      await controller.calculateTotalWatchTime(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.calculateTotalWatchTime(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockService.getTotalWatchTime).toHaveBeenCalledWith(validUserId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
-        totalWatchTimeInMinutes: mockTotalTime
+        totalWatchTimeInMinutes: mockTotalTime,
       });
     });
 
@@ -291,11 +256,7 @@ describe('UserStreamingHistoryController', () => {
         path: '/history/total-time',
       };
 
-      await controller.calculateTotalWatchTime(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext
-      );
+      await controller.calculateTotalWatchTime(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
     });

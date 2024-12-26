@@ -15,7 +15,7 @@ describe('UserController', () => {
   let mockRes: Partial<Response>;
   let mockUserRepository: IUserRepository;
   let mockNext: jest.MockedFunction<NextFunction>;
-  
+
   beforeEach(() => {
     mockUserRepository = {} as jest.Mocked<IUserRepository>;
     mockUserService = new UserService(mockUserRepository) as jest.Mocked<UserService>;
@@ -23,7 +23,7 @@ describe('UserController', () => {
     mockReq = {};
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
     };
     mockNext = jest.fn();
   });
@@ -36,7 +36,7 @@ describe('UserController', () => {
       mockReq.params = { id: userID };
 
       await userController.getUserById(mockReq as Request, mockRes as Response, mockNext);
-      
+
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalled();
     });
@@ -44,7 +44,7 @@ describe('UserController', () => {
     it('should return 404 if user ID is invalid', async () => {
       mockReq.params = { id: 'invalid-id' };
 
-      await userController.getUserById(mockReq as Request, mockRes as Response, mockNext)
+      await userController.getUserById(mockReq as Request, mockRes as Response, mockNext);
       expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
     });
   });
@@ -58,7 +58,7 @@ describe('UserController', () => {
 
       await userController.registerUser(mockReq as Request, mockRes as Response, mockNext);
 
-      const returnValueUser = { message: 'User created successfully', user:mockUser };
+      const returnValueUser = { message: 'User created successfully', user: mockUser };
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith(returnValueUser);
     });
@@ -74,7 +74,7 @@ describe('UserController', () => {
   describe('loginUser', () => {
     it('should return 200 and the user if login is successful', async () => {
       const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: ''} as IUser;
+      const mockUser = { id: userID, name: 'John Doe', email: '' } as IUser;
       mockUserService.loginUser.mockResolvedValue(mockUser);
       mockReq.body = mockUser;
 
@@ -89,7 +89,7 @@ describe('UserController', () => {
   describe('updateUser', () => {
     it('should return 200 and the updated user', async () => {
       const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: ''} as IUser;
+      const mockUser = { id: userID, name: 'John Doe', email: '' } as IUser;
       mockUserService.updateUser.mockResolvedValue(mockUser);
       mockReq.params = { id: userID };
       mockReq.body = mockUser;
@@ -104,7 +104,7 @@ describe('UserController', () => {
   describe('deleteUser', () => {
     it('should return 200 and the deleted user', async () => {
       const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: ''} as IUser;
+      const mockUser = { id: userID, name: 'John Doe', email: '' } as IUser;
       mockUserService.deleteUser.mockResolvedValue(mockUser);
       mockReq.params = { id: userID };
 
@@ -120,8 +120,8 @@ describe('UserController', () => {
     it('should return 200 and all users', async () => {
       const userID = generateValidObjectId();
       const mockUsers = [
-        { id: generateValidObjectId(), name: 'John Doe', email: ''},
-        { id: generateValidObjectId(), name: 'Jane Doe', email: ''}
+        { id: generateValidObjectId(), name: 'John Doe', email: '' },
+        { id: generateValidObjectId(), name: 'Jane Doe', email: '' },
       ] as IUser[];
       mockUserService.getAllUsers.mockResolvedValue(mockUsers);
       mockReq.params = { id: userID };

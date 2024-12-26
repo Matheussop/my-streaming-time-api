@@ -88,7 +88,7 @@ describe('UserStreamingHistoryService', () => {
       const mockStreamingHistoryData = {
         userId: mockUserId,
         watchHistory: [mockStreamingEntry],
-      }
+      };
       mockRepository.findByUserId.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockStreamingHistoryData);
 

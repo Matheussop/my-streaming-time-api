@@ -33,8 +33,8 @@ export class StreamingTypeService implements IStreamingTypeService {
     await this.validateStreamingTypeData(data);
     await this.checkDuplicateName(data.name!);
 
-     const dataResponse = await this.repository.create(data);
-     return dataResponse;
+    const dataResponse = await this.repository.create(data);
+    return dataResponse;
   }
 
   async updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeUpdate> {

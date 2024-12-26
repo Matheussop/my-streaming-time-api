@@ -104,7 +104,7 @@ export class StreamingTypeController {
     });
 
     await this.service.deleteStreamingType(req.params.id);
-    res.status(204).send("Streaming type deleted");
+    res.status(204).send('Streaming type deleted');
   });
 }
 

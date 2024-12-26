@@ -16,11 +16,11 @@ describe('MovieRepository Integration Tests', () => {
       categories: [
         { id: 1, name: 'Series' },
         { id: 2, name: 'Movies' },
-      ]
+      ],
     } as unknown as IStreamingTypeResponse;
-    
+
     const streamingType = await createStreamingType(newStreamingTypeData);
-    categoriesIds = streamingType.categories.map(category => category.id);
+    categoriesIds = streamingType.categories.map((category) => category.id);
   });
 
   afterAll(async () => {

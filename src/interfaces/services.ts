@@ -1,5 +1,5 @@
-import { IUser } from "../models/userModel";
-import { IUserStreamingHistory, StreamingHistoryEntry } from "../models/userStreamingHistoryModel";
+import { IUser } from '../models/userModel';
+import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
 import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 
 export interface IUserService {
@@ -7,7 +7,7 @@ export interface IUserService {
   loginUser(email: string, password: string): Promise<IUser>;
   getUserById(id: string): Promise<IUser | null>;
   updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
-  deleteUser(id: string): Promise< IUser | null>;
+  deleteUser(id: string): Promise<IUser | null>;
   getAllUsers(): Promise<IUser[]>;
 }
 

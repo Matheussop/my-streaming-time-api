@@ -47,10 +47,10 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
     const history = await this.repository.findByUserId(userId);
 
-    if(!history) {
+    if (!history) {
       return this.repository.create({ userId, watchHistory: [streamingData] });
     }
-    
+
     const streamingInHistory = history.watchHistory.find((entry) => entry.streamingId === streamingData.streamingId);
     if (streamingInHistory) {
       throw new StreamingServiceError('Streaming already in history', 400);
