@@ -4,14 +4,10 @@ import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
-import { IMovieRepository } from '../interfaces/repositories';
+import { IMovieService } from '../interfaces/services';
 
 export class MovieController {
-  private movieService: MovieService;
-
-  constructor(private movieRepository: IMovieRepository) {
-    this.movieService = new MovieService(movieRepository);
-  }
+  constructor(private movieService: IMovieService) {}
 
   getMoviesByTitle = catchAsync(async (req: Request, res: Response): Promise<void> => {
     const { title, page = 1, limit = 10 } = req.body;

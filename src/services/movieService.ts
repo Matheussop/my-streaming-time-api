@@ -1,8 +1,9 @@
 import logger from '../config/logger';
 import { IMovieRepository } from '../interfaces/repositories';
+import { IMovieService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
 
-export class MovieService {
+export class MovieService implements IMovieService {
   constructor(private movieRepository: IMovieRepository) {}
 
   async getMovies(skip: number, limit: number) {

@@ -4,10 +4,12 @@ import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '.
 import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieController } from '../controllers/movieController';
+import { MovieService } from '../services/movieService';
 
 const movieRouter: Router = Router();
 const movieRepository = new MovieRepository();
-const movieController = new MovieController(movieRepository);
+const movieService = new MovieService(movieRepository);
+const movieController = new MovieController(movieService);
 
 /**
  * @swagger

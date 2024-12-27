@@ -27,3 +27,12 @@ export interface IStreamingTypeService {
   addCategoryToStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
   removeCategoryFromStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
 }
+
+export interface IMovieService {
+  getMovies(skip: number, limit: number): Promise<any>;
+  getMovieById(id: string): Promise<any>;
+  createMovie(movieData: any): Promise<any>;
+  updateMovie(id: string, updateData: any): Promise<any>;
+  deleteMovie(id: string): Promise<any>;
+  getMoviesByTitle(title: string, skip?: number, limit?: number): Promise<any>;
+}
