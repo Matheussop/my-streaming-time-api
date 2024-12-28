@@ -153,7 +153,12 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
           movies: savedMovies,
         });
       } else {
-        res.status(200).json({ movies: externalMovies });
+        res.status(200).json({
+          page,
+          limit,
+          total: externalMovies.length,
+          movies: externalMovies,
+        });
       }
     } else {
       throw new StreamingServiceError('Movie not found', 404);
