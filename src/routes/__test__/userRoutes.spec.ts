@@ -1,147 +1,101 @@
-import express, { Request, Response, NextFunction, Express } from 'express';
-import { UserController } from '../../controllers/userController';
-import { UserService } from '../../services/userService';
-import { UserRepository } from '../../repositories/userRepository';
-import * as validateModule from '../../util/validate';
+import express, { Express } from 'express';
 import request from 'supertest';
+import { HttpStatus, Messages } from '../../constants/httpStatus';
+import * as validateModule from '../../util/validate';
 
-jest.mock('../../controllers/userController');
+const mockImplementations = {
+  registerUser: jest.fn(),
+  loginUser: jest.fn(),
+  getUserById: jest.fn(),
+  updateUser: jest.fn(),
+  deleteUser: jest.fn(),
+  listUsers: jest.fn()
+};
+
+jest.mock('../../controllers/userController', () => ({
+  UserController: jest.fn().mockImplementation(() => mockImplementations)
+}));
+
 jest.mock('../../services/userService');
 jest.mock('../../repositories/userRepository');
-
 jest.mock('../../util/validate', () => ({
   validateRequest: jest.fn(),
 }));
-
-const mockRegisterUser = jest.fn();
-const mockLoginUser = jest.fn();
-const mockGetUserById = jest.fn();
-const mockUpdateUser = jest.fn();
-const mockDeleteUser = jest.fn();
-const mockListUsers = jest.fn();
-
-jest.mock('../../controllers/userController', () => {
-  return {
-    UserController: jest.fn().mockImplementation(() => ({
-      registerUser: mockRegisterUser,
-      loginUser: mockLoginUser,
-      getUserById: mockGetUserById,
-      updateUser: mockUpdateUser,
-      deleteUser: mockDeleteUser,
-      listUsers: mockListUsers
-    }))
-  };
-});
 
 import userRoutes from '../userRoutes';
 
 describe('User Routes', () => {
   let app: Express;
-  let mockReq: Partial<Request>;
-  let mockRes: Partial<Response>;
-  let mockNext: jest.MockedFunction<NextFunction>;
-  let mockUserController: jest.Mocked<UserController>;
-  let mockUserService: jest.Mocked<UserService>;
-  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockValidateRequest: jest.Mock;
+
+  const testData = {
+    validUser: {
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: 'Password123!'
+    },
+    validCredentials: {
+      email: 'john@example.com',
+      password: 'Password123!'
+    },
+    mockUsers: [
+      { id: '1', name: 'User 1', email: 'user1@example.com' },
+      { id: '2', name: 'User 2', email: 'user2@example.com' }
+    ],
+    testUserId: '123'
+  };
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
     app.use('/user', userRoutes);
+    mockValidateRequest = validateModule.validateRequest as jest.Mock;
   });
 
-  beforeEach(() => {
-    mockReq = {
-      body: {},
-      params: {},
-    } as Partial<Request>;
-    mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    } as Partial<Response>;
-    mockNext = jest.fn();
-
-    mockUserRepository = new UserRepository() as jest.Mocked<UserRepository>;
-    mockUserService = new UserService(mockUserRepository) as jest.Mocked<UserService>;
-    mockUserController = new UserController(mockUserService) as jest.Mocked<UserController>;
-    
+  beforeEach(() => {    
     jest.clearAllMocks();
     mockValidateRequest.mockImplementation((req, res, next) => next());
   });
 
-  const mockValidateRequest = validateModule.validateRequest as jest.Mock;
-
-  const findRoute = (path: string, method: string): any | undefined => {
-    return userRoutes.stack.find(layer => {
-      if (!layer.route) return false;
-      return layer.route.path === path && layer.route.stack.some(handler => 
-        handler.method === method
-      );
-    });
-  };
-
   describe('POST /register', () => {
-    const validUser = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123'
-    };
-
-    it('should register a new user with valid data', async () => {
-      mockReq.body = validUser;
-      
-      jest.spyOn(mockUserController, 'registerUser').mockImplementation((req, res) => {
-        res.status(201).json({ message: 'User created successfully' });
+    it('should register a new user with valid data', async () => {      
+      mockImplementations.registerUser.mockImplementation((req, res) => {
+        res.status(HttpStatus.CREATED).json({ message: Messages.USER_CREATED_SUCCESSFULLY });
       });
 
-      const response = await request(app).post('/user/register').send(validUser);
+      const response = await request(app).post('/user/register').send(testData.validUser);
 
-      expect(response.status).toBe(201);
-      expect(mockUserController.registerUser).toHaveBeenCalled();
+      expect(response.status).toBe(HttpStatus.CREATED);
+      expect(mockImplementations.registerUser).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('POST /login', () => {
-    const validCredentials = {
-      email: 'john@example.com',
-      password: 'password123'
-    };
-
     it('should login user with valid credentials', async () => {
-      mockReq.body = validCredentials;
-
-      jest.spyOn(mockUserController, 'loginUser').mockImplementation((req, res) => {
-        res.status(200).json({ message: 'User logged in successfully' });
+      mockImplementations.loginUser.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json({ message: Messages.AUTHENTICATION_SUCCESS });
       });
 
-      const response = await request(app).post('/user/login').send(validCredentials);
+      const response = await request(app).post('/user/login').send(testData.validCredentials);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(mockValidateRequest).toHaveBeenCalled();
-      expect(mockUserController.loginUser).toHaveBeenCalled();
+      expect(mockImplementations.loginUser).toHaveBeenCalled();
     });
   });
 
   describe('GET /users/:id', () => {
     it('should get user by valid ID', async () => {
-      const userId = '123';
-      const mockUser = {
-        id: userId,
-        name: 'John Doe',
-        email: 'john@example.com'
-      };
-
-      jest.spyOn(mockUserController, 'getUserById').mockImplementation((req, res) => {
-        res.status(200).json(mockUser);
+      mockImplementations.getUserById.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json(testData.validUser);
       });
 
       const response = await request(app)
-        .get(`/user/${userId}`);
+        .get(`/user/${testData.testUserId}`);
 
-
-      expect(response.status).toBe(200);
-      expect(mockUserController.getUserById).toHaveBeenCalled();
-      expect(response.body).toEqual(mockUser);
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(mockImplementations.getUserById).toHaveBeenCalled();
+      expect(response.body).toEqual(testData.validUser);
     });
   });
 
@@ -153,54 +107,45 @@ describe('User Routes', () => {
     };
 
     it('should update user with valid data', async () => {
-      jest.spyOn(mockUserController, 'updateUser').mockImplementation((req, res) => {
-        res.status(200).json({ message: 'User updated successfully' });
+      mockImplementations.updateUser.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json({ message: Messages.USER_UPDATED_SUCCESSFULLY });
       });
 
       const response = await request(app)
-        .put(`/user/${userId}`)
+        .put(`/user/${testData.validUser}`)
         .send(updateData);
 
-      expect(response.status).toBe(200);
-      expect(mockUserController.updateUser).toHaveBeenCalled();
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(mockImplementations.updateUser).toHaveBeenCalled();
     });
   });
 
   describe('DELETE /users/:id', () => {
     it('should delete user with valid ID', async () => {
-      const userId = '123';
-      mockReq.params = { id: userId };
-
-      jest.spyOn(mockUserController, 'deleteUser').mockImplementation((req, res) => {
-        res.status(200).json({ message: 'User deleted successfully' });
+      mockImplementations.deleteUser.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json({ message: Messages.USER_DELETED_SUCCESSFULLY });
       });
 
       const response = await request(app)
-        .delete(`/user/${userId}`);
+        .delete(`/user/${testData.testUserId}`);
 
-
-      expect(response.status).toBe(200);
-      expect(mockUserController.deleteUser).toHaveBeenCalled();
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(mockImplementations.deleteUser).toHaveBeenCalled();
     });
   });
 
   describe('GET /users', () => {
     it('should list all users', async () => {
-      const mockUsers = [
-        { id: '1', name: 'User 1', email: 'user1@example.com' },
-        { id: '2', name: 'User 2', email: 'user2@example.com' }
-      ];
-
-      jest.spyOn(mockUserController, 'listUsers').mockImplementation((req, res) => {
-        res.status(200).json(mockUsers);
+      mockImplementations.listUsers.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json(testData.mockUsers);
       });
 
       const response = await request(app)
         .get('/user');
 
-      expect(response.status).toBe(200);
-      expect(mockUserController.listUsers).toHaveBeenCalled();
-      expect(response.body).toEqual(mockUsers);
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(mockImplementations.listUsers).toHaveBeenCalled();
+      expect(response.body).toEqual(testData.mockUsers);
     });
   });
 });
