@@ -1,6 +1,7 @@
 import { IUserRepository } from '../interfaces/repositories';
 import { IUserService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { IUser } from '../models/userModel';
 
 export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
@@ -27,9 +28,8 @@ export class UserService implements IUserService {
       ...userData,
       // password: hashedPassword
     });
-
-    const { password, ...userWithoutPassword } = newUser.toObject();
-    return userWithoutPassword;
+    const registerUser = newUser.toJSON() as IUser
+    return registerUser;
   }
 
   async loginUser(email: string, password: string) {

@@ -60,7 +60,7 @@ describe('UserService', () => {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'hashedpassword',
-        toObject: jest.fn().mockReturnValue({ id: '1', name: 'John Doe', email: 'john@example.com' }),
+        toJSON: jest.fn().mockReturnValue({ id: '1', name: 'John Doe', email: 'john@example.com' }),
       };
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.create.mockResolvedValue(mockUser as unknown as IUser);
