@@ -6,6 +6,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js'],
   coverageDirectory: 'coverage',
   setupFiles: ['<rootDir>/jest.setup.ts'],
+  modulePathIgnorePatterns: ['<rootDir>/src/swagger.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',

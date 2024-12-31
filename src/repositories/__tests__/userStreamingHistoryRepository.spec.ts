@@ -54,6 +54,13 @@ describe('UserStreamingHistoryRepository', () => {
       expect(result).toEqual([mockHistory]);
       expect(UserStreamingHistory.find).toHaveBeenCalled();
     });
+
+    it('should return paginated streaming history list without params for pagination', async () => {
+      const result = await repository.findAll();
+
+      expect(result).toEqual([mockHistory]);
+      expect(UserStreamingHistory.find).toHaveBeenCalled();
+    })
   });
 
   describe('findById', () => {
