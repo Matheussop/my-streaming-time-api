@@ -24,39 +24,3 @@ export const HttpStatus = {
 
 // Type para usar com TypeScript
 export type HttpStatusCode = typeof HttpStatus[keyof typeof HttpStatus];
-
-
-export const Messages = {
-  // Authentication & Authorization messages
-  AUTHENTICATION_SUCCESS: 'Authentication successful',
-  LOGOUT_SUCCESS: 'Logout successful',
-  TOKEN_REFRESH_SUCCESS: 'Token refreshed successfully',
-
-  // User related messages
-  USER_FOUND: 'User found',
-  USER_CREATED_SUCCESSFULLY: 'User created successfully',
-  USER_UPDATED_SUCCESSFULLY: 'User updated successfully',
-  USER_DELETED_SUCCESSFULLY: 'User deleted successfully',
-
-  // Validation messages
-  VALID_EMAIL: 'Email format is valid',
-  VALID_PASSWORD: 'Password meets all requirements',
-  VALID_NAME: 'Name is valid',
-  ALL_FIELDS_VALID: 'All fields are valid',
-
-  // Request messages
-  REQUEST_SUCCESSFUL: 'Request processed successfully',
-  PARAMETERS_VALID: 'Parameters are valid',
-
-  // Server messages
-  SERVER_OPERATION_SUCCESS: 'Operation completed successfully on the server',
-  DATABASE_OPERATION_SUCCESS: 'Database operation completed successfully',
-  SERVICE_AVAILABLE: 'Service is available',
-
-  // Rate limiting
-  RATE_LIMIT_RESOLVED: 'Request rate within limits',
-
-  // Generic messages
-  OPERATION_SUCCESSFUL: 'Operation completed successfully',
-  NO_ERROR: 'No errors encountered',
-} as const;

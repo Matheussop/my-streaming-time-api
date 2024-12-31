@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import request from 'supertest';
-import { HttpStatus, Messages } from '../../constants/httpStatus';
+import { HttpStatus } from '../../constants/httpStatus';
+import { Messages } from '../../constants/messages';
 import * as validateModule from '../../util/validate';
 
 const mockImplementations = {
