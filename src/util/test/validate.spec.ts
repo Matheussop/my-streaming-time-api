@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { validateRequest, validateRequiredFields } from '../validate';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 
-
 describe('Validation Functions', () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
@@ -13,7 +12,7 @@ describe('Validation Functions', () => {
       const body = {
         name: 'John',
         email: 'john@example.com',
-        password: "passwordHashed"
+        password: 'passwordHashed',
       };
       const requiredFields = ['name', 'email', 'password'];
 
@@ -25,7 +24,7 @@ describe('Validation Functions', () => {
     it('should return array of missing fields when some fields are missing', () => {
       const body = {
         name: 'John',
-        password: "passwordHashed"
+        password: 'passwordHashed',
       };
       const requiredFields = ['name', 'email', 'password'];
 
@@ -47,7 +46,7 @@ describe('Validation Functions', () => {
       const body = {
         name: 'John',
         email: null,
-        password: "passwordHashed"
+        password: 'passwordHashed',
       };
       const requiredFields = ['name', 'email', 'password'];
 
@@ -60,7 +59,7 @@ describe('Validation Functions', () => {
       const body = {
         name: 'John',
         email: undefined,
-        password: "passwordHashed"
+        password: 'passwordHashed',
       };
       const requiredFields = ['name', 'email', 'password'];
 
@@ -73,7 +72,7 @@ describe('Validation Functions', () => {
       const body = {
         name: 'John',
         email: '',
-        password: "passwordHashed"
+        password: 'passwordHashed',
       };
       const requiredFields = ['name', 'email', 'password'];
 
@@ -93,49 +92,34 @@ describe('Validation Functions', () => {
     it('should call next() when all required fields are present', () => {
       mockReq.body = {
         name: 'John',
-        email: 'john@example.com'
+        email: 'john@example.com',
       };
       const requiredFields = ['name', 'email'];
 
-      validateRequest(
-        mockReq as Request,
-        mockRes as Response,
-        mockNext as NextFunction,
-        requiredFields
-      );
+      validateRequest(mockReq as Request, mockRes as Response, mockNext as NextFunction, requiredFields);
 
       expect(mockNext).toHaveBeenCalled();
     });
 
     it('should throw StreamingServiceError when fields are missing', () => {
       mockReq.body = {
-        name: 'John'
+        name: 'John',
       };
       const requiredFields = ['name', 'email', 'password'];
 
       expect(() => {
-        validateRequest(
-          mockReq as Request,
-          mockRes as Response,
-          mockNext as NextFunction,
-          requiredFields
-        );
+        validateRequest(mockReq as Request, mockRes as Response, mockNext as NextFunction, requiredFields);
       }).toThrow(StreamingServiceError);
     });
 
     it('should include missing fields in error mess password', () => {
       mockReq.body = {
-        name: 'John'
+        name: 'John',
       };
       const requiredFields = ['name', 'email', 'password'];
 
       expect(() => {
-        validateRequest(
-          mockReq as Request,
-          mockRes as Response,
-          mockNext as NextFunction,
-          requiredFields
-        );
+        validateRequest(mockReq as Request, mockRes as Response, mockNext as NextFunction, requiredFields);
       }).toThrow('The following parameters are required: email, password');
     });
 
@@ -144,12 +128,7 @@ describe('Validation Functions', () => {
       const requiredFields = ['name', 'email'];
 
       try {
-        validateRequest(
-          mockReq as Request,
-          mockRes as Response,
-          mockNext as NextFunction,
-          requiredFields
-        );
+        validateRequest(mockReq as Request, mockRes as Response, mockNext as NextFunction, requiredFields);
       } catch (error: any) {
         expect(error).toBeInstanceOf(StreamingServiceError);
         expect(error.statusCode).toBe(400);
@@ -161,12 +140,7 @@ describe('Validation Functions', () => {
       const requiredFields = ['name', 'email'];
 
       expect(() => {
-        validateRequest(
-          mockReq as Request,
-          mockRes as Response,
-          mockNext as NextFunction,
-          requiredFields
-        );
+        validateRequest(mockReq as Request, mockRes as Response, mockNext as NextFunction, requiredFields);
       }).toThrow('The following parameters are required: name, email');
     });
 
@@ -174,17 +148,12 @@ describe('Validation Functions', () => {
       mockReq.body = {
         name: '',
         email: null,
-        password: undefined
+        password: undefined,
       };
       const requiredFields = ['name', 'email', 'password'];
 
       expect(() => {
-        validateRequest(
-          mockReq as Request,
-          mockRes as Response,
-          mockNext as NextFunction,
-          requiredFields
-        );
+        validateRequest(mockReq as Request, mockRes as Response, mockNext as NextFunction, requiredFields);
       }).toThrow('The following parameters are required: name, email, password');
     });
   });

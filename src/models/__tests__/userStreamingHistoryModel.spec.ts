@@ -7,7 +7,7 @@ describe('UserStreamingHistory Model', () => {
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri()
+    const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
   });
 
@@ -65,7 +65,6 @@ describe('UserStreamingHistory Model', () => {
 
     expect(savedHistory.totalWatchTimeInMinutes).toBe(120);
 
-    // Add a new entry and save
     savedHistory.watchHistory.push({ streamingId: 'stream5', title: 'Show E', durationInMinutes: 60 });
     const updatedHistory = await savedHistory.save();
 

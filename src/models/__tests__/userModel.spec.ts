@@ -32,7 +32,7 @@ describe('User Model', () => {
     expect(savedUser._id).toBeDefined();
     expect(savedUser.name).toBe('John Doe');
     expect(savedUser.email).toBe('johndoe@example.com');
-    expect(savedUser.password).toBe('securepassword'); 
+    expect(savedUser.password).toBe('securepassword');
     expect(savedUser.createdAt).toBeDefined();
   });
 

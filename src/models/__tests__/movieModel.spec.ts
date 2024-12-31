@@ -3,33 +3,27 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import Movie from '../movieModel';
 import StreamingTypes from '../streamingTypesModel';
 
-
 describe('Movie Model Integrations Test ', () => {
   let mongoServer: MongoMemoryServer;
 
-  // Configurar conexão com banco de dados antes dos testes
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
   });
 
-  // Limpar dados e desconectar após os testes
   afterAll(async () => {
     await mongoose.disconnect();
     await mongoServer.stop();
   });
 
-  // Limpar a coleção após cada teste
   afterEach(async () => {
     await Movie.deleteMany({});
     await StreamingTypes.deleteMany({});
   });
 
-  // Teste de criação de filme
   describe('Movie Creation', () => {
     it('should create a movie with valid data', async () => {
-      // Criar tipos de streaming com categorias para o teste
       await StreamingTypes.create({
         name: 'Netflix',
         categories: [{ id: 1, name: 'Action' }],
@@ -46,7 +40,7 @@ describe('Movie Model Integrations Test ', () => {
       };
 
       const movie = await Movie.create(validMovie);
-      
+
       expect(movie.title).toBe(validMovie.title);
       expect(movie.rating).toBe(validMovie.rating);
       expect(movie.genre).toEqual(expect.arrayContaining(validMovie.genre));
@@ -73,7 +67,7 @@ describe('Movie Model Integrations Test ', () => {
         plot: 'Test plot',
         cast: ['Actor 1'],
         rating: 4.5,
-        genre: [999], // Gênero inválido
+        genre: [999],
         url: 'http://example.com',
       };
 
@@ -81,7 +75,6 @@ describe('Movie Model Integrations Test ', () => {
     });
   });
 
-  // Teste do método estático findByTitle
   describe('findByTitle Static Method', () => {
     beforeEach(async () => {
       await StreamingTypes.create({
@@ -89,7 +82,6 @@ describe('Movie Model Integrations Test ', () => {
         categories: [{ id: 1, name: 'Action' }],
       });
 
-      // Criar alguns filmes para testar a busca
       const movies = [
         {
           title: 'The Matrix',
@@ -134,7 +126,6 @@ describe('Movie Model Integrations Test ', () => {
     });
   });
 
-  // Teste de transformação toJSON
   describe('toJSON Transform', () => {
     it('should covert to JSON', async () => {
       await StreamingTypes.create({

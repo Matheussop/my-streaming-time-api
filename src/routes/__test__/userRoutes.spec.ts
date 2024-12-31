@@ -10,11 +10,11 @@ const mockImplementations = {
   getUserById: jest.fn(),
   updateUser: jest.fn(),
   deleteUser: jest.fn(),
-  listUsers: jest.fn()
+  listUsers: jest.fn(),
 };
 
 jest.mock('../../controllers/userController', () => ({
-  UserController: jest.fn().mockImplementation(() => mockImplementations)
+  UserController: jest.fn().mockImplementation(() => mockImplementations),
 }));
 
 jest.mock('../../services/userService');
@@ -33,17 +33,17 @@ describe('User Routes', () => {
     validUser: {
       name: 'John Doe',
       email: 'john@example.com',
-      password: 'Password123!'
+      password: 'Password123!',
     },
     validCredentials: {
       email: 'john@example.com',
-      password: 'Password123!'
+      password: 'Password123!',
     },
     mockUsers: [
       { id: '1', name: 'User 1', email: 'user1@example.com' },
-      { id: '2', name: 'User 2', email: 'user2@example.com' }
+      { id: '2', name: 'User 2', email: 'user2@example.com' },
     ],
-    testUserId: '123'
+    testUserId: '123',
   };
 
   beforeAll(() => {
@@ -53,13 +53,13 @@ describe('User Routes', () => {
     mockValidateRequest = validateModule.validateRequest as jest.Mock;
   });
 
-  beforeEach(() => {    
+  beforeEach(() => {
     jest.clearAllMocks();
     mockValidateRequest.mockImplementation((req, res, next) => next());
   });
 
   describe('POST /register', () => {
-    it('should register a new user with valid data', async () => {      
+    it('should register a new user with valid data', async () => {
       mockImplementations.registerUser.mockImplementation((req, res) => {
         res.status(HttpStatus.CREATED).json({ message: Messages.USER_CREATED_SUCCESSFULLY });
       });
@@ -91,8 +91,7 @@ describe('User Routes', () => {
         res.status(HttpStatus.OK).json(testData.validUser);
       });
 
-      const response = await request(app)
-        .get(`/user/${testData.testUserId}`);
+      const response = await request(app).get(`/user/${testData.testUserId}`);
 
       expect(response.status).toBe(HttpStatus.OK);
       expect(mockImplementations.getUserById).toHaveBeenCalled();
@@ -104,7 +103,7 @@ describe('User Routes', () => {
     const userId = '123';
     const updateData = {
       name: 'Updated Name',
-      email: 'updated@example.com'
+      email: 'updated@example.com',
     };
 
     it('should update user with valid data', async () => {
@@ -112,9 +111,7 @@ describe('User Routes', () => {
         res.status(HttpStatus.OK).json({ message: Messages.USER_UPDATED_SUCCESSFULLY });
       });
 
-      const response = await request(app)
-        .put(`/user/${testData.validUser}`)
-        .send(updateData);
+      const response = await request(app).put(`/user/${testData.validUser}`).send(updateData);
 
       expect(response.status).toBe(HttpStatus.OK);
       expect(mockImplementations.updateUser).toHaveBeenCalled();
@@ -127,8 +124,7 @@ describe('User Routes', () => {
         res.status(HttpStatus.OK).json({ message: Messages.USER_DELETED_SUCCESSFULLY });
       });
 
-      const response = await request(app)
-        .delete(`/user/${testData.testUserId}`);
+      const response = await request(app).delete(`/user/${testData.testUserId}`);
 
       expect(response.status).toBe(HttpStatus.OK);
       expect(mockImplementations.deleteUser).toHaveBeenCalled();
@@ -141,8 +137,7 @@ describe('User Routes', () => {
         res.status(HttpStatus.OK).json(testData.mockUsers);
       });
 
-      const response = await request(app)
-        .get('/user');
+      const response = await request(app).get('/user');
 
       expect(response.status).toBe(HttpStatus.OK);
       expect(mockImplementations.listUsers).toHaveBeenCalled();

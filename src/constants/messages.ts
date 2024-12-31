@@ -59,4 +59,4 @@ export const Messages = {
 } as const;
 
 export type MessageKey = keyof typeof Messages;
-export type Message = typeof Messages[MessageKey];
+export type Message = (typeof Messages)[MessageKey];

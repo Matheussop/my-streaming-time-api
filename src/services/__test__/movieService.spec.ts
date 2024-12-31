@@ -96,7 +96,9 @@ describe('MovieService', () => {
     it('should throw error if movie not found', async () => {
       mockMovieRepository.findById.mockResolvedValue(null);
 
-      await expect(movieService.getMovieById('999')).rejects.toThrow(new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404));
+      await expect(movieService.getMovieById('999')).rejects.toThrow(
+        new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404),
+      );
     });
   });
 
@@ -196,7 +198,9 @@ describe('MovieService', () => {
     it('should throw error if movie not found for deletion', async () => {
       mockMovieRepository.findById.mockResolvedValue(null);
 
-      await expect(movieService.deleteMovie('999')).rejects.toThrow(new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404));
+      await expect(movieService.deleteMovie('999')).rejects.toThrow(
+        new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404),
+      );
     });
   });
 

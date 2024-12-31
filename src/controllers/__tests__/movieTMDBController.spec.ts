@@ -46,14 +46,11 @@ describe('Movie Controller', () => {
     it('should fetch and return movies successfully', async () => {
       axiosGetSpy.mockResolvedValueOnce(mockMovieData);
 
-      await getExternalMovies(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await getExternalMovies(mockRequest as Request, mockResponse as Response);
 
       expect(axiosGetSpy).toHaveBeenCalledWith(
         'https://api.themoviedb.org/3/movie/popular?language=pt-BR&page=1',
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith(
@@ -67,7 +64,7 @@ describe('Movie Controller', () => {
             rating: 8.5,
             url: expect.stringContaining('/test-path.jpg'),
           }),
-        ])
+        ]),
       );
     });
 
@@ -75,10 +72,7 @@ describe('Movie Controller', () => {
       const errorMessage = 'API Error';
       axiosGetSpy.mockRejectedValueOnce(new Error(errorMessage));
 
-      await getExternalMovies(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await getExternalMovies(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -107,7 +101,7 @@ describe('Movie Controller', () => {
             vote_average: 8.5,
             poster_path: '/test-path.jpg',
           },
-          movieInDataBase
+          movieInDataBase,
         ],
       },
     };
@@ -117,15 +111,10 @@ describe('Movie Controller', () => {
       movieFindSpy.mockReturnValueOnce({
         lean: jest.fn().mockResolvedValue([movieInDataBase]),
       });
-      
-      movieInsertManySpy.mockResolvedValueOnce([
-        { ...mockMovieData.data.results[0], _id: 'new-id' },
-      ]);
 
-      await fetchAndSaveExternalMovies(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      movieInsertManySpy.mockResolvedValueOnce([{ ...mockMovieData.data.results[0], _id: 'new-id' }]);
+
+      await fetchAndSaveExternalMovies(mockRequest as Request, mockResponse as Response);
 
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(movieFindSpy).toHaveBeenCalledTimes(1);
@@ -136,7 +125,7 @@ describe('Movie Controller', () => {
           expect.objectContaining({
             title: 'New Movie',
           }),
-        ])
+        ]),
       );
     });
 
@@ -147,10 +136,7 @@ describe('Movie Controller', () => {
         lean: jest.fn().mockRejectedValue(new Error(errorMessage)),
       });
 
-      await fetchAndSaveExternalMovies(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await fetchAndSaveExternalMovies(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -167,10 +153,7 @@ describe('Movie Controller', () => {
     it('should return error when title is missing', async () => {
       mockRequest.body = {};
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -190,10 +173,7 @@ describe('Movie Controller', () => {
       const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
       movieFindSpy.mockReturnValue({ skip: mockSkip });
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -214,10 +194,7 @@ describe('Movie Controller', () => {
       const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
       movieFindSpy.mockReturnValue({ skip: mockSkip });
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -233,14 +210,16 @@ describe('Movie Controller', () => {
 
       const tmdbResponse = {
         data: {
-          results: [{
-            title: 'New Movie',
-            release_date: '2024-01-01',
-            overview: 'Test overview',
-            vote_average: 8.5,
-            genre_ids: [28, 12],
-            poster_path: '/test-path.jpg',
-          }],
+          results: [
+            {
+              title: 'New Movie',
+              release_date: '2024-01-01',
+              overview: 'Test overview',
+              vote_average: 8.5,
+              genre_ids: [28, 12],
+              poster_path: '/test-path.jpg',
+            },
+          ],
         },
       };
 
@@ -251,14 +230,9 @@ describe('Movie Controller', () => {
 
       axiosGetSpy.mockResolvedValueOnce(tmdbResponse);
       movieFindSpy.mockReturnValue({ lean: mockLean });
-      movieInsertManySpy.mockResolvedValueOnce([
-        { ...tmdbResponse.data.results[0], _id: 'new-id' },
-      ]);
+      movieInsertManySpy.mockResolvedValueOnce([{ ...tmdbResponse.data.results[0], _id: 'new-id' }]);
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -285,10 +259,7 @@ describe('Movie Controller', () => {
 
       axiosGetSpy.mockRejectedValueOnce(new Error('TMDB API Error'));
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -302,14 +273,16 @@ describe('Movie Controller', () => {
 
       const tmdbResponse = {
         data: {
-          results: [{
-            title: 'New Movie',
-            release_date: '2024-01-01',
-            overview: 'Test overview',
-            vote_average: 8.5,
-            genre_ids: [28, 12],
-            poster_path: '/test-path.jpg',
-          }],
+          results: [
+            {
+              title: 'New Movie',
+              release_date: '2024-01-01',
+              overview: 'Test overview',
+              vote_average: 8.5,
+              genre_ids: [28, 12],
+              poster_path: '/test-path.jpg',
+            },
+          ],
         },
       };
 
@@ -320,14 +293,9 @@ describe('Movie Controller', () => {
 
       axiosGetSpy.mockResolvedValueOnce(tmdbResponse);
       movieFindSpy.mockReturnValue({ lean: mockLean });
-      movieInsertManySpy.mockResolvedValueOnce([
-        { ...tmdbResponse.data.results[0], _id: 'new-id' },
-      ]);
+      movieInsertManySpy.mockResolvedValueOnce([{ ...tmdbResponse.data.results[0], _id: 'new-id' }]);
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -352,17 +320,13 @@ describe('Movie Controller', () => {
       const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
       movieFindSpy.mockReturnValue({ skip: mockSkip });
 
-
       axiosGetSpy.mockResolvedValueOnce({
         data: {
-          results: []
-        }
+          results: [],
+        },
       });
 
-      await findOrAddMovie(
-        mockRequest as Request,
-        mockResponse as Response
-      );
+      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({

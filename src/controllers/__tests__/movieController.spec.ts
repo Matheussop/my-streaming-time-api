@@ -39,7 +39,7 @@ describe('MovieController', () => {
       mockReq = {
         body: { title: 'Test' },
         method: 'GET',
-        path: '/movies/search'
+        path: '/movies/search',
       };
       mockService.getMoviesByTitle.mockResolvedValue(mockMovies);
 
@@ -54,11 +54,14 @@ describe('MovieController', () => {
   describe('getMovies', () => {
     it('should return paginated movies list', async () => {
       const validSecondaryId = generateValidObjectId();
-      const mockMovies: IMovie[] = [{ id: validId, title: 'Movie 1' }, { id: validSecondaryId, title: 'Movie 2' }] as IMovie[];
+      const mockMovies: IMovie[] = [
+        { id: validId, title: 'Movie 1' },
+        { id: validSecondaryId, title: 'Movie 2' },
+      ] as IMovie[];
       mockReq = {
         body: {},
         method: 'GET',
-        path: '/movies'
+        path: '/movies',
       };
       mockService.getMovies.mockResolvedValue(mockMovies);
 
@@ -73,7 +76,7 @@ describe('MovieController', () => {
       mockReq = {
         body: { page: 1, limit: 101 },
         method: 'GET',
-        path: '/movies'
+        path: '/movies',
       };
 
       await controller.getMovies(mockReq as Request, mockRes as Response, mockNext);
@@ -83,13 +86,12 @@ describe('MovieController', () => {
   });
 
   describe('getMovieById', () => {
-
     it('should return movie by id', async () => {
       const mockMovie: IMovie = { id: validId, title: 'Test Movie' } as IMovie;
       mockReq = {
         params: { id: validId },
         method: 'GET',
-        path: `/movies/${validId}`
+        path: `/movies/${validId}`,
       };
       mockService.getMovieById.mockResolvedValue(mockMovie);
 
@@ -104,7 +106,7 @@ describe('MovieController', () => {
       mockReq = {
         params: { id: 'invalid-id' },
         method: 'GET',
-        path: '/movies/invalid-id'
+        path: '/movies/invalid-id',
       };
 
       await controller.getMovieById(mockReq as Request, mockRes as Response, mockNext);
@@ -120,16 +122,16 @@ describe('MovieController', () => {
         release_date: '2024-01-01',
         plot: 'Test plot',
         cast: ['Actor 1'],
-        genre: [1,2],
+        genre: [1, 2],
         rating: 8.5,
-        url: 'movie-url'
+        url: 'movie-url',
       };
 
       const mockCreatedMovie = { id: validId, ...movieData } as IMovie;
       mockReq = {
         body: movieData,
         method: 'POST',
-        path: '/movies'
+        path: '/movies',
       };
       mockService.createMovie.mockResolvedValue(mockCreatedMovie);
 
@@ -144,7 +146,7 @@ describe('MovieController', () => {
       mockReq = {
         body: {},
         method: 'POST',
-        path: '/movies'
+        path: '/movies',
       };
 
       await controller.createMovie(mockReq as Request, mockRes as Response, mockNext);
@@ -161,7 +163,7 @@ describe('MovieController', () => {
         params: { id: validId },
         body: updateData,
         method: 'PUT',
-        path: `/movies/${validId}`
+        path: `/movies/${validId}`,
       };
       mockService.updateMovie.mockResolvedValue(mockUpdatedMovie);
 
@@ -177,7 +179,7 @@ describe('MovieController', () => {
         params: { id: 'invalid-id' },
         body: { title: 'Updated Movie' },
         method: 'PUT',
-        path: '/movies/invalid-id'
+        path: '/movies/invalid-id',
       };
 
       await controller.updateMovie(mockReq as Request, mockRes as Response, mockNext);
@@ -190,7 +192,7 @@ describe('MovieController', () => {
         params: { id: validId },
         body: {},
         method: 'PUT',
-        path: `/movies/${validId}`
+        path: `/movies/${validId}`,
       };
 
       await controller.updateMovie(mockReq as Request, mockRes as Response, mockNext);
@@ -204,9 +206,8 @@ describe('MovieController', () => {
       mockReq = {
         params: { id: validId },
         method: 'DELETE',
-        path: `/movies/${validId}`
+        path: `/movies/${validId}`,
       };
-
 
       await controller.deleteMovie(mockReq as Request, mockRes as Response, mockNext);
 
@@ -219,7 +220,7 @@ describe('MovieController', () => {
       mockReq = {
         params: { id: 'invalid-id' },
         method: 'DELETE',
-        path: '/movies/invalid-id'
+        path: '/movies/invalid-id',
       };
 
       await controller.deleteMovie(mockReq as Request, mockRes as Response, mockNext);

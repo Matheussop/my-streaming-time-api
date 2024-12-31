@@ -44,7 +44,7 @@ export const ErrorMessages = {
   USER_CREATION_FAILED: 'Unable to create user',
   USER_UPDATE_FAILED: 'Unable to update user',
   USER_DELETION_FAILED: 'Unable to delete user',
-  
+
   // Validation User errors
   INVALID_EMAIL: 'Invalid email format',
   INVALID_PASSWORD: 'Password must contain at least 8 characters, including numbers, uppercase and lowercase letters',
@@ -63,15 +63,15 @@ export const ErrorMessages = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
   DATABASE_ERROR: 'Database access error',
   SERVICE_UNAVAILABLE: 'Service temporarily unavailable',
-  
+
   // Rate limiting
   TOO_MANY_REQUESTS: 'Too many requests. Please try again later',
 
   // Generic errors
   OPERATION_FAILED: 'Operation failed',
-  UNKNOWN_ERROR: 'Unknown error'
+  UNKNOWN_ERROR: 'Unknown error',
 } as const;
 
 // Types for TypeScript
 export type ErrorMessageKey = keyof typeof ErrorMessages;
-export type ErrorMessage = typeof ErrorMessages[ErrorMessageKey];
+export type ErrorMessage = (typeof ErrorMessages)[ErrorMessageKey];

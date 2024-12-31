@@ -28,7 +28,7 @@ export class UserService implements IUserService {
       ...userData,
       // password: hashedPassword
     });
-    const registerUser = newUser.toJSON() as IUser
+    const registerUser = newUser.toJSON() as IUser;
     return registerUser;
   }
 
