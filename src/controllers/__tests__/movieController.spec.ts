@@ -5,6 +5,8 @@ import { MovieRepository } from '../../repositories/movieRepository';
 import { MovieService } from '../../services/movieService';
 import Movie, { IMovie } from '../../models/movieModel';
 import { StreamingServiceError } from '../../middleware/errorHandler';
+import { ErrorMessages } from '../../constants/errorMessages';
+import { Messages } from '../../constants/messages';
 
 jest.mock('../../services/movieService');
 
@@ -76,7 +78,7 @@ describe('MovieController', () => {
 
       await controller.getMovies(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Limit cannot exceed 100 items', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.MOVIE_FETCH_LIMIT_EXCEEDED, 400));
     });
   });
 
@@ -107,7 +109,7 @@ describe('MovieController', () => {
 
       await controller.getMovieById(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid movie ID format', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400));
     });
   });
 
@@ -147,7 +149,7 @@ describe('MovieController', () => {
 
       await controller.createMovie(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Request body is missing', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400));
     });
   });
 
@@ -180,7 +182,7 @@ describe('MovieController', () => {
 
       await controller.updateMovie(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid movie ID format', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400));
     });
 
     it('should throw error when update data is missing', async () => {
@@ -193,7 +195,7 @@ describe('MovieController', () => {
 
       await controller.updateMovie(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Update data is missing', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400));
     });
   });
 
@@ -210,7 +212,7 @@ describe('MovieController', () => {
 
       expect(mockService.deleteMovie).toHaveBeenCalledWith(validId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({ message: 'Movie deleted successfully' });
+      expect(mockRes.json).toHaveBeenCalledWith({ message: Messages.MOVIE_DELETED_SUCCESSFULLY });
     });
 
     it('should throw error for invalid movie id format', async () => {
@@ -222,7 +224,7 @@ describe('MovieController', () => {
 
       await controller.deleteMovie(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid movie ID format', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400));
     });
   });
 });

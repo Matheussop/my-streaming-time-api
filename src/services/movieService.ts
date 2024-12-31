@@ -1,4 +1,5 @@
 import logger from '../config/logger';
+import { ErrorMessages } from '../constants/errorMessages';
 import { IMovieRepository } from '../interfaces/repositories';
 import { IMovieService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
@@ -17,7 +18,7 @@ export class MovieService implements IMovieService {
         message: 'Movie not found',
         movieId: id,
       });
-      throw new StreamingServiceError('Movie not found', 404);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404);
     }
     return movie;
   }
@@ -46,7 +47,7 @@ export class MovieService implements IMovieService {
         message: 'Movie not found for update',
         movieId: id,
       });
-      throw new StreamingServiceError('Movie not found', 404);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404);
     }
 
     // If updating the title, check for duplicates
@@ -66,7 +67,7 @@ export class MovieService implements IMovieService {
         message: 'Movie not found for deletion',
         movieId: id,
       });
-      throw new StreamingServiceError('Movie not found', 404);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404);
     }
     return movie;
   }
@@ -78,7 +79,7 @@ export class MovieService implements IMovieService {
         message: 'Movie not found',
         title: title,
       });
-      throw new StreamingServiceError('Movie not found', 404);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404);
     }
 
     return movies;
@@ -88,14 +89,14 @@ export class MovieService implements IMovieService {
   private async checkDuplicateTitle(title: string) {
     const movies = await this.movieRepository.findByTitle(title, 0, 1);
     if (movies && movies.length > 0) {
-      throw new StreamingServiceError('Movie with this title already exists', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_WITH_TITLE_EXISTS, 400);
     }
   }
 
   private validateRating(rating: any): number {
     const numRating = parseFloat(rating);
     if (isNaN(numRating) || numRating < 0 || numRating > 10) {
-      throw new StreamingServiceError('Rating must be a number between 0 and 10', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_RATING_INVALID, 400);
     }
     return numRating;
   }
@@ -103,11 +104,11 @@ export class MovieService implements IMovieService {
   private validateReleaseDate(date: string): string {
     const releaseDate = new Date(date);
     if (isNaN(releaseDate.getTime())) {
-      throw new StreamingServiceError('Invalid release date', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_RELEASE_DATE_INVALID, 400);
     }
     if (releaseDate > new Date()) {
       // TODO This may need to be removed in the future, as we will accept upcoming movie releases.
-      throw new StreamingServiceError('Release date cannot be in the future', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_RELEASE_DATE_FUTURE, 400);
     }
     //Return date without time
     return releaseDate.toISOString().split('T')[0];
@@ -118,13 +119,13 @@ export class MovieService implements IMovieService {
       // TODO For now the URL is accepted as is, but at some point it will need to be validated.
       return url;
     } catch {
-      throw new StreamingServiceError('Invalid URL format', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_URL_INVALID, 400);
     }
   }
 
   private processCastList(cast: any[]): string[] {
     if (!Array.isArray(cast)) {
-      throw new StreamingServiceError('Cast must be an array', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_CAST_INVALID, 400);
     }
     return cast.map((actor) => actor.trim());
   }

@@ -2,6 +2,7 @@ import { MovieService } from '../movieService';
 import { IMovieRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IMovie } from '../../models/movieModel';
+import { ErrorMessages } from '../../constants/errorMessages';
 
 describe('MovieService', () => {
   let movieService: MovieService;
@@ -69,7 +70,7 @@ describe('MovieService', () => {
       mockMovieRepository.findByTitle.mockResolvedValue([mockMovie as IMovie]);
 
       await expect(movieService.createMovie(movieData)).rejects.toThrow(
-        new StreamingServiceError('Movie with this title already exists', 400),
+        new StreamingServiceError(ErrorMessages.MOVIE_WITH_TITLE_EXISTS, 400),
       );
     });
 
@@ -95,7 +96,7 @@ describe('MovieService', () => {
     it('should throw error if movie not found', async () => {
       mockMovieRepository.findById.mockResolvedValue(null);
 
-      await expect(movieService.getMovieById('999')).rejects.toThrow(new StreamingServiceError('Movie not found', 404));
+      await expect(movieService.getMovieById('999')).rejects.toThrow(new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404));
     });
   });
 
@@ -129,7 +130,7 @@ describe('MovieService', () => {
       mockMovieRepository.findById.mockResolvedValue(null);
 
       await expect(movieService.updateMovie('999', { title: 'Updated Title' })).rejects.toThrow(
-        new StreamingServiceError('Movie not found', 404),
+        new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404),
       );
     });
 
@@ -142,7 +143,7 @@ describe('MovieService', () => {
       mockMovieRepository.findByTitle.mockResolvedValue([existingMovie as IMovie]);
 
       await expect(movieService.updateMovie('999', { title: 'Updated Title' })).rejects.toThrow(
-        new StreamingServiceError('Movie with this title already exists', 400),
+        new StreamingServiceError(ErrorMessages.MOVIE_WITH_TITLE_EXISTS, 400),
       );
     });
 
@@ -150,7 +151,7 @@ describe('MovieService', () => {
       mockMovieRepository.findById.mockResolvedValue(mockMovie as IMovie);
 
       await expect(movieService.updateMovie('999', { rating: '11' })).rejects.toThrow(
-        new StreamingServiceError('Rating must be a number between 0 and 10', 400),
+        new StreamingServiceError(ErrorMessages.MOVIE_RATING_INVALID, 400),
       );
     });
 
@@ -160,7 +161,7 @@ describe('MovieService', () => {
       const releaseDate = new Date();
       releaseDate.setFullYear(releaseDate.getFullYear() + 1);
       await expect(movieService.updateMovie('999', { release_date: releaseDate.toISOString() })).rejects.toThrow(
-        new StreamingServiceError('Release date cannot be in the future', 400),
+        new StreamingServiceError(ErrorMessages.MOVIE_RELEASE_DATE_FUTURE, 400),
       );
     });
 
@@ -168,7 +169,7 @@ describe('MovieService', () => {
       mockMovieRepository.findById.mockResolvedValue(mockMovie as IMovie);
 
       await expect(movieService.updateMovie('999', { release_date: '2024-20-20' })).rejects.toThrow(
-        new StreamingServiceError('Invalid release date', 400),
+        new StreamingServiceError(ErrorMessages.MOVIE_RELEASE_DATE_INVALID, 400),
       );
     });
 
@@ -176,7 +177,7 @@ describe('MovieService', () => {
       mockMovieRepository.findById.mockResolvedValue(mockMovie as IMovie);
 
       await expect(movieService.updateMovie('999', { cast: 'Actor 1' })).rejects.toThrow(
-        new StreamingServiceError('Cast must be an array', 400),
+        new StreamingServiceError(ErrorMessages.MOVIE_CAST_INVALID, 400),
       );
     });
   });
@@ -195,7 +196,7 @@ describe('MovieService', () => {
     it('should throw error if movie not found for deletion', async () => {
       mockMovieRepository.findById.mockResolvedValue(null);
 
-      await expect(movieService.deleteMovie('999')).rejects.toThrow(new StreamingServiceError('Movie not found', 404));
+      await expect(movieService.deleteMovie('999')).rejects.toThrow(new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404));
     });
   });
 
@@ -213,7 +214,7 @@ describe('MovieService', () => {
       mockMovieRepository.findByTitle.mockResolvedValue([]);
 
       await expect(movieService.getMoviesByTitle('Test Movie')).rejects.toThrow(
-        new StreamingServiceError('Movie not found', 404),
+        new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404),
       );
     });
   });

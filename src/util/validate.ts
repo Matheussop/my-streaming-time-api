@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export const validateRequiredFields = (body: any, requiredFields: string[]): string[] => {
   const missingFields: string[] = [];
@@ -14,7 +15,7 @@ export const validateRequiredFields = (body: any, requiredFields: string[]): str
 export const validateRequest = (req: Request, res: Response, next: NextFunction, requiredFields: string[]): void => {
   const missingFields = validateRequiredFields(req.body, requiredFields);
   if (missingFields.length > 0) {
-    throw new StreamingServiceError(`The following parameters are required: ${missingFields.join(', ')}`, 400);
+    throw new StreamingServiceError(`${ErrorMessages.REQUIRED_PARAMETERS} ${missingFields.join(', ')}`, 400);
   } else {
     next();
   }

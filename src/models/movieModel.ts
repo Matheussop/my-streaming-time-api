@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
 import StreamingTypes from './streamingTypesModel';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export interface IMovie extends Document {
   _id: string;
@@ -20,7 +21,7 @@ export interface IMovieModel extends Model<IMovie, {}, IMovieMethods> {
 
 const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
   {
-    title: { type: String, required: [true, 'Title is required'] },
+    title: { type: String, required: [true, ErrorMessages.MOVIE_TITLE_REQUIRED] },
     release_date: { type: String },
     plot: { type: String, default: '' },
     cast: [{ type: String }],

@@ -1,10 +1,11 @@
-import { MovieService } from './../services/movieService';
 import { Request, Response } from 'express';
 import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { IMovieService } from '../interfaces/services';
+import { ErrorMessages } from '../constants/errorMessages';
+import { Messages } from '../constants/messages';
 
 export class MovieController {
   constructor(private movieService: IMovieService) {}
@@ -37,7 +38,7 @@ export class MovieController {
     });
 
     if (Number(limit) > 100) {
-      throw new StreamingServiceError('Limit cannot exceed 100 items', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_FETCH_LIMIT_EXCEEDED, 400);
     }
 
     const movies = await this.movieService.getMovies(skip, limit);
@@ -55,7 +56,7 @@ export class MovieController {
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError('Invalid movie ID format', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
     }
 
     const movie = await this.movieService.getMovieById(id);
@@ -77,7 +78,7 @@ export class MovieController {
         method: req.method,
         path: req.path,
       });
-      throw new StreamingServiceError('Request body is missing', 400);
+      throw new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400);
     }
 
     const movie = new Movie({
@@ -106,11 +107,11 @@ export class MovieController {
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError('Invalid movie ID format', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
     }
 
     if (!req.body || Object.keys(req.body).length === 0) {
-      throw new StreamingServiceError('Update data is missing', 400);
+      throw new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400);
     }
 
     const movie = await this.movieService.updateMovie(id, req.body);
@@ -128,11 +129,11 @@ export class MovieController {
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError('Invalid movie ID format', 400);
+      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
     }
 
     await this.movieService.deleteMovie(id);
 
-    res.status(200).json({ message: 'Movie deleted successfully' });
+    res.status(200).json({ message: Messages.MOVIE_DELETED_SUCCESSFULLY });
   });
 }

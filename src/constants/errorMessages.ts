@@ -10,6 +10,15 @@ export const ErrorMessages = {
   MOVIE_FETCH_AND_SAVE_FAILED: 'Unable to fetch and save movie',
   MOVIE_EXTERNAL_FETCH_FAILED: 'Unable to fetch external movies',
   MOVIE_EXTERNAL_SAVE_FAILED: 'Unable to save external movies',
+  MOVIE_FETCH_LIMIT_EXCEEDED: 'Limit cannot exceed 100 items',
+  MOVIE_ID_INVALID: 'Invalid movie ID format',
+  MOVIE_WITH_TITLE_EXISTS: 'Movie with this title already exists',
+  MOVIE_RATING_INVALID: 'Rating must be a number between 0 and 10',
+  MOVIE_RELEASE_DATE_INVALID: 'Release date must be a valid date format',
+  MOVIE_RELEASE_DATE_FUTURE: 'Release date cannot be in the future',
+  MOVIE_URL_INVALID: 'Invalid URL format',
+  MOVIE_CAST_INVALID: 'Invalid cast format, must be an array of strings',
+  MOVIE_TITLE_REQUIRED: 'Title is required',
 
   // Streaming Type errors
   STREAMING_TYPE_NOT_FOUND: 'Streaming type not found',
@@ -36,7 +45,7 @@ export const ErrorMessages = {
   USER_UPDATE_FAILED: 'Unable to update user',
   USER_DELETION_FAILED: 'Unable to delete user',
   
-  // Validation errors
+  // Validation User errors
   INVALID_EMAIL: 'Invalid email format',
   INVALID_PASSWORD: 'Password must contain at least 8 characters, including numbers, uppercase and lowercase letters',
   INVALID_NAME: 'Name is required',
@@ -45,8 +54,10 @@ export const ErrorMessages = {
 
   // Request errors
   INVALID_REQUEST: 'Invalid request',
+  REQUIRED_PARAMETERS: 'The following parameters are required:',
   MISSING_PARAMETERS: 'Missing required parameters',
   INVALID_PARAMETERS: 'Invalid parameters',
+  BODY_REQUIRED: 'Request body is required',
 
   // Server errors
   INTERNAL_SERVER_ERROR: 'Internal server error',
