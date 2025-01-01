@@ -3,6 +3,8 @@ import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { StreamingTypeService } from '../services/streamingTypeService';
+import { Messages } from '../constants/messages';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export class StreamingTypeController {
   constructor(private service: StreamingTypeService) {}
@@ -104,12 +106,12 @@ export class StreamingTypeController {
     });
 
     await this.service.deleteStreamingType(req.params.id);
-    res.status(204).send('Streaming type deleted');
+    res.status(204).send(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
   });
 }
 
 const validateIdFormat = (id: string, type: string) => {
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-    throw new StreamingServiceError(`Invalid ${type} ID format`, 400);
+    throw new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT(type), 400);
   }
 };

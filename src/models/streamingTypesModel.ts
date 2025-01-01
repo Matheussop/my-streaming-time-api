@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export interface ICategory {
   id: number;
@@ -16,11 +17,11 @@ export interface IStreamingType extends Document {
 const categorySchema = new Schema<ICategory>({
   id: {
     type: Number,
-    required: [true, 'Category ID is required'],
+    required: [true, ErrorMessages.STREAMING_TYPE_CATEGORIES_INVALID_ID],
   },
   name: {
     type: String,
-    required: [true, 'Category name is required'],
+    required: [true, ErrorMessages.STREAMING_TYPE_CATEGORIES_NAME_REQUIRED],
     trim: true,
   },
 });
@@ -29,7 +30,7 @@ const streamingTypesSchema = new Schema<IStreamingType>(
   {
     name: {
       type: String,
-      required: [true, 'Name is required'],
+      required: [true, ErrorMessages.STREAMING_TYPE_NAME_REQUIRED],
       unique: true,
       trim: true,
     },

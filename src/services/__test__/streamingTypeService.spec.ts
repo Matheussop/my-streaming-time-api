@@ -3,6 +3,7 @@ import { IStreamingTypeRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IStreamingType } from '../../models/streamingTypesModel';
 import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse } from '../../interfaces/streamingTypes';
+import { ErrorMessages } from '../../constants/errorMessages';
 
 describe('StreamingTypeService', () => {
   let streamingTypeService: StreamingTypeService;
@@ -58,7 +59,7 @@ describe('StreamingTypeService', () => {
       mockRepository.findById.mockResolvedValue(null);
 
       await expect(streamingTypeService.getStreamingTypeById('invalid')).rejects.toThrow(
-        new StreamingServiceError('Streaming type not found', 404),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
       );
     });
   });
@@ -85,7 +86,7 @@ describe('StreamingTypeService', () => {
       };
       mockRepository.findByName.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
       await expect(streamingTypeService.createStreamingType(newType)).rejects.toThrow(
-        new StreamingServiceError('Streaming type name already exists', 400),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400),
       );
     });
 
@@ -94,7 +95,7 @@ describe('StreamingTypeService', () => {
         categories: [{ id: 1, name: 'Movies' }],
       } as IStreamingTypeCreate;
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError('Name is required', 400),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_REQUIRED, 400),
       );
     });
 
@@ -103,7 +104,7 @@ describe('StreamingTypeService', () => {
         name: 'Netflix',
       } as IStreamingTypeCreate;
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError('At least one category is required', 400),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_REQUIRED, 400),
       );
     });
 
@@ -113,7 +114,7 @@ describe('StreamingTypeService', () => {
         categories: [{ id: 1 }],
       } as IStreamingTypeCreate;
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError('Invalid category data', 400),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_INVALID_DATA, 400),
       );
     });
 
@@ -126,7 +127,7 @@ describe('StreamingTypeService', () => {
         ],
       };
       await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError('Duplicate category ID', 400),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_DUPLICATE_CATEGORY, 400),
       );
     });
   });
@@ -150,7 +151,7 @@ describe('StreamingTypeService', () => {
       const newCategories: ICategory[] = [{ id: 3, name: 'Documentaries' }];
       mockRepository.findById.mockResolvedValue(null);
       await expect(streamingTypeService.addCategoryToStreamingType('type1', newCategories)).rejects.toThrow(
-        new StreamingServiceError('Streaming type not found', 404),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
       );
     });
 
@@ -158,7 +159,7 @@ describe('StreamingTypeService', () => {
       const existingCategories: ICategory[] = [{ id: 1, name: 'Movies' }];
       mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
       await expect(streamingTypeService.addCategoryToStreamingType('type1', existingCategories)).rejects.toThrow(
-        new StreamingServiceError('Categories already exist', 400),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORY_ALREADY_EXISTS, 400),
       );
     });
   });
@@ -189,7 +190,7 @@ describe('StreamingTypeService', () => {
       };
       mockRepository.findById.mockResolvedValue(null);
       await expect(streamingTypeService.updateStreamingType('type1', updatedType)).rejects.toThrow(
-        new StreamingServiceError('Streaming type not found', 404),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
       );
     });
   });
@@ -214,7 +215,7 @@ describe('StreamingTypeService', () => {
       mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
 
       await expect(streamingTypeService.removeCategoryFromStreamingType('type1', invalidCategories)).rejects.toThrow(
-        new StreamingServiceError('Categories not found in streaming type: 3', 404),
+        new StreamingServiceError(`${ErrorMessages.STREAMING_TYPE_CATEGORY_NOT_FOUND}: 3`, 404),
       );
     });
   });
@@ -235,7 +236,7 @@ describe('StreamingTypeService', () => {
     it('should throw error if streaming type not found', async () => {
       mockRepository.delete.mockResolvedValue(null);
       await expect(streamingTypeService.deleteStreamingType('type1')).rejects.toThrow(
-        new StreamingServiceError('Streaming type not found', 404),
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
       );
     });
   });

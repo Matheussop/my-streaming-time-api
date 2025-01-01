@@ -9,6 +9,7 @@ import logger from '../config/logger';
 import { IStreamingType } from '../models/streamingTypesModel';
 import { IStreamingTypeService } from '../interfaces/services';
 import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export class StreamingTypeService implements IStreamingTypeService {
   constructor(private repository: StreamingTypeRepository) {}
@@ -21,10 +22,10 @@ export class StreamingTypeService implements IStreamingTypeService {
     const streamingType = await this.repository.findById(id);
     if (!streamingType) {
       logger.warn({
-        message: 'Streaming type not found',
+        message: ErrorMessages.STREAMING_TYPE_NOT_FOUND,
         streamingTypeId: id,
       });
-      throw new StreamingServiceError('Streaming type not found', 404);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
     }
     return streamingType;
   }
@@ -44,7 +45,7 @@ export class StreamingTypeService implements IStreamingTypeService {
 
     const updatedType = await this.repository.update(id, data);
     if (!updatedType) {
-      throw new StreamingServiceError('Streaming type not found', 404);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
     }
 
     return updatedType;
@@ -53,7 +54,7 @@ export class StreamingTypeService implements IStreamingTypeService {
   async deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null> {
     const result = await this.repository.delete(id);
     if (!result) {
-      throw new StreamingServiceError('Streaming type not found', 404);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
     }
     return result;
   }
@@ -65,7 +66,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     const newCategories = category.filter((category) => !existingIds.has(category.id));
 
     if (newCategories.length === 0) {
-      throw new StreamingServiceError('Categories already exist', 400);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORY_ALREADY_EXISTS, 400);
     }
     return this.repository.addCategory(id, newCategories);
   }
@@ -83,7 +84,7 @@ export class StreamingTypeService implements IStreamingTypeService {
 
     if (invalidCategories.length > 0) {
       throw new StreamingServiceError(
-        `Categories not found in streaming type: ${invalidCategories.map((c) => c.id).join(', ')}`,
+        `${ErrorMessages.STREAMING_TYPE_CATEGORY_NOT_FOUND}: ${invalidCategories.map((c) => c.id).join(', ')}`,
         404,
       );
     }
@@ -93,11 +94,11 @@ export class StreamingTypeService implements IStreamingTypeService {
 
   private async validateStreamingTypeData(data: Partial<IStreamingType>): Promise<void> {
     if (!data.name) {
-      throw new StreamingServiceError('Name is required', 400);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_REQUIRED, 400);
     }
 
     if (!Array.isArray(data.categories) || data.categories.length === 0) {
-      throw new StreamingServiceError('At least one category is required', 400);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_REQUIRED, 400);
     }
 
     if (data.categories) {
@@ -110,11 +111,11 @@ export class StreamingTypeService implements IStreamingTypeService {
 
     categories.forEach((category) => {
       if (!category.id || !category.name) {
-        throw new StreamingServiceError('Invalid category data', 400);
+        throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_INVALID_DATA, 400);
       }
 
       if (ids.has(category.id)) {
-        throw new StreamingServiceError('Duplicate category ID', 400);
+        throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_DUPLICATE_CATEGORY, 400);
       }
 
       ids.add(category.id);
@@ -124,7 +125,7 @@ export class StreamingTypeService implements IStreamingTypeService {
   private async checkDuplicateName(name: string, excludeId?: string): Promise<void> {
     const existing = (await this.repository.findByName(name)) as IStreamingType | null;
     if (existing && (!excludeId || existing._id.toString() !== excludeId)) {
-      throw new StreamingServiceError('Streaming type name already exists', 400);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400);
     }
   }
 }

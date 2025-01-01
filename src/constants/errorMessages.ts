@@ -30,6 +30,14 @@ export const ErrorMessages = {
   STREAMING_TYPE_CATEGORY_ALREADY_EXISTS: 'Category already exists in streaming type',
   STREAMING_TYPE_CATEGORY_ADDITION_FAILED: 'Unable to add category to streaming type',
   STREAMING_TYPE_CATEGORY_REMOVAL_FAILED: 'Unable to remove category from streaming type',
+  STREAMING_TYPE_NAME_REQUIRED: 'Name is required',
+  STREAMING_TYPE_CATEGORIES_REQUIRED: 'At least one category are required',
+  STREAMING_TYPE_CATEGORIES_NAME_REQUIRED: 'Category name is required',
+  STREAMING_TYPE_CATEGORIES_INVALID_ID: 'Invalid category type ID',
+  STREAMING_TYPE_INVALID_DATA: 'Invalid streaming type data',
+  STREAMING_TYPE_DUPLICATE_CATEGORY: 'Duplicate category ID',
+  INVALID_ID_FORMAT: (type: string) => `Invalid ${type} ID format`,
+  STREAMING_TYPE_NAME_EXISTS: 'Streaming type name already exists',
 
   // Authentication & Authorization errors
   INVALID_CREDENTIALS: 'Invalid email or password',

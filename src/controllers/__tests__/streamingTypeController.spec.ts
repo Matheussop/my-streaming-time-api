@@ -6,6 +6,8 @@ import { StreamingTypeRepository } from '../../repositories/streamingTypeReposit
 import logger from '../../config/logger';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from '../../interfaces/streamingTypes';
+import { ErrorMessages } from '../../constants/errorMessages';
+import { Messages } from '../../constants/messages';
 
 jest.mock('../../services/streamingTypeService');
 
@@ -89,7 +91,7 @@ describe('StreamingTypeController', () => {
 
       await controller.getStreamingTypeById(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid streamingType ID format', 400));
+      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT('streamingType'), 400));
     });
   });
 
@@ -146,7 +148,7 @@ describe('StreamingTypeController', () => {
       await controller.deleteStreamingType(mockReq as Request, mockRes as Response, mockNext);
       expect(mockService.deleteStreamingType).toHaveBeenCalledWith(validId);
       expect(mockRes.status).toHaveBeenCalledWith(204);
-      expect(mockRes.send).toHaveBeenCalledWith('Streaming type deleted');
+      expect(mockRes.send).toHaveBeenCalledWith(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
     });
   });
 
