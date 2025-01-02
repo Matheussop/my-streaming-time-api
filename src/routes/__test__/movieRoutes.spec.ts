@@ -10,6 +10,7 @@ const mockImplementations = {
   getMovies: jest.fn(),
   getMovieById: jest.fn(),
   updateMovie: jest.fn(),
+  getMoviesByGenre: jest.fn(),
   deleteMovie: jest.fn(),
 };
 
@@ -57,6 +58,20 @@ describe('Movie Routes', () => {
       });
 
       const response = await request(app).get('/movies/title').query({ title: 'Test Movie' }).expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(mockMovies);
+    });
+  });
+
+  describe('GET /byGenre', () => {
+    it('should return movies by genre', async () => {
+      const mockMovies = [{ id: '1', genre: 'Test genre', rating: 8.5 }];
+
+      mockImplementations.getMoviesByGenre.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json(mockMovies);
+      });
+
+      const response = await request(app).get('/movies/byGenre').query({ genre: 'Test genre' }).expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockMovies);
     });

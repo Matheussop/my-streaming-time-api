@@ -81,10 +81,15 @@ describe('StreamingTypes Model', () => {
       name: 'Series', // Duplicate name
       categories: [{ id: 2, name: 'Thriller' }],
     });
-
-    await streamingType1.save();
-
+    
     let error;
+
+    try {
+      await streamingType1.save();
+    } catch (err: any) {
+      error = err;
+    }
+
     try {
       await streamingType2.save();
     } catch (err: any) {

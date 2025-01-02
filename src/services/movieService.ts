@@ -106,7 +106,7 @@ export class MovieService implements IMovieService {
 
   // Private validation and processing methods
   private async getGenreId(genre: string): Promise<number> {
-    const genreId = await this.streamingTypeRepository.getIdGenreByGenreName(genre);
+    const genreId = await this.streamingTypeRepository.getIdGenreByName(genre);
     
     if (!genreId) {
       logger.warn({

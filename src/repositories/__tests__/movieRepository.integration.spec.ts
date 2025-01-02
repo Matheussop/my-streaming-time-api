@@ -130,4 +130,21 @@ describe('MovieRepository Integration Tests', () => {
     expect(foundMovie).not.toBeNull();
     expect(foundMovie?.length).toBeGreaterThan(0);
   });
+
+  it('should find a movie by genre', async () => {
+    const movieData: Partial<IMovie> = {
+      title: 'Test Movie',
+      release_date: '2024-03-20',
+      plot: 'Test plot',
+      genre: categoriesIds,
+      rating: 8.5,
+      url: 'http://test.com',
+    };
+
+    await movieRepository.create(movieData);
+    const genre = movieData?.genre?.[0] ?? 0;
+    const foundMovie = await movieRepository.findByGenre(genre, 0, 10);
+    expect(foundMovie).not.toBeNull();
+    expect(foundMovie?.length).toBeGreaterThan(0);
+  });
 });

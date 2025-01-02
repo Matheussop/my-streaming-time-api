@@ -91,6 +91,18 @@ describe('MovieRepository Unit Tests', () => {
     });
   });
 
+  describe('findByGenre', () => {
+    it('should find movies by genre', async () => {
+      const findSpy = jest.spyOn(Movie, 'findByGenre').mockResolvedValue([mockMovie] as IMovie[]);
+
+      const result = await movieRepository.findByGenre(1, 0, 10);
+
+      expect(findSpy).toHaveBeenCalledWith(1, 0, 10);
+      expect(result).toHaveLength(1);
+      expect(result?.[0]?.genre).toContain(1);
+    });
+  });
+
   describe('create', () => {
     it('should create a new movie', async () => {
       mockSaveMovie.mockResolvedValue(mockMovie);
