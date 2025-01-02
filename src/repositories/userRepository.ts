@@ -2,7 +2,7 @@ import { IUserRepository } from '../interfaces/repositories';
 import User, { IUser } from '../models/userModel';
 
 export class UserRepository implements IUserRepository {
-  async findAll(skip = 0, limit = 10): Promise<IUser[]> {
+  async findAll(skip: number, limit: number): Promise<IUser[]> {
     return User.find().skip(skip).limit(limit).select('-password');
   }
 
