@@ -1,3 +1,4 @@
+import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import { Router } from 'express';
 
 import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '../controllers/movieTMDBController';
@@ -8,7 +9,8 @@ import { MovieService } from '../services/movieService';
 
 const movieRouter: Router = Router();
 const movieRepository = new MovieRepository();
-const movieService = new MovieService(movieRepository);
+const streamingTypeRepository = new StreamingTypeRepository();
+const movieService = new MovieService(movieRepository, streamingTypeRepository);
 const movieController = new MovieController(movieService);
 
 /**
@@ -152,6 +154,27 @@ movieRouter.post('/external', fetchAndSaveExternalMovies);
  *         description: Invalid input
  */
 movieRouter.post('/findOrAddMovie', (req, res, next) => validateRequest(req, res, next, ['title']), findOrAddMovie);
+
+/**
+ * @swagger
+ * /movies/{genre}:
+ *   get:
+ *     summary: Retrieve a movie by genre
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: genre
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A movie object
+ *       404:
+ *         description: Movie not found
+ */
+movieRouter.get('/byGenre', (req, res, next) => validateRequest(req, res, next, ['genre']), movieController.getMoviesByGenre);
+
 /**
  * @swagger
  * /movies/{id}:

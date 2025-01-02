@@ -12,6 +12,7 @@ export interface IBaseRepository<T> {
 }
 
 export interface IMovieRepository extends IBaseRepository<IMovie> {
+  findByGenre(genre_id: number, skip: number, limit: number): Promise<IMovie[] | null>;
   findByTitle(title: string, skip?: number, limit?: number): Promise<IMovie[] | null>;
 }
 

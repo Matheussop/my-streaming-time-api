@@ -17,6 +17,7 @@ export interface IMovieMethods {}
 
 export interface IMovieModel extends Model<IMovie, {}, IMovieMethods> {
   findByTitle(title: string, skip: number, limit: number): Promise<IMovie[] | null>;
+  findByGenre(genre_id: number, skip: number, limit: number): Promise<IMovie[] | null>;
 }
 
 const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
@@ -58,6 +59,12 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
 
 movieSchema.static('findByTitle', function (title: string, skip: number, limit: number): Promise<IMovie[] | null> {
   return this.find({ title: new RegExp(title, 'i') })
+    .skip(skip)
+    .limit(limit);
+});
+
+movieSchema.static('findByGenre', function (genre: string, skip: number, limit: number): Promise<IMovie[] | null> {
+  return this.find({ genre })
     .skip(skip)
     .limit(limit);
 });

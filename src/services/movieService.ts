@@ -1,11 +1,15 @@
+import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import logger from '../config/logger';
 import { ErrorMessages } from '../constants/errorMessages';
-import { IMovieRepository } from '../interfaces/repositories';
 import { IMovieService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { MovieRepository } from '../repositories/movieRepository';
 
 export class MovieService implements IMovieService {
-  constructor(private movieRepository: IMovieRepository) {}
+  constructor(
+    private movieRepository: MovieRepository, 
+    private streamingTypeRepository: StreamingTypeRepository,
+  ) {}
 
   async getMovies(skip: number, limit: number) {
     return this.movieRepository.findAll(skip, limit);
@@ -72,20 +76,48 @@ export class MovieService implements IMovieService {
     return movie;
   }
 
-  async getMoviesByTitle(title: string, skip?: number, limit?: number) {
+  async getMoviesByTitle(title: string, skip: number, limit: number) {
     const movies = await this.movieRepository.findByTitle(title, skip, limit);
     if (!movies || movies.length <= 0) {
       logger.warn({
         message: 'Movie not found',
         title: title,
       });
-      throw new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404);
+      throw new StreamingServiceError(ErrorMessages.MOVIES_NOT_FOUND, 404);
+    }
+
+    return movies;
+  }
+
+  async getMoviesByGenre(genre: string, skip: number, limit: number) {
+    const genre_id = await this.getGenreId(genre);
+
+    const movies = await this.movieRepository.findByGenre(genre_id, skip, limit);
+    if (!movies || movies.length <= 0) {
+      logger.warn({
+        message: 'Movies not found',
+        genre_id,
+      });
+      throw new StreamingServiceError(ErrorMessages.MOVIES_NOT_FOUND, 404);
     }
 
     return movies;
   }
 
   // Private validation and processing methods
+  private async getGenreId(genre: string): Promise<number> {
+    const genreId = await this.streamingTypeRepository.getIdGenreByGenreName(genre);
+    
+    if (!genreId) {
+      logger.warn({
+        message: 'Genre not found',
+        genreId,
+      });
+      throw new StreamingServiceError(ErrorMessages.MOVIE_GENRE_INVALID, 404);
+    }
+    return genreId;
+  }
+
   private async checkDuplicateTitle(title: string) {
     const movies = await this.movieRepository.findByTitle(title, 0, 1);
     if (movies && movies.length > 0) {

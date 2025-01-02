@@ -3,12 +3,12 @@ import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
-import { IMovieService } from '../interfaces/services';
 import { ErrorMessages } from '../constants/errorMessages';
 import { Messages } from '../constants/messages';
+import { MovieService } from '../services/movieService';
 
 export class MovieController {
-  constructor(private movieService: IMovieService) {}
+  constructor(private movieService: MovieService) {}
 
   getMoviesByTitle = catchAsync(async (req: Request, res: Response): Promise<void> => {
     const { title, page = 1, limit = 10 } = req.body;
@@ -22,6 +22,22 @@ export class MovieController {
 
     const movies = await this.movieService.getMoviesByTitle(title, skip, limit);
     res.status(200).json(movies);
+  });
+
+  getMoviesByGenre = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const { genre, page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    logger.info({
+      message: 'Fetching movie by Genre',
+      genre,
+      method: req.method,
+      path: req.path,
+    });
+
+    const movie = await this.movieService.getMoviesByGenre(genre, skip, limit);
+
+    res.status(200).json(movie);
   });
 
   getMovies = catchAsync(async (req: Request, res: Response): Promise<void> => {
@@ -63,7 +79,7 @@ export class MovieController {
 
     res.status(200).json(movie);
   });
-
+  
   createMovie = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating new movie',

@@ -1,6 +1,7 @@
 export const ErrorMessages = {
   // Movies errors
   MOVIE_NOT_FOUND: 'Movie not found',
+  MOVIES_NOT_FOUND: 'Movies not found',
   MOVIE_ALREADY_EXISTS: 'Movie already exists',
   MOVIE_CREATION_FAILED: 'Unable to create movie',
   MOVIE_UPDATE_FAILED: 'Unable to update movie',
@@ -19,6 +20,8 @@ export const ErrorMessages = {
   MOVIE_URL_INVALID: 'Invalid URL format',
   MOVIE_CAST_INVALID: 'Invalid cast format, must be an array of strings',
   MOVIE_TITLE_REQUIRED: 'Title is required',
+  MOVIE_GENRE_REQUIRED: 'Genre is required',
+  MOVIE_GENRE_INVALID: 'Genre is not valid or not registered in the database',
 
   // Streaming Type errors
   STREAMING_TYPE_NOT_FOUND: 'Streaming type not found',
