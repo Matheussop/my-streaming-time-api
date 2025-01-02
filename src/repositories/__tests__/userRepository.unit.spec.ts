@@ -46,7 +46,7 @@ describe('UserRepository Unit Tests', () => {
         }),
       } as any);
 
-      const result = await userRepository.findAll();
+      const result = await userRepository.findAll(0, 2);
 
       expect(findSpy).toHaveBeenCalled();
       expect(result).toHaveLength(2);

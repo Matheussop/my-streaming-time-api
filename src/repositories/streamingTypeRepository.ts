@@ -8,7 +8,7 @@ import {
 import StreamingTypes from '../models/streamingTypesModel';
 
 export class StreamingTypeRepository implements IStreamingTypeRepository {
-  async findAll(skip = 0, limit = 10): Promise<IStreamingTypeResponse[]> {
+  async findAll(skip: number, limit:number): Promise<IStreamingTypeResponse[]> {
     return StreamingTypes.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
   }
 
@@ -22,7 +22,7 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
     });
   }
   
-  async getIdGenreByGenreName(genre: string): Promise<number | null> {
+  async getIdGenreByName(genre: string): Promise<number | null> {
     const result = await StreamingTypes.findOne({
       'categories.name': new RegExp(`^${genre}$`, 'i'),
     },{

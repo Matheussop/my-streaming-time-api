@@ -45,7 +45,7 @@ describe('UserRepository Integration Tests', () => {
 
       await User.create(anotherUser);
 
-      const users = await userRepository.findAll();
+      const users = await userRepository.findAll(0, 2);
       expect(users).toHaveLength(2);
       users.forEach((user) => {
         expect(user).toHaveProperty('name');
@@ -81,7 +81,7 @@ describe('UserRepository Integration Tests', () => {
 
     it('should return empty array when no users exist', async () => {
       await User.deleteMany({}); // limpa todos os usuários
-      const users = await userRepository.findAll();
+      const users = await userRepository.findAll(0, 10);
       expect(users).toHaveLength(0);
     });
   });

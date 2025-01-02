@@ -6,8 +6,8 @@ import { IUser } from '../models/userModel';
 export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
 
-  async getAllUsers() {
-    return this.userRepository.findAll();
+  async getAllUsers(skip: number, limit: number) {
+    return this.userRepository.findAll(skip, limit);
   }
 
   async getUserById(id: string) {

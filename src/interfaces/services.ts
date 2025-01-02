@@ -9,7 +9,7 @@ export interface IUserService {
   getUserById(id: string): Promise<IUser | null>;
   updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
   deleteUser(id: string): Promise<IUser | null>;
-  getAllUsers(): Promise<IUser[]>;
+  getAllUsers(skip: number, limit: number): Promise<IUser[]>;
 }
 
 export interface IUserStreamingHistoryService {

@@ -124,8 +124,12 @@ describe('UserController', () => {
         { id: generateValidObjectId(), name: 'Jane Doe', email: '' },
       ] as IUser[];
       mockUserService.getAllUsers.mockResolvedValue(mockUsers);
-      mockReq.params = { id: userID };
-
+      mockReq = {
+        body: {},
+        params: { id: userID },
+        method: 'GET',
+        path: '/movies',
+      };
       await userController.listUsers(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(200);

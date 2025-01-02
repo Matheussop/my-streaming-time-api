@@ -3,7 +3,6 @@ import { MovieRepository } from '../movieRepository';
 import { IMovie } from '../../models/movieModel';
 import { IStreamingTypeResponse } from '../../interfaces/streamingTypes';
 import { StreamingTypeRepository } from '../streamingTypeRepository';
-import { afterEach } from 'node:test';
 
 describe('MovieRepository Integration Tests', () => {
   let movieRepository: MovieRepository;
