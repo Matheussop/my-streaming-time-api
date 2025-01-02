@@ -21,6 +21,17 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
       name: new RegExp(`^${name}$`, 'i'),
     });
   }
+  
+  async getIdGenreByGenreName(genre: string): Promise<number | null> {
+    const result = await StreamingTypes.findOne({
+      'categories.name': new RegExp(`^${genre}$`, 'i'),
+    },{
+      _id: 0,
+      'categories.$': 1,
+    }).lean();
+
+    return result?.categories?.[0]?.id || null;
+  }
 
   async create(data: IStreamingTypeCreate): Promise<IStreamingTypeResponse> {
     const streamingType = new StreamingTypes(data);
