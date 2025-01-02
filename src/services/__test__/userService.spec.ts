@@ -28,7 +28,7 @@ describe('UserService', () => {
       ];
       mockUserRepository.findAll.mockResolvedValue(mockUsers as unknown as IUser[]);
 
-      const result = await userService.getAllUsers();
+      const result = await userService.getAllUsers(0, 10);
 
       expect(mockUserRepository.findAll).toHaveBeenCalled();
       expect(result).toEqual(mockUsers);

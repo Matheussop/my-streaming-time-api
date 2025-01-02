@@ -23,6 +23,7 @@ describe('StreamingTypeService', () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       findByName: jest.fn(),
+      getIdGenreByName: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

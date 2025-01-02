@@ -4,7 +4,7 @@ import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStre
 import { ICategory, IStreamingTypeResponse } from './streamingTypes';
 
 export interface IBaseRepository<T> {
-  findAll(skip?: number, limit?: number): Promise<T[]>;
+  findAll(skip: number, limit: number): Promise<T[]>;
   findById(id: string): Promise<T | null>;
   create(data: Partial<T>): Promise<T>;
   update(id: string, data: Partial<T>): Promise<T | null>;
@@ -12,6 +12,7 @@ export interface IBaseRepository<T> {
 }
 
 export interface IMovieRepository extends IBaseRepository<IMovie> {
+  findByGenre(genre_id: number, skip: number, limit: number): Promise<IMovie[] | null>;
   findByTitle(title: string, skip?: number, limit?: number): Promise<IMovie[] | null>;
 }
 
@@ -31,6 +32,7 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
 
 export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse> {
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
+  getIdGenreByName(genre: string): Promise<number | null>;
   addCategory(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
   removeCategory(id: string, categoryId: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null>;
 }

@@ -7,6 +7,7 @@ import Movie, { IMovie } from '../../models/movieModel';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { ErrorMessages } from '../../constants/errorMessages';
 import { Messages } from '../../constants/messages';
+import { StreamingTypeRepository } from '../../repositories/streamingTypeRepository';
 
 jest.mock('../../services/movieService');
 
@@ -14,6 +15,7 @@ describe('MovieController', () => {
   let controller: MovieController;
   let mockService: jest.Mocked<MovieService>;
   let mockMovieRepository: jest.Mocked<MovieRepository>;
+  let mockStreamingTypeRepository: jest.Mocked<StreamingTypeRepository>;
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
   let mockNext: jest.MockedFunction<NextFunction>;
@@ -22,7 +24,8 @@ describe('MovieController', () => {
   beforeEach(() => {
     validId = generateValidObjectId();
     mockMovieRepository = {} as jest.Mocked<MovieRepository>;
-    mockService = new MovieService(mockMovieRepository) as jest.Mocked<MovieService>;
+    mockStreamingTypeRepository = {} as jest.Mocked<StreamingTypeRepository>;
+    mockService = new MovieService(mockMovieRepository, mockStreamingTypeRepository) as jest.Mocked<MovieService>;
     controller = new MovieController(mockService);
     mockReq = {};
     mockRes = {
@@ -46,6 +49,24 @@ describe('MovieController', () => {
       await controller.getMoviesByTitle(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockService.getMoviesByTitle).toHaveBeenCalledWith('Test', 0, 10);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(mockMovies);
+    });
+  });
+
+  describe('getMoviesByTitle', () => {
+    it('should return movies filtered by genre', async () => {
+      const mockMovies: IMovie[] = [{ id: validId, title: 'Test Movie', genre: [1] }] as IMovie[];
+      mockReq = {
+        body: { genre: 'Test' },
+        method: 'GET',
+        path: '/movies/search',
+      };
+      mockService.getMoviesByGenre.mockResolvedValue(mockMovies);
+
+      await controller.getMoviesByGenre(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getMoviesByGenre).toHaveBeenCalledWith('Test', 0, 10);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(mockMovies);
     });

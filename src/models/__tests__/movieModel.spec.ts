@@ -126,6 +126,52 @@ describe('Movie Model Integrations Test ', () => {
     });
   });
 
+  describe('findByGenre Static Method', () => {
+    beforeEach(async () => {
+      await StreamingTypes.create({
+        name: 'Netflix',
+        categories: [{ id: 1, name: 'Action' }],
+      });
+
+      const movies = [
+        {
+          title: 'The Matrix',
+          release_date: '1999-03-31',
+          rating: 4.8,
+          genre: [1],
+          url: 'http://matrix.com',
+        },
+        {
+          title: 'Matrix Reloaded',
+          release_date: '2003-05-15',
+          rating: 4.5,
+          genre: [1],
+          url: 'http://matrix2.com',
+        },
+        {
+          title: 'Different Movie',
+          release_date: '2024-01-01',
+          rating: 4.0,
+          genre: [1],
+          url: 'http://different.com',
+        },
+      ];
+
+      await Movie.create(movies);
+    });
+
+    it('should find movies by genre', async () => {
+      const movies = await Movie.findByGenre(1, 0, 10);
+      expect(movies).toHaveLength(3);
+      expect(movies![0].genre).toContain(1);
+    });
+
+    it('should respect skip and limit parameters', async () => {
+      const movies = await Movie.findByGenre(1, 1, 1);
+      expect(movies).toHaveLength(1);
+    });
+  });
+
   describe('toJSON Transform', () => {
     it('should covert to JSON', async () => {
       await StreamingTypes.create({

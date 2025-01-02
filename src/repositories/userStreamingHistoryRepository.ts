@@ -5,7 +5,7 @@ import UserStreamingHistory, {
 } from '../models/userStreamingHistoryModel';
 
 export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepository {
-  async findAll(skip = 0, limit = 10): Promise<IUserStreamingHistory[]> {
+  async findAll(skip:number, limit: number): Promise<IUserStreamingHistory[]> {
     return UserStreamingHistory.find().skip(skip).limit(limit);
   }
 

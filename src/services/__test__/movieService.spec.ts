@@ -1,5 +1,5 @@
 import { MovieService } from '../movieService';
-import { IMovieRepository } from '../../interfaces/repositories';
+import { IMovieRepository, IStreamingTypeRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IMovie } from '../../models/movieModel';
 import { ErrorMessages } from '../../constants/errorMessages';
@@ -7,6 +7,7 @@ import { ErrorMessages } from '../../constants/errorMessages';
 describe('MovieService', () => {
   let movieService: MovieService;
   let mockMovieRepository: jest.Mocked<IMovieRepository>;
+  let mockStreamingTypeRepository: jest.Mocked<IStreamingTypeRepository>;
 
   const mockMovie: Partial<IMovie> = {
     _id: '123',
@@ -23,13 +24,18 @@ describe('MovieService', () => {
     mockMovieRepository = {
       findAll: jest.fn(),
       findById: jest.fn(),
+      findByGenre: jest.fn(),
       findByTitle: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
     } as jest.Mocked<IMovieRepository>;
 
-    movieService = new MovieService(mockMovieRepository);
+    mockStreamingTypeRepository = {
+      getIdGenreByName: jest.fn(),
+    } as unknown as jest.Mocked<IStreamingTypeRepository>;
+
+    movieService = new MovieService(mockMovieRepository, mockStreamingTypeRepository);
   });
 
   describe('getMovies', () => {
@@ -98,6 +104,36 @@ describe('MovieService', () => {
 
       await expect(movieService.getMovieById('999')).rejects.toThrow(
         new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404),
+      );
+    });
+  });
+
+  describe('getMoviesByGenre', () => {
+    it('should return movie if found', async () => {
+      mockStreamingTypeRepository.getIdGenreByName.mockResolvedValue(1);
+      mockMovieRepository.findByGenre.mockResolvedValue([mockMovie as IMovie]);
+
+      const result = await movieService.getMoviesByGenre('action', 0 ,10);
+
+      expect(result).toEqual([mockMovie]);
+      expect(mockMovieRepository.findByGenre).toHaveBeenCalledWith(1, 0 , 10);
+    });
+
+    it('should throw error if movie not found', async () => {
+      mockStreamingTypeRepository.getIdGenreByName.mockResolvedValue(1);
+
+      mockMovieRepository.findByGenre.mockResolvedValue([]);
+
+      await expect(movieService.getMoviesByGenre('action', 0, 10)).rejects.toThrow(
+        new StreamingServiceError(ErrorMessages.MOVIES_NOT_FOUND, 404),
+      );
+    });
+
+    it('should throw error if genre is invalid', async () => {
+      mockStreamingTypeRepository.getIdGenreByName.mockResolvedValue(null);
+
+      await expect(movieService.getMoviesByGenre('invalid', 0, 10)).rejects.toThrow(
+        new StreamingServiceError(ErrorMessages.MOVIE_GENRE_INVALID, 404),
       );
     });
   });
@@ -217,8 +253,8 @@ describe('MovieService', () => {
     it('should throw error if movie not found', async () => {
       mockMovieRepository.findByTitle.mockResolvedValue([]);
 
-      await expect(movieService.getMoviesByTitle('Test Movie')).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404),
+      await expect(movieService.getMoviesByTitle('Test Movie', 0, 10)).rejects.toThrow(
+        new StreamingServiceError(ErrorMessages.MOVIES_NOT_FOUND, 404),
       );
     });
   });

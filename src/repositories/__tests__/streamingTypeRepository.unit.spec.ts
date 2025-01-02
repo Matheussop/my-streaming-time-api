@@ -91,6 +91,31 @@ describe('StreamingTypeRepository Unit', () => {
     });
   });
 
+  describe('getIdGenreByName', () => {
+    it('should return a id genre by a name', async () => {
+      (StreamingTypes.findOne as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ categories: [{ id: 1 }] }),
+      });
+
+      const result = await repository.getIdGenreByName('action');
+
+      expect(result).toEqual(1);
+      expect(StreamingTypes.findOne).toHaveBeenCalledWith({
+        'categories.name': new RegExp('^action$', 'i'),
+      },{"_id": 0, "categories.$": 1});
+    });
+
+    it('should return null when genre is not found', async () => {
+      (StreamingTypes.findOne as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(null),
+      });
+
+      const result = await repository.getIdGenreByName('InvalidGenre');
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('create', () => {
     it('should create a new streaming type', async () => {
       const mockSave = jest.fn().mockResolvedValue(mockStreamingType);

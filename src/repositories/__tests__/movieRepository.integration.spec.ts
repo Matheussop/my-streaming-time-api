@@ -3,7 +3,6 @@ import { MovieRepository } from '../movieRepository';
 import { IMovie } from '../../models/movieModel';
 import { IStreamingTypeResponse } from '../../interfaces/streamingTypes';
 import { StreamingTypeRepository } from '../streamingTypeRepository';
-import { afterEach } from 'node:test';
 
 describe('MovieRepository Integration Tests', () => {
   let movieRepository: MovieRepository;
@@ -128,6 +127,23 @@ describe('MovieRepository Integration Tests', () => {
     await movieRepository.create(movieData);
     const movieTitle = movieData?.title || '';
     const foundMovie = await movieRepository.findByTitle(movieTitle, 0, 10);
+    expect(foundMovie).not.toBeNull();
+    expect(foundMovie?.length).toBeGreaterThan(0);
+  });
+
+  it('should find a movie by genre', async () => {
+    const movieData: Partial<IMovie> = {
+      title: 'Test Movie',
+      release_date: '2024-03-20',
+      plot: 'Test plot',
+      genre: categoriesIds,
+      rating: 8.5,
+      url: 'http://test.com',
+    };
+
+    await movieRepository.create(movieData);
+    const genre = movieData?.genre?.[0] ?? 0;
+    const foundMovie = await movieRepository.findByGenre(genre, 0, 10);
     expect(foundMovie).not.toBeNull();
     expect(foundMovie?.length).toBeGreaterThan(0);
   });

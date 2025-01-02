@@ -82,6 +82,9 @@ export class UserController {
   });
 
   listUsers = catchAsync(async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
+
     logger.info({
       message: 'List users',
       userId: req.params.id,
@@ -89,7 +92,7 @@ export class UserController {
       path: req.path,
     });
 
-    const users = await this.userService.getAllUsers();
+    const users = await this.userService.getAllUsers(skip, limit);
     res.status(200).json(users);
   });
 }

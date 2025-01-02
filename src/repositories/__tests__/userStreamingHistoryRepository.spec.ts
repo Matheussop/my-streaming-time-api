@@ -56,7 +56,7 @@ describe('UserStreamingHistoryRepository', () => {
     });
 
     it('should return paginated streaming history list without params for pagination', async () => {
-      const result = await repository.findAll();
+      const result = await repository.findAll(0, 10);
 
       expect(result).toEqual([mockHistory]);
       expect(UserStreamingHistory.find).toHaveBeenCalled();

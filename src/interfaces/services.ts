@@ -1,3 +1,4 @@
+import { IMovie } from '../models/movieModel';
 import { IUser } from '../models/userModel';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
 import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
@@ -8,7 +9,7 @@ export interface IUserService {
   getUserById(id: string): Promise<IUser | null>;
   updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
   deleteUser(id: string): Promise<IUser | null>;
-  getAllUsers(): Promise<IUser[]>;
+  getAllUsers(skip: number, limit: number): Promise<IUser[]>;
 }
 
 export interface IUserStreamingHistoryService {
@@ -31,6 +32,7 @@ export interface IStreamingTypeService {
 export interface IMovieService {
   getMovies(skip: number, limit: number): Promise<any>;
   getMovieById(id: string): Promise<any>;
+  getMoviesByGenre(genre: string, skip: number, limit: number): Promise<IMovie[]>;
   createMovie(movieData: any): Promise<any>;
   updateMovie(id: string, updateData: any): Promise<any>;
   deleteMovie(id: string): Promise<any>;
