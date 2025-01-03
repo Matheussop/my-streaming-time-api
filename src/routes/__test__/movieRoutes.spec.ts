@@ -141,7 +141,7 @@ describe('Movie Routes', () => {
         res.status(HttpStatus.ACCEPTED).json({ message: Messages.MOVIE_FETCHED_AND_SAVED_SUCCESSFULLY });
       });
 
-      await request(app).post('/movies/external').expect(HttpStatus.ACCEPTED);
+      await request(app).post('/movies/saveExternalMovies').expect(HttpStatus.ACCEPTED);
     });
   });
 

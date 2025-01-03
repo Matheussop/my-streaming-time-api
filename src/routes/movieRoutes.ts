@@ -126,7 +126,7 @@ movieRouter.get('/external', getExternalMovies);
  *       201:
  *         description: External movies fetched and saved successfully
  */
-movieRouter.post('/external', fetchAndSaveExternalMovies);
+movieRouter.post('/saveExternalMovies', fetchAndSaveExternalMovies);
 
 /**
  * @swagger
