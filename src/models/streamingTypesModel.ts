@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Model, Schema } from 'mongoose';
 import { ErrorMessages } from '../constants/errorMessages';
 
 export interface ICategory {
@@ -14,6 +14,10 @@ export interface IStreamingType extends Document {
   updatedAt: Date;
 }
 
+export interface IStreamingTypeModel extends Model<IStreamingType, {}, {}>{
+  findByName(category: string): Promise<IStreamingType | null >
+}
+
 const categorySchema = new Schema<ICategory>({
   id: {
     type: Number,
@@ -26,7 +30,7 @@ const categorySchema = new Schema<ICategory>({
   },
 });
 
-const streamingTypesSchema = new Schema<IStreamingType>(
+const streamingTypesSchema = new Schema<IStreamingType, IStreamingTypeModel>(
   {
     name: {
       type: String,
@@ -47,6 +51,10 @@ const streamingTypesSchema = new Schema<IStreamingType>(
   },
 );
 
-const StreamingTypes = mongoose.model<IStreamingType>('StreamingType', streamingTypesSchema);
+streamingTypesSchema.static('findByName', function (name: string) {
+  return this.findOne({ name: new RegExp(name, 'i') });
+});
+
+const StreamingTypes = mongoose.model<IStreamingType, IStreamingTypeModel>('StreamingType', streamingTypesSchema);
 
 export default StreamingTypes;

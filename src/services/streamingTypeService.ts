@@ -30,6 +30,18 @@ export class StreamingTypeService implements IStreamingTypeService {
     return streamingType;
   }
 
+  async getStreamingTypeByName(name: string): Promise<IStreamingTypeResponse> {
+    const streamingType = await this.repository.findByName(name);
+    if (!streamingType) {
+      logger.warn({
+        message: ErrorMessages.STREAMING_TYPE_NOT_FOUND,
+        streamingTypeName: name,
+      });
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
+    }
+    return streamingType;
+  }
+
   async createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate> {
     await this.validateStreamingTypeData(data);
     await this.checkDuplicateName(data.name!);

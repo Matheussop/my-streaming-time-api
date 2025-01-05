@@ -40,6 +40,19 @@ export class StreamingTypeController {
     res.status(200).json(streamingType);
   });
 
+  getStreamingTypeByName = catchAsync(async (req: Request, res: Response) => {
+    const { name } = req.params;
+    logger.info({
+      message: 'Fetching streaming type by Category Name',
+      streamingTypeCategoryName: name,
+      method: req.method,
+      path: req.path,
+    });
+
+    const streamingType = await this.service.getStreamingTypeByName(name);
+    res.status(200).json(streamingType);
+  });
+
   createStreamingType = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating new streaming type',

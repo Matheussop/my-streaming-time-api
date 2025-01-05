@@ -22,6 +22,7 @@ export interface IUserStreamingHistoryService {
 export interface IStreamingTypeService {
   getAllStreamingTypes(skip: number, limit: number): Promise<IStreamingTypeResponse[]>;
   getStreamingTypeById(id: string): Promise<IStreamingTypeResponse | null>;
+  getStreamingTypeByName(name: string): Promise<IStreamingTypeResponse | null>;
   createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate>;
   updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeUpdate | null>;
   deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null>;

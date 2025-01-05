@@ -17,9 +17,7 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
   }
 
   async findByName(name: string): Promise<IStreamingTypeResponse | null> {
-    return StreamingTypes.findOne({
-      name: new RegExp(`^${name}$`, 'i'),
-    });
+    return StreamingTypes.findByName(name)
   }
   
   async getIdGenreByName(genre: string): Promise<number | null> {

@@ -49,6 +49,26 @@ router.get('/:id', controller.getStreamingTypeById);
 
 /**
  * @swagger
+ * /streamingTypes/category/{category}:
+ *   get:
+ *     summary: Retrieve a streaming type by category name
+ *     tags: [StreamingTypes]
+ *     parameters:
+ *       - in: path
+ *         name: category
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A streaming type object
+ *       404:
+ *         description: Streaming type not found
+ */
+router.get('/name/:name', controller.getStreamingTypeByName);
+
+/**
+ * @swagger
  * /streamingTypes:
  *   post:
  *     summary: Create a new streaming type
