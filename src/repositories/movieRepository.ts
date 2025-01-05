@@ -3,7 +3,7 @@ import Movie, { IMovie } from '../models/movieModel';
 
 export class MovieRepository implements IMovieRepository {
   async findAll(skip: number, limit: number): Promise<IMovie[]> {
-    return Movie.find().skip(skip).limit(limit);
+    return Movie.find().sort({ release_date: -1 }).skip(skip).limit(limit);
   }
 
   async findById(id: string): Promise<IMovie | null> {

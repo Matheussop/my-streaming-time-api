@@ -173,7 +173,7 @@ movieRouter.post('/findOrAddMovie', (req, res, next) => validateRequest(req, res
  *       404:
  *         description: Movie not found
  */
-movieRouter.get('/byGenre', (req, res, next) => validateRequest(req, res, next, ['genre']), movieController.getMoviesByGenre);
+movieRouter.post('/byGenre', (req, res, next) => validateRequest(req, res, next, ['genre']), movieController.getMoviesByGenre);
 
 /**
  * @swagger
