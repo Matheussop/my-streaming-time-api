@@ -65,6 +65,25 @@ describe('StreamingTypeService', () => {
     });
   });
 
+  describe('getStreamingTypeByName', () => {
+    it('should return streaming type when found by name', async () => {
+      mockRepository.findByName.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+
+      const result = await streamingTypeService.getStreamingTypeByName('Netflix');
+
+      expect(result).toEqual(mockStreamingType);
+      expect(mockRepository.findByName).toHaveBeenCalledWith('Netflix');
+    });
+
+    it('should throw error when streaming type not found by name', async () => {
+      mockRepository.findByName.mockResolvedValue(null);
+
+      await expect(streamingTypeService.getStreamingTypeByName('invalid')).rejects.toThrow(
+        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
+      );
+    });
+  });
+
   describe('createStreamingType', () => {
     it('should create streaming type with valid data', async () => {
       const newType: IStreamingTypeCreate = {

@@ -95,6 +95,24 @@ describe('StreamingTypeController', () => {
     });
   });
 
+  describe('getStreamingTypeByName', () => {
+    it('should return streaming type for valid name', async () => {
+      const nameStreamingType = 'Movies'
+      const mockStreamingType = { _id: validId, name: nameStreamingType } as IStreamingTypeResponse;
+      mockReq = {
+        params: { name: nameStreamingType },
+        method: 'GET',
+        path: '/streaming-types/id',
+      };
+      mockService.getStreamingTypeByName.mockResolvedValue(mockStreamingType);
+
+      await controller.getStreamingTypeByName(mockReq as Request, mockRes as Response, mockNext);
+      expect(mockService.getStreamingTypeByName).toHaveBeenCalledWith(nameStreamingType);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(mockStreamingType);
+    });
+  });
+
   describe('createStreamingType', () => {
     it('should create new streaming type successfully', async () => {
       const mockStreamingTypeData = {

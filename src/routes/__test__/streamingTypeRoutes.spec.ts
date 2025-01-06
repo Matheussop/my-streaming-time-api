@@ -7,6 +7,7 @@ import * as validateModule from '../../util/validate';
 const mockImplementations = {
   getStreamingTypes: jest.fn(),
   getStreamingTypeById: jest.fn(),
+  getStreamingTypeByName: jest.fn(),
   createStreamingType: jest.fn(),
   updateStreamingType: jest.fn(),
   addCategoryToStreamingType: jest.fn(),
@@ -64,6 +65,20 @@ describe('Streaming Types Routes', () => {
       });
 
       const response = await request(app).get('/streamingTypes/1').expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(mockType);
+    });
+  });
+
+  describe('GET /name/:name', () => {
+    it('should return 200 and streaming type when found by name', async () => {
+      const mockType = { id: '1', name: 'Series', categories: ['Action', 'Drama'] };
+
+      mockImplementations.getStreamingTypeByName.mockImplementation((req, res) => {
+        res.status(HttpStatus.OK).json(mockType);
+      });
+
+      const response = await request(app).get('/streamingTypes/name/Series').expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockType);
     });

@@ -100,6 +100,19 @@ describe('StreamingTypes Model', () => {
     expect(error.code).toBe(11000); // Duplicate key error code
   });
 
+  it('should find a streaming type by name using findByName', async () => {
+    const streamingType = new StreamingTypes({
+      name: 'Movies',
+      categories: [{ id: 1, name: 'Action' }],
+    });
+    await streamingType.save();
+
+    const foundStreamingType = await StreamingTypes.findByName('Movies');
+
+    expect(foundStreamingType).toBeDefined();
+    expect(foundStreamingType?.name).toBe('Movies');
+  });
+
   it('should to able to make a toJSON transformation', async () => {
     const streamingType = new StreamingTypes({
       name: 'Documentaries',

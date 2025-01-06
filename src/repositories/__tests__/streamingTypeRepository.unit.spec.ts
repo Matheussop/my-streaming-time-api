@@ -72,18 +72,16 @@ describe('StreamingTypeRepository Unit', () => {
 
   describe('findByName', () => {
     it('should return a streaming type by name', async () => {
-      (StreamingTypes.findOne as jest.Mock).mockResolvedValue(mockStreamingType);
+      (StreamingTypes.findByName as jest.Mock).mockResolvedValue(mockStreamingType);
 
       const result = await repository.findByName('Netflix');
 
       expect(result).toEqual(mockStreamingType);
-      expect(StreamingTypes.findOne).toHaveBeenCalledWith({
-        name: new RegExp('^Netflix$', 'i'),
-      });
+      expect(StreamingTypes.findByName).toHaveBeenCalledWith('Netflix');
     });
 
-    it('should return null when name is not found', async () => {
-      (StreamingTypes.findOne as jest.Mock).mockResolvedValue(null);
+    it('should return null when ID is not found', async () => {
+      (StreamingTypes.findByName as jest.Mock).mockResolvedValue(null);
 
       const result = await repository.findByName('InvalidName');
 
