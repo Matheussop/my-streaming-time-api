@@ -31,6 +31,7 @@ describe('MovieRepository Unit Tests', () => {
       const mockMovies = [mockMovie, { ...mockMovie, _id: new mongoose.Types.ObjectId() }];
 
       const findSpy = jest.spyOn(Movie, 'find').mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue(mockMovies),
       } as any);
@@ -47,6 +48,7 @@ describe('MovieRepository Unit Tests', () => {
       const limit = 5;
 
       const findSpy = jest.spyOn(Movie, 'find').mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockResolvedValue([]),
       } as any);

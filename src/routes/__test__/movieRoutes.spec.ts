@@ -63,7 +63,7 @@ describe('Movie Routes', () => {
     });
   });
 
-  describe('GET /byGenre', () => {
+  describe('POST /byGenre', () => {
     it('should return movies by genre', async () => {
       const mockMovies = [{ id: '1', genre: 'Test genre', rating: 8.5 }];
 
@@ -71,7 +71,7 @@ describe('Movie Routes', () => {
         res.status(HttpStatus.OK).json(mockMovies);
       });
 
-      const response = await request(app).get('/movies/byGenre').query({ genre: 'Test genre' }).expect(HttpStatus.OK);
+      const response = await request(app).post('/movies/byGenre').query({ genre: 'Test genre' }).expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockMovies);
     });
