@@ -1,4 +1,18 @@
 export const ErrorMessages = {
+  // Series erros
+  SERIES_TITLE_REQUIRED: 'Title is required',
+  SERIES_NUMBER_OF_EPISODES_REQUIRED: 'Number of episodes is required',
+  SERIES_NUMBER_OF_SEASONS_REQUIRED: 'Number of seasons is required',
+  SERIES_ID_INVALID: 'Invalid series ID format',
+  SERIES_WITH_TITLE_EXISTS: 'Movie with this title already exists',
+  SERIES_RATING_INVALID: 'Rating must be a number between 0 and 10',
+  SERIES_RELEASE_DATE_INVALID: 'Release date must be a valid date format',
+  SERIES_RELEASE_DATE_FUTURE: 'Release date cannot be in the future',
+  SERIES_URL_INVALID: 'Invalid URL format',
+  SERIES_CAST_INVALID: 'Invalid cast format, must be an array of strings',
+  SERIES_GENRE_REQUIRED: 'Genre is required',
+  SERIES_GENRE_INVALID: 'Genre is not valid or not registered in the database',
+
   // Movies errors
   MOVIE_NOT_FOUND: 'Movie not found',
   MOVIES_NOT_FOUND: 'Movies not found',

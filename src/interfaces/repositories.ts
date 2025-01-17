@@ -1,13 +1,14 @@
+import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from './series';
 import { IUser } from '../models/userModel';
 import { IMovie } from '../models/movieModel';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
 import { ICategory, IStreamingTypeResponse } from './streamingTypes';
 
-export interface IBaseRepository<T> {
+export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   findAll(skip: number, limit: number): Promise<T[]>;
   findById(id: string): Promise<T | null>;
-  create(data: Partial<T>): Promise<T>;
-  update(id: string, data: Partial<T>): Promise<T | null>;
+  create(data: Partial<TCreate>): Promise<TCreate>;
+  update(id: string, data: Partial<TUpdate>): Promise<TUpdate | null>;
   delete(id: string): Promise<T | null>;
 }
 
@@ -35,4 +36,9 @@ export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType
   getIdGenreByName(genre: string): Promise<number | null>;
   addCategory(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
   removeCategory(id: string, categoryId: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null>;
+}
+
+export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{
+  findByTitle(title: string, skip?: number, limit?: number): Promise<ISeriesResponse[] | null>;
+  findByGenre(genre_id: number, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
 }

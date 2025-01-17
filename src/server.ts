@@ -9,6 +9,7 @@ import userStreamingHistoryRoutes from './routes/userStreamingHistoryRoutes';
 import streamingTypeRoutes from './routes/streamingTypeRoutes';
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
+import seriesRoutes from './routes/seriesRoutes';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ const startServer = async () => {
 
     // Routes
     app.use('/movies', movieRoutes);
+    app.use('/series', seriesRoutes);
     app.use('/streamingTypes', streamingTypeRoutes);
     app.use('/user', userRoutes);
     app.use('/user-streaming-history', userStreamingHistoryRoutes);

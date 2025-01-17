@@ -1,6 +1,7 @@
 import { IMovie } from '../models/movieModel';
 import { IUser } from '../models/userModel';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
+import { ISeriesCreate, ISeriesResponse } from './series';
 import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 
 export interface IUserService {
@@ -39,3 +40,8 @@ export interface IMovieService {
   deleteMovie(id: string): Promise<any>;
   getMoviesByTitle(title: string, skip?: number, limit?: number): Promise<any>;
 }
+
+export interface ISeriesService{
+  getSeriesByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
+  createManySeries(seriesArray: ISeriesCreate[]): Promise<ISeriesResponse[] | null>;
+} 
