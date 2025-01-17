@@ -104,6 +104,7 @@ export class MovieController {
       cast: req.body.cast,
       genre: req.body.genre,
       rating: parseFloat(req.body.rating),
+      poster: req.body.poster,
       url: req.body.url,
     });
 

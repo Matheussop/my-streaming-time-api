@@ -37,6 +37,7 @@ export class MovieService implements IMovieService {
       cast: this.processCastList(movieData.cast),
       genre: movieData.genre,
       rating: this.validateRating(movieData.rating),
+      poster: this.validateURL(movieData.poster),
       url: this.validateURL(movieData.url),
     };
 

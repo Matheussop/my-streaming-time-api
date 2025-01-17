@@ -32,6 +32,7 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
         plot: movie.overview,
         genre: movie.genre_ids,
         rating: movie.vote_average,
+        poster: `https://image.tmdb.org/t/p/original${movie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
       };
     });
@@ -68,6 +69,7 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
         plot: externalMovie.overview,
         genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
+        poster: `https://image.tmdb.org/t/p/original${externalMovie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
 
@@ -113,8 +115,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
 
     const encodedQueryParams = encodeURIComponent(title.trim());
     // If not in database, check external API
-    const url = `https://api.themoviedb.org/3/search/movie?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1`;
-    // const url = 'https://api.themoviedb.org/3/search/ multi ?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=1'; Verificar o uso do multi ao inves do movie como parametro
+    const url = `https://api.themoviedb.org/3/search/movie?query=${encodedQueryParams}&include_adult=false&language=pt-BR&page=${page}`;
 
     const options = {
       method: 'GET',
@@ -133,9 +134,9 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         plot: externalMovie.overview,
         rating: externalMovie.vote_average,
         genre: externalMovie.genre_ids,
+        poster: `https://image.tmdb.org/t/p/original${externalMovie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
-
       const existingMovies = await Movie.find(
         { title: { $in: externalMovies.map((movie: any) => movie.title) } },
         'title',

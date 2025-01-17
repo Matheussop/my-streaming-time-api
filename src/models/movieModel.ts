@@ -10,6 +10,7 @@ export interface IMovie extends Document {
   cast: string[];
   rating: number;
   genre: number[];
+  poster: string;
   url: string;
 }
 
@@ -44,6 +45,7 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
         message: (props: any) => `The genre(s) ${props.value} is/are not valid or not registered in the database!`,
       },
     },
+    poster: { type: String },
     url: { type: String, required: true },
   },
   {

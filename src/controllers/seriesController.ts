@@ -92,7 +92,7 @@ export class SeriesController {
         genre: externalSerie.genre_ids,
         numberEpisodes: externalSerie.number_of_episodes || 0,
         numberSeasons: externalSerie.number_of_seasons || 0,
-        poster: `https://image.tmdb.org/t/p/w500${externalSerie.backdrop_path}`,
+        poster: `https://image.tmdb.org/t/p/original${externalSerie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalSerie.poster_path}`,
       }));
 

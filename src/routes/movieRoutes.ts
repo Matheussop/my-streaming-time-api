@@ -66,6 +66,8 @@ movieRouter.get(
  *                   type: string
  *               rating:
  *                 type: number
+ *               poster:
+ *                 type: string
  *               url:
  *                 type: string
  *               release_date:
@@ -228,6 +230,8 @@ movieRouter.get('/:id', movieController.getMovieById);
  *                   type: string
  *               rating:
  *                 type: number
+ *               poster:
+ *                 type: string
  *               url:
  *                 type: string
  *               release_date:
