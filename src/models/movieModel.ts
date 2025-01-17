@@ -64,9 +64,7 @@ movieSchema.static('findByTitle', function (title: string, skip: number, limit: 
 });
 
 movieSchema.static('findByGenre', function (genre: string, skip: number, limit: number): Promise<IMovie[] | null> {
-  return this.find({ genre })
-    .skip(skip)
-    .limit(limit);
+  return this.find({ genre }).skip(skip).limit(limit);
 });
 
 const Movie = mongoose.model<IMovie, IMovieModel>('Movie', movieSchema);

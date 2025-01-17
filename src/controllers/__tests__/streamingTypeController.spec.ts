@@ -91,13 +91,15 @@ describe('StreamingTypeController', () => {
 
       await controller.getStreamingTypeById(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT('streamingType'), 400));
+      expect(mockNext).toHaveBeenCalledWith(
+        new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT('streamingType'), 400),
+      );
     });
   });
 
   describe('getStreamingTypeByName', () => {
     it('should return streaming type for valid name', async () => {
-      const nameStreamingType = 'Movies'
+      const nameStreamingType = 'Movies';
       const mockStreamingType = { _id: validId, name: nameStreamingType } as IStreamingTypeResponse;
       mockReq = {
         params: { name: nameStreamingType },

@@ -113,10 +113,10 @@ describe('MovieService', () => {
       mockStreamingTypeRepository.getIdGenreByName.mockResolvedValue(1);
       mockMovieRepository.findByGenre.mockResolvedValue([mockMovie as IMovie]);
 
-      const result = await movieService.getMoviesByGenre('action', 0 ,10);
+      const result = await movieService.getMoviesByGenre('action', 0, 10);
 
       expect(result).toEqual([mockMovie]);
-      expect(mockMovieRepository.findByGenre).toHaveBeenCalledWith(1, 0 , 10);
+      expect(mockMovieRepository.findByGenre).toHaveBeenCalledWith(1, 0, 10);
     });
 
     it('should throw error if movie not found', async () => {

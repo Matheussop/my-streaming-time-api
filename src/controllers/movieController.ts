@@ -79,7 +79,7 @@ export class MovieController {
 
     res.status(200).json(movie);
   });
-  
+
   createMovie = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating new movie',

@@ -28,7 +28,7 @@ describe('StreamingTypeRepository Integration Tests', () => {
 
   describe('findAll', () => {
     it('should return all streaming types', async () => {
-      const streamingTypes = await streamingTypeRepository.findAll(0,10);
+      const streamingTypes = await streamingTypeRepository.findAll(0, 10);
 
       expect(streamingTypes).toHaveLength(1);
       expect(streamingTypes[0].name).toBe('Netflix');

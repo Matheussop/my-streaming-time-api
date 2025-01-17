@@ -81,7 +81,7 @@ describe('StreamingTypes Model', () => {
       name: 'Series', // Duplicate name
       categories: [{ id: 2, name: 'Thriller' }],
     });
-    
+
     let error;
 
     try {

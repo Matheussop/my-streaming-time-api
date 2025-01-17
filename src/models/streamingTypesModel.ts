@@ -14,8 +14,8 @@ export interface IStreamingType extends Document {
   updatedAt: Date;
 }
 
-export interface IStreamingTypeModel extends Model<IStreamingType, {}, {}>{
-  findByName(category: string): Promise<IStreamingType | null >
+export interface IStreamingTypeModel extends Model<IStreamingType, {}, {}> {
+  findByName(category: string): Promise<IStreamingType | null>;
 }
 
 const categorySchema = new Schema<ICategory>({

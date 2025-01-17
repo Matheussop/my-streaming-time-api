@@ -1,6 +1,6 @@
-import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import { Router } from 'express';
 
+import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '../controllers/movieTMDBController';
 import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
@@ -173,7 +173,11 @@ movieRouter.post('/findOrAddMovie', (req, res, next) => validateRequest(req, res
  *       404:
  *         description: Movie not found
  */
-movieRouter.post('/byGenre', (req, res, next) => validateRequest(req, res, next, ['genre']), movieController.getMoviesByGenre);
+movieRouter.post(
+  '/byGenre',
+  (req, res, next) => validateRequest(req, res, next, ['genre']),
+  movieController.getMoviesByGenre,
+);
 
 /**
  * @swagger

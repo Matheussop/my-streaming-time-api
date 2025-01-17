@@ -60,7 +60,7 @@ describe('UserStreamingHistoryRepository', () => {
 
       expect(result).toEqual([mockHistory]);
       expect(UserStreamingHistory.find).toHaveBeenCalled();
-    })
+    });
   });
 
   describe('findById', () => {

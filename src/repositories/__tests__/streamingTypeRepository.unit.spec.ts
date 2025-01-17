@@ -98,9 +98,12 @@ describe('StreamingTypeRepository Unit', () => {
       const result = await repository.getIdGenreByName('action');
 
       expect(result).toEqual(1);
-      expect(StreamingTypes.findOne).toHaveBeenCalledWith({
-        'categories.name': new RegExp('^action$', 'i'),
-      },{"_id": 0, "categories.$": 1});
+      expect(StreamingTypes.findOne).toHaveBeenCalledWith(
+        {
+          'categories.name': new RegExp('^action$', 'i'),
+        },
+        { _id: 0, 'categories.$': 1 },
+      );
     });
 
     it('should return null when genre is not found', async () => {
