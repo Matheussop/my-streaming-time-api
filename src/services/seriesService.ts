@@ -8,11 +8,11 @@ import { SeriesRepository } from "../repositories/seriesRepository";
 
 export class SeriesService implements ISeriesService {
   constructor(
-    private seriesRepository: SeriesRepository) {}
+    private seriesRepository: SeriesRepository) { }
 
   async getSeriesByTitle(title: string, skip: number, limit: number) {
     const series = await this.seriesRepository.findByTitle(title, skip, limit);
-    if(!series || series.length <= 0){
+    if (!series || series.length <= 0) {
       logger.warn({
         message: 'Series not found',
         title: title,
@@ -21,25 +21,41 @@ export class SeriesService implements ISeriesService {
     return series
   }
 
-  async createManySeries(seriesArray: ISeriesCreate[]){
+  async createManySeries(seriesArray: ISeriesCreate[]) {
+    const processedData: ISeriesCreate[] = (
+      await Promise.all(
+        seriesArray.map(async (serieObj: ISeriesCreate) => {
+          const obj = await this.processCreateData(serieObj)
+          const isDuplicate = await this.checkDuplicateTitle(obj.title);
 
-    const processedData: ISeriesCreate[] = seriesArray.map((serieObj: ISeriesCreate) => {
-      return new Series(
-        {
-          title: serieObj.title.trim(),
-          release_date: this.validateReleaseDate(serieObj.release_date),
-          plot: serieObj.plot,
-          cast: serieObj.cast,
-          genre: serieObj.genre,
-          numberEpisodes: serieObj.numberEpisodes,
-          numberSeasons: serieObj.numberSeasons,
-          rating: this.validateRating(serieObj.rating),
-          poster: this.validateURL(serieObj.poster),
-          url: this.validateURL(serieObj.url),
-        }
+          if (isDuplicate) {
+            return null
+          }
+          return obj;
+        })
       )
-    })
+    ).filter((item): item is ISeriesCreate => item !== null);
+
     return this.seriesRepository.createManySeries(processedData)
+  }
+
+  async createSerie(serieData: ISeriesCreate) {
+    const processedData: ISeriesCreate = await this.processCreateData(serieData);
+
+    await this.checkDuplicateTitle(processedData.title, true);
+
+    return this.seriesRepository.create(processedData)
+  }
+
+  private async checkDuplicateTitle(title: string, showError = false) {
+    const movies = await this.seriesRepository.findByTitle(title, 0, 1);
+    if (movies && movies.length > 0) {
+      if (showError) {
+        throw new StreamingServiceError(ErrorMessages.MOVIE_WITH_TITLE_EXISTS, 400);
+      } else {
+        return true
+      }
+    }
   }
 
   private validateRating(rating: any): number {
@@ -51,7 +67,7 @@ export class SeriesService implements ISeriesService {
   }
 
   private validateReleaseDate(date: string): string {
-    if (date == ''){
+    if (date == '') {
       return date
     }
 
@@ -95,5 +111,20 @@ export class SeriesService implements ISeriesService {
     if (data.plot) processed.plot = data.plot;
 
     return processed;
+  }
+
+  private async processCreateData(data: ISeriesCreate): Promise<ISeriesCreate> {
+    return {
+      title: data.title.trim(),
+      release_date: this.validateReleaseDate(data.release_date),
+      plot: data.plot,
+      cast: data.cast,
+      genre: data.genre,
+      numberEpisodes: data.numberEpisodes,
+      numberSeasons: data.numberSeasons,
+      rating: this.validateRating(data.rating),
+      poster: this.validateURL(data.poster),
+      url: this.validateURL(data.url),
+    }
   }
 }

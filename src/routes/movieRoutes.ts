@@ -79,7 +79,7 @@ movieRouter.get(
  */
 movieRouter.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'release_date']),
+  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'release_date']),
   movieController.createMovie,
 );
 

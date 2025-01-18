@@ -99,9 +99,10 @@ export class SeriesController {
       const existingTitles = seriesDataBase?.map((series) => series.title);
 
       const newSeries = externalSeries.filter((externalSerie: any) => !existingTitles?.includes(externalSerie.title));
+      const limitedSeries = newSeries.slice(0, limit);
 
       if (newSeries.length > 0) {
-        const savedSeries = await this.seriesService.createManySeries(newSeries);
+        const savedSeries = await this.seriesService.createManySeries(limitedSeries);
         res.status(200).json({
           page,
           limit,
@@ -120,5 +121,30 @@ export class SeriesController {
       throw new StreamingServiceError('Series not found', 404);
     }
 
+  })
+
+  createSeries = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Creating a series',
+      movieData: req.body,
+      method: req.method,
+      path: req.path,
+    });
+
+    const seriesObj: ISeriesCreate = {
+      title: req.body.title,
+      release_date: req.body.release_date,
+      plot: req.body.plot,
+      cast: req.body.cast,
+      genre: req.body.genre,
+      numberEpisodes: req.body.numberEpisodes,
+      numberSeasons: req.body.numberSeasons,
+      rating: parseFloat(req.body.rating),
+      poster: req.body.poster,
+      url: req.body.url,
+    };
+
+    const newSerie = await this.seriesService.createSerie(seriesObj);
+    res.status(201).json(newSerie);
   })
 }

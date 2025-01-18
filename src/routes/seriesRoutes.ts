@@ -41,6 +41,46 @@ seriesRouter.get(
 
 /**
  * @swagger
+ * /movies:
+ *   post:
+ *     summary: Create a new movie
+ *     tags: [Movies]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               plot:
+ *                 type: string
+ *               cast:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               rating:
+ *                 type: number
+ *               poster:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *               release_date:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Movie created successfully
+ */
+seriesRouter.post(
+  '/',
+  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'numberEpisodes', 'numberSeasons' , 'release_date', 'genre']),
+  seriesController.createSeries,
+);
+
+/**
+ * @swagger
  * /series/external:
  *   get:
  *     summary: Retrieve a list of external list of series returned by TMDB
