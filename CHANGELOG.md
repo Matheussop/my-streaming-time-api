@@ -20,9 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance optimizations
 - Additional TMDB features
 
-
-## [1.2.0]
 ### Added
+- Series Management: Added functionality for series management, including routes, models, services, controller, and repository methods.
+- Poster Field: Added a poster field to movie and series models. 
 - New path route on movies to get movies by genre name
   - Route `byGenre` in `movieRoutes.ts` to fetch movies by genre.
 
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Edit findAll on controllers to receive required parameters
-
+- Movie Retrieval: Refactored movie retrieval to sort by release date and updated route method for genre filtering
 
 ## [1.1.0]
 ### Added
