@@ -11,6 +11,27 @@ import { Messages } from "../constants/messages";
 export class SeriesController {
   constructor(private seriesService: SeriesService){}
 
+  getSeries = catchAsync(async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    logger.info({
+      message: 'Fetching series list',
+      page,
+      limit,
+      skip,
+      method: req.method,
+      path: req.path,
+    });
+    
+    if (Number(limit) > 100) {
+      throw new StreamingServiceError(ErrorMessages.SERIES_FETCH_LIMIT_EXCEEDED, 400);
+    }
+
+    const series = await this.seriesService.getSeries(skip, limit);
+    res.status(200).json(series);
+  });
+
   getSeriesByTitle = catchAsync(async (req: Request, res: Response): Promise<void> => {
     const { title, page = 1, limit = 10 } = req.body;
     const skip = (Number(page) - 1) * Number(limit);
@@ -146,6 +167,29 @@ export class SeriesController {
 
     const newSerie = await this.seriesService.createSerie(seriesObj);
     res.status(201).json(newSerie);
+  })
+
+  updateSerie = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    logger.info({
+      message: 'Updating serie',
+      serieId: id,
+      updateData: req.body,
+      method: req.method,
+      path: req.path,
+    });
+
+    
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
+    }
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+      throw new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400);
+    }
+
+    const serie = await this.seriesService.updateSerie(id, req.body);
+    res.status(200).json(serie);
   })
 
   deleteSerie = catchAsync(async (req: Request, res: Response) => {

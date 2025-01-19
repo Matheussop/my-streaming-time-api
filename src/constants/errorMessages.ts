@@ -14,6 +14,7 @@ export const ErrorMessages = {
   SERIES_CAST_INVALID: 'Invalid cast format, must be an array of strings',
   SERIES_GENRE_REQUIRED: 'Genre is required',
   SERIES_GENRE_INVALID: 'Genre is not valid or not registered in the database',
+  SERIES_FETCH_LIMIT_EXCEEDED: 'Limit cannot exceed 100 items',
 
   // Movies errors
   MOVIE_NOT_FOUND: 'Movie not found',

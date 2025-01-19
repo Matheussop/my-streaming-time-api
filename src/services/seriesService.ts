@@ -1,6 +1,6 @@
 import logger from "../config/logger";
 import { ErrorMessages } from "../constants/errorMessages";
-import { ISeriesCreate } from "../interfaces/series";
+import { ISeriesCreate, ISeriesUpdate } from "../interfaces/series";
 import { ISeriesService } from "../interfaces/services";
 import { StreamingServiceError } from "../middleware/errorHandler";
 import Series from "../models/seriesModel";
@@ -9,6 +9,10 @@ import { SeriesRepository } from "../repositories/seriesRepository";
 export class SeriesService implements ISeriesService {
   constructor(
     private seriesRepository: SeriesRepository) { }
+
+  async getSeries(skip: number, limit: number){
+    return this.seriesRepository.findAll(skip, limit);
+  }
 
   async getSeriesByTitle(title: string, skip: number, limit: number) {
     const series = await this.seriesRepository.findByTitle(title, skip, limit);
@@ -47,14 +51,35 @@ export class SeriesService implements ISeriesService {
     return this.seriesRepository.create(processedData)
   }
 
+  async updateSerie(id: string, updateData: ISeriesUpdate){
+    const existingSerie = await this.seriesRepository.findById(id);
+
+    if (!existingSerie) {
+      logger.warn({
+        message: 'Serie not found for update',
+        serieId: id,
+      });
+      throw new StreamingServiceError(ErrorMessages.SERIE_NOT_FOUND, 404);
+    }
+
+    // If updating the title, check for duplicates
+    if (updateData.title && updateData.title !== existingSerie.title) {
+      await this.checkDuplicateTitle(updateData.title, true);
+    }
+
+    const processedUpdate = await this.processUpdateData(updateData);
+
+    return this.seriesRepository.update(id, processedUpdate);
+  }
+
   async deleteSerie(id: string){
     const deletedSerie = await this.seriesRepository.delete(id);
-    if (deletedSerie) {
+    if (!deletedSerie) {
       logger.warn({
         message: 'Serie not found for delete',
         serieId: id,
       });
-      throw new StreamingServiceError(ErrorMessages.SERIES_NOT_FOUND, 404);
+      throw new StreamingServiceError(ErrorMessages.SERIE_NOT_FOUND, 404);
     }
     return deletedSerie;
   }

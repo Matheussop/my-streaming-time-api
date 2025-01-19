@@ -18,6 +18,29 @@ const seriesController = new SeriesController(seriesService);
 
 /**
  * @swagger
+ * /series:
+ *   get:
+ *     summary: Retrieve a list of series
+ *     tags: [Series]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: A list of series
+ */
+seriesRouter.get('/', seriesController.getSeries);
+
+/**
+ * @swagger
  * /series/title:
  *   get:
  *     summary: Get series by title
@@ -96,6 +119,53 @@ seriesRouter.post(
   (req, res, next) => validateRequest(req, res, next, ['title']),
   seriesController.findOrAddSerie,
 );
+
+/**
+ * @swagger
+ * /series/{id}:
+ *   put:
+ *     summary: Update a serie by ID
+ *     tags: [Series]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               plot:
+ *                 type: string
+ *               cast:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               rating:
+ *                 type: number
+ *               numberEpisode:
+ *                 type: number
+ *               numberSeasons:
+ *                 type: number
+ *               poster:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *               release_date:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Serie updated successfully
+ */
+seriesRouter.put('/:id', seriesController.updateSerie);
+
 
 /**
  * @swagger
