@@ -41,10 +41,10 @@ seriesRouter.get(
 
 /**
  * @swagger
- * /movies:
+ * /series:
  *   post:
- *     summary: Create a new movie
- *     tags: [Movies]
+ *     summary: Create a new series
+ *     tags: [Series]
  *     requestBody:
  *       required: true
  *       content:
@@ -71,7 +71,7 @@ seriesRouter.get(
  *                 format: date
  *     responses:
  *       201:
- *         description: Movie created successfully
+ *         description: Serie created successfully
  */
 seriesRouter.post(
   '/',
@@ -94,7 +94,25 @@ seriesRouter.post(
 seriesRouter.post(
   '/findOrAddSerie',
   (req, res, next) => validateRequest(req, res, next, ['title']),
-  seriesController.findOrAddMovie,
+  seriesController.findOrAddSerie,
 );
+
+/**
+ * @swagger
+ * /series/{id}:
+ *   delete:
+ *     summary: Delete a serie by ID
+ *     tags: [Series]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Serie deleted successfully
+ */
+seriesRouter.delete('/:id', seriesController.deleteSerie);
 
 export default seriesRouter;

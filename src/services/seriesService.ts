@@ -47,11 +47,23 @@ export class SeriesService implements ISeriesService {
     return this.seriesRepository.create(processedData)
   }
 
+  async deleteSerie(id: string){
+    const deletedSerie = await this.seriesRepository.delete(id);
+    if (deletedSerie) {
+      logger.warn({
+        message: 'Serie not found for delete',
+        serieId: id,
+      });
+      throw new StreamingServiceError(ErrorMessages.SERIES_NOT_FOUND, 404);
+    }
+    return deletedSerie;
+  }
+
   private async checkDuplicateTitle(title: string, showError = false) {
-    const movies = await this.seriesRepository.findByTitle(title, 0, 1);
-    if (movies && movies.length > 0) {
+    const series = await this.seriesRepository.findByTitle(title, 0, 1);
+    if (series && series.length > 0) {
       if (showError) {
-        throw new StreamingServiceError(ErrorMessages.MOVIE_WITH_TITLE_EXISTS, 400);
+        throw new StreamingServiceError(ErrorMessages.SERIES_WITH_TITLE_EXISTS, 400);
       } else {
         return true
       }
@@ -76,7 +88,7 @@ export class SeriesService implements ISeriesService {
       throw new StreamingServiceError(ErrorMessages.SERIES_RELEASE_DATE_INVALID, 400);
     }
     if (releaseDate > new Date()) {
-      // TODO This may need to be removed in the future, as we will accept upcoming movie releases.
+      // TODO This may need to be removed in the future, as we will accept upcoming serie releases.
       throw new StreamingServiceError(ErrorMessages.SERIES_RELEASE_DATE_FUTURE, 400);
     }
     //Return date without time

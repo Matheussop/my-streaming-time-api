@@ -1,4 +1,14 @@
 export const Messages = {
+  // Series 
+  SERIE_FOUND: 'Serie found',
+  SERIES_FOUND: 'Series found',
+  SERIE_CREATED_SUCCESSFULLY: 'Serie created successfully',
+  SERIE_UPDATED_SUCCESSFULLY: 'Serie updated successfully',
+  SERIE_DELETED_SUCCESSFULLY: 'Serie deleted successfully',
+  SERIE_FETCHED_SUCCESSFULLY: 'Serie fetched successfully',
+  SERIE_SAVED_SUCCESSFULLY: 'Serie saved successfully',
+  SERIE_FETCHED_AND_SAVED_SUCCESSFULLY: 'Serie fetched and saved successfully',
+
   // Movies messages
   MOVIE_FOUND: 'Movie found',
   MOVIES_FOUND: 'Movies found',

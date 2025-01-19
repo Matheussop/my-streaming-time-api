@@ -6,7 +6,7 @@ import { SeriesService } from '../services/seriesService';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { ErrorMessages } from '../constants/errorMessages';
-import Series from "../models/seriesModel";
+import { Messages } from "../constants/messages";
 
 export class SeriesController {
   constructor(private seriesService: SeriesService){}
@@ -28,7 +28,7 @@ export class SeriesController {
   createManySeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating many series',
-      movieData: req.body,
+      serieData: req.body,
       method: req.method,
       path: req.path,
     });
@@ -48,7 +48,7 @@ export class SeriesController {
     res.status(201).json(newSeries);
   })
 
-  findOrAddMovie = catchAsync(async (req: Request, res: Response) => {
+  findOrAddSerie = catchAsync(async (req: Request, res: Response) => {
     const { title, page = 1, limit = 10 } = req.body;
     const skip = (page - 1) * limit;
 
@@ -56,9 +56,9 @@ export class SeriesController {
     
     if(seriesDataBase && seriesDataBase?.length > 5){
       logger.info({
-        message: 'Movie already existed in database with this parameter',
+        message: 'Serie already existed in database with this parameter',
         path: req.path,
-        movieData: req.body,
+        serieData: req.body,
         method: req.method,
       })
       res.status(200).json({
@@ -107,14 +107,14 @@ export class SeriesController {
           page,
           limit,
           total: savedSeries.length,
-          movies: savedSeries,
+          series: savedSeries,
         });
       } else {
         res.status(200).json({
           page,
           limit,
           total: externalSeries.length,
-          movies: externalSeries,
+          series: externalSeries,
         });
       }
     } else {
@@ -125,8 +125,8 @@ export class SeriesController {
 
   createSeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
-      message: 'Creating a series',
-      movieData: req.body,
+      message: 'Creating a serie',
+      serieData: req.body,
       method: req.method,
       path: req.path,
     });
@@ -146,5 +146,25 @@ export class SeriesController {
 
     const newSerie = await this.seriesService.createSerie(seriesObj);
     res.status(201).json(newSerie);
+  })
+
+  deleteSerie = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    logger.info({
+      message: 'Deleting a serie',
+      serieData: req.body,
+      method: req.method,
+      path: req.path,
+    });
+
+    
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
+    }
+
+    await this.seriesService.deleteSerie(id);
+
+    res.status(200).json({ message: Messages.SERIE_DELETED_SUCCESSFULLY})
   })
 }
