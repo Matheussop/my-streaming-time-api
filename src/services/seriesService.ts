@@ -3,7 +3,6 @@ import { ErrorMessages } from "../constants/errorMessages";
 import { ISeriesCreate, ISeriesUpdate } from "../interfaces/series";
 import { ISeriesService } from "../interfaces/services";
 import { StreamingServiceError } from "../middleware/errorHandler";
-import Series from "../models/seriesModel";
 import { SeriesRepository } from "../repositories/seriesRepository";
 
 export class SeriesService implements ISeriesService {
@@ -12,6 +11,18 @@ export class SeriesService implements ISeriesService {
 
   async getSeries(skip: number, limit: number){
     return this.seriesRepository.findAll(skip, limit);
+  }
+
+  async getSeriesById(id: string) {
+    const serie = this.seriesRepository.findById(id)
+    if (!serie) {
+      logger.warn({
+        message: 'Serie not found',
+        serieId: id,
+      });
+      throw new StreamingServiceError(ErrorMessages.SERIE_NOT_FOUND, 404);
+    }
+    return serie;
   }
 
   async getSeriesByTitle(title: string, skip: number, limit: number) {

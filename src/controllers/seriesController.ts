@@ -46,6 +46,21 @@ export class SeriesController {
     res.status(200).json(series);
   });
 
+  getSerieById = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    logger.info({
+      message: 'Fetching series by id',
+      serieId: id,
+      method: req.method,
+      path: req.path,
+    });
+
+    const series = await this.seriesService.getSeriesById(id);
+    
+    res.status(200).json(series);
+  });
+
   createManySeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating many series',
@@ -67,7 +82,7 @@ export class SeriesController {
 
     const newSeries = await this.seriesService.createManySeries(seriesArray);
     res.status(201).json(newSeries);
-  })
+  });
 
   findOrAddSerie = catchAsync(async (req: Request, res: Response) => {
     const { title, page = 1, limit = 10 } = req.body;
@@ -142,7 +157,7 @@ export class SeriesController {
       throw new StreamingServiceError('Series not found', 404);
     }
 
-  })
+  });
 
   createSeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
@@ -167,7 +182,7 @@ export class SeriesController {
 
     const newSerie = await this.seriesService.createSerie(seriesObj);
     res.status(201).json(newSerie);
-  })
+  });
 
   updateSerie = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -190,7 +205,7 @@ export class SeriesController {
 
     const serie = await this.seriesService.updateSerie(id, req.body);
     res.status(200).json(serie);
-  })
+  });
 
   deleteSerie = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -210,5 +225,5 @@ export class SeriesController {
     await this.seriesService.deleteSerie(id);
 
     res.status(200).json({ message: Messages.SERIE_DELETED_SUCCESSFULLY})
-  })
+  });
 }

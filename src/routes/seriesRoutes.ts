@@ -37,7 +37,7 @@ const seriesController = new SeriesController(seriesService);
  *       200:
  *         description: A list of series
  */
-seriesRouter.get('/', seriesController.getSeries);
+seriesRouter.get('/:id', seriesController.getSerieById);
 
 /**
  * @swagger
@@ -119,6 +119,27 @@ seriesRouter.post(
   (req, res, next) => validateRequest(req, res, next, ['title']),
   seriesController.findOrAddSerie,
 );
+
+
+/**
+ * @swagger
+ * /series/{id}:
+ *   get:
+ *     summary: Retrieve a serie by ID
+ *     tags: [Series]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A movie object
+ *       404:
+ *         description: Series not found
+ */
+seriesRouter.get('/:id', seriesController.getSerieById);
 
 /**
  * @swagger

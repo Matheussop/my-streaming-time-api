@@ -1,7 +1,12 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
 import StreamingTypes from './streamingTypesModel';
 import { ErrorMessages } from '../constants/errorMessages';
+import { StreamingServiceError } from '../middleware/errorHandler';
 
+interface IGenre {
+  id: number;
+  name: string;
+}
 export interface IMovie extends Document {
   _id: string;
   title: string;
@@ -9,7 +14,7 @@ export interface IMovie extends Document {
   plot: string;
   cast: string[];
   rating: number;
-  genre: number[];
+  genre: number[] | IGenre[];
   poster: string;
   url: string;
 }
@@ -28,21 +33,17 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
     plot: { type: String, default: '' },
     cast: [{ type: String }],
     rating: { type: Number, required: true },
-    genre: {
-      type: [Number],
+    genre: { 
+      type: Schema.Types.Mixed,
       required: true,
       validate: {
-        validator: async function (categoriesIds: number[]) {
-          const result = await Promise.all(
-            categoriesIds.map(async (category_id: number) => {
-              const streamingTypes = await StreamingTypes.find();
-              const categories = streamingTypes.flatMap((type) => type.categories);
-              return categories.some((category: any) => category.id === category_id);
-            }),
-          );
-          return result.every((isValid) => isValid === true);
+        validator: function (value: any) {
+          if (!Array.isArray(value)) return false;
+          if (value.length === 0) return true; // Allow empty arrays
+          const isNumberArray = typeof value[0] === 'number';
+          return isNumberArray;
         },
-        message: (props: any) => `The genre(s) ${props.value} is/are not valid or not registered in the database!`,
+        message: 'Genre must be an array of numbers',
       },
     },
     poster: { type: String },
@@ -58,6 +59,29 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
     },
   },
 );
+
+movieSchema.pre('save', async function (next) {
+  const movie = this;
+  const streamingTypes = await StreamingTypes.find();
+  const categories = streamingTypes.flatMap((type) => type.categories);
+
+  const invalidIds: number[] = [];
+  movie.genre = movie.genre.map((genreId: number | IGenre) => {
+    const category = categories.find((category: any) => category.id === genreId);
+    if (category) {
+      return { id: category.id, name: category.name };
+    } else {
+      invalidIds.push(genreId as number);
+      return null;
+    }
+  }).filter((genreItem) => genreItem !== null);
+
+  if (invalidIds.length > 0) {
+    return next(new StreamingServiceError(`The genre(s) ${invalidIds.join(', ')} is/are not valid or not registered in the database!`, 400));
+  }
+
+  next();
+});
 
 movieSchema.static('findByTitle', function (title: string, skip: number, limit: number): Promise<IMovie[] | null> {
   return this.find({ title: new RegExp(title, 'i') })

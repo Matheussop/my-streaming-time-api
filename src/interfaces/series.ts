@@ -6,9 +6,14 @@ export interface ISeriesCreate {
   rating: number;
   numberEpisodes: number;
   numberSeasons: number;
-  genre: number[];
+  genre: number[] | IGenre[];
   poster: string;
   url: string;
+}
+
+export interface IGenre {
+  id: number;
+  name: string;
 }
 
 export interface ISeriesUpdate {
@@ -19,7 +24,7 @@ export interface ISeriesUpdate {
   numberEpisodes?: number;
   numberSeasons?: number;
   rating?: number;
-  genre?: number[];
+  genre?: number[] | IGenre[];
   poster?: string;
   url?: string;
 }
