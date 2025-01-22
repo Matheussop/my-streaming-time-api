@@ -10,6 +10,7 @@ import streamingTypeRoutes from './routes/streamingTypeRoutes';
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
 import seriesRoutes from './routes/seriesRoutes';
+import commonMediaRoutes from './routes/commonMediaRoutes';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ const startServer = async () => {
     setupSwagger(app);
 
     // Routes
+    app.use('/commonMedia', commonMediaRoutes)
     app.use('/movies', movieRoutes);
     app.use('/series', seriesRoutes);
     app.use('/streamingTypes', streamingTypeRoutes);
