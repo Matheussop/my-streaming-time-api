@@ -28,8 +28,8 @@ export class SeriesRepository implements ISeriesRepository{
     return Series.findByTitle(title, skip, limit);
   }
 
-  async findByGenre(genre_id: number, skip: number, limit: number): Promise<ISeriesResponse[] | null> {
-    return Series.findByGenre(genre_id, skip, limit)
+  async findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null> {
+    return Series.findByGenre(genre, skip, limit)
   }
 
   async createManySeries(data: ISeriesCreate[]){

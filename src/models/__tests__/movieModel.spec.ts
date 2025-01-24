@@ -39,11 +39,12 @@ describe('Movie Model Integrations Test ', () => {
         url: 'http://example.com',
       };
 
+      const genre = [{ id: 1, name: "Action",}]
       const movie = await Movie.create(validMovie);
 
       expect(movie.title).toBe(validMovie.title);
       expect(movie.rating).toBe(validMovie.rating);
-      expect(movie.genre).toEqual(expect.arrayContaining(validMovie.genre));
+      expect(movie.genre).toEqual(expect.arrayContaining(genre));
     });
 
     it('should fail when creating a movie without required fields', async () => {
@@ -161,13 +162,13 @@ describe('Movie Model Integrations Test ', () => {
     });
 
     it('should find movies by genre', async () => {
-      const movies = await Movie.findByGenre(1, 0, 10);
+      const movies = await Movie.findByGenre('Action', 0, 10);
       expect(movies).toHaveLength(3);
-      expect(movies![0].genre).toContain(1);
+      expect(movies![0].genre).toStrictEqual([{"id": 1, "name": "Action"}]);
     });
 
     it('should respect skip and limit parameters', async () => {
-      const movies = await Movie.findByGenre(1, 1, 1);
+      const movies = await Movie.findByGenre('Action', 1, 1);
       expect(movies).toHaveLength(1);
     });
   });

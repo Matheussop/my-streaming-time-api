@@ -140,10 +140,8 @@ describe('MovieRepository Integration Tests', () => {
       rating: 8.5,
       url: 'http://test.com',
     };
-
     await movieRepository.create(movieData);
-    const genre = movieData?.genre?.[0] ?? 0;
-    const foundMovie = await movieRepository.findByGenre(genre, 0, 10);
+    const foundMovie = await movieRepository.findByGenre('Series', 0, 10);
     expect(foundMovie).not.toBeNull();
     expect(foundMovie?.length).toBeGreaterThan(0);
   });

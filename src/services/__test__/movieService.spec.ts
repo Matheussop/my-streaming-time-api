@@ -116,7 +116,7 @@ describe('MovieService', () => {
       const result = await movieService.getMoviesByGenre('action', 0, 10);
 
       expect(result).toEqual([mockMovie]);
-      expect(mockMovieRepository.findByGenre).toHaveBeenCalledWith(1, 0, 10);
+      expect(mockMovieRepository.findByGenre).toHaveBeenCalledWith('action', 0, 10);
     });
 
     it('should throw error if movie not found', async () => {
@@ -126,14 +126,6 @@ describe('MovieService', () => {
 
       await expect(movieService.getMoviesByGenre('action', 0, 10)).rejects.toThrow(
         new StreamingServiceError(ErrorMessages.MOVIES_NOT_FOUND, 404),
-      );
-    });
-
-    it('should throw error if genre is invalid', async () => {
-      mockStreamingTypeRepository.getIdGenreByName.mockResolvedValue(null);
-
-      await expect(movieService.getMoviesByGenre('invalid', 0, 10)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.MOVIE_GENRE_INVALID, 404),
       );
     });
   });

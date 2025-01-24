@@ -12,7 +12,7 @@ export interface ISeriesMethods {}
 
 export interface ISeriesModel extends Model<ISerie, {}, ISeriesMethods> {
   findByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
-  findByGenre(genre_id: number, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
+  findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
 }
 
 const seriesSchema = new Schema<ISerie, ISeriesModel, ISeriesMethods>(

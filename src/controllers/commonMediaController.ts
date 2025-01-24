@@ -10,7 +10,6 @@ export class CommonMediaController {
   getCommonMediaList = catchAsync(async (req: Request, res: Response) => {
     const { mediaType, page = 1, limit = 10 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
-    console.log("Coasomda", mediaType, req.query)
     let mediaList;
     if(mediaType === "movies") {
       mediaList = await this.movieService.getMovies(skip, Number(limit));

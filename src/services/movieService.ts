@@ -91,13 +91,11 @@ export class MovieService implements IMovieService {
   }
 
   async getMoviesByGenre(genre: string, skip: number, limit: number) {
-    const genre_id = await this.getGenreId(genre);
-
-    const movies = await this.movieRepository.findByGenre(genre_id, skip, limit);
+    const movies = await this.movieRepository.findByGenre(genre, skip, limit);
     if (!movies || movies.length <= 0) {
       logger.warn({
         message: 'Movies not found',
-        genre_id,
+        genre,
       });
       throw new StreamingServiceError(ErrorMessages.MOVIES_NOT_FOUND, 404);
     }

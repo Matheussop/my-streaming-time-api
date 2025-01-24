@@ -13,7 +13,7 @@ export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
 }
 
 export interface IMovieRepository extends IBaseRepository<IMovie> {
-  findByGenre(genre_id: number, skip: number, limit: number): Promise<IMovie[] | null>;
+  findByGenre(genre: string, skip: number, limit: number): Promise<IMovie[] | null>;
   findByTitle(title: string, skip?: number, limit?: number): Promise<IMovie[] | null>;
 }
 
@@ -40,5 +40,5 @@ export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType
 
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{
   findByTitle(title: string, skip?: number, limit?: number): Promise<ISeriesResponse[] | null>;
-  findByGenre(genre_id: number, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
+  findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
 }
