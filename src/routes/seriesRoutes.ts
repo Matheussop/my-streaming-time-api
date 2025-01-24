@@ -18,29 +18,6 @@ const seriesController = new SeriesController(seriesService);
 
 /**
  * @swagger
- * /series:
- *   get:
- *     summary: Retrieve a list of series
- *     tags: [Series]
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of items per page
- *     responses:
- *       200:
- *         description: A list of series
- */
-seriesRouter.get('/:id', seriesController.getSerieById);
-
-/**
- * @swagger
  * /series/title:
  *   get:
  *     summary: Get series by title
@@ -61,6 +38,29 @@ seriesRouter.get(
   (req, res, next) => validateRequest(req, res, next, ['title']),
   seriesController.getSeriesByTitle,
 );
+
+/**
+ * @swagger
+ * /series:
+ *   get:
+ *     summary: Retrieve a list of series
+ *     tags: [Series]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: A list of series
+ */
+seriesRouter.get('/:id', seriesController.getSerieById);
 
 /**
  * @swagger
