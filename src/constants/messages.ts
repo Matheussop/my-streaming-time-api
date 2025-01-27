@@ -27,7 +27,7 @@ export const Messages = {
   STREAMING_TYPE_DELETED_SUCCESSFULLY: 'Streaming type deleted successfully',
   STREAMING_TYPE_CATEGORIES_ADDED_SUCCESSFULLY: 'Categories added successfully',
   STREAMING_TYPE_CATEGORIES_REMOVED_SUCCESSFULLY: 'Categories removed successfully',
-
+  STREAMING_TYPE_COVER_CHANGE_SUCCESSFULLY: "Covers changed successfully",
   // History Streaming messages
   STREAMING_HISTORY_FOUND: 'Streaming history found',
   STREAMING_ADDED_SUCCESSFULLY: 'Streaming added successfully',

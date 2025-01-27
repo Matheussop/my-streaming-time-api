@@ -1,6 +1,7 @@
 export interface ICategory {
   id: number;
   name: string;
+  poster?: string;
 }
 
 export interface IStreamingTypeCreate {

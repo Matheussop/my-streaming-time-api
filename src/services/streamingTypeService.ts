@@ -10,6 +10,7 @@ import { IStreamingType } from '../models/streamingTypesModel';
 import { IStreamingTypeService } from '../interfaces/services';
 import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
 import { ErrorMessages } from '../constants/errorMessages';
+import axios from 'axios';
 
 export class StreamingTypeService implements IStreamingTypeService {
   constructor(private repository: StreamingTypeRepository) {}
@@ -76,7 +77,7 @@ export class StreamingTypeService implements IStreamingTypeService {
 
     const existingIds = new Set(streamingType.categories.map((c) => c.id));
     const newCategories = category.filter((category) => !existingIds.has(category.id));
-
+    
     if (newCategories.length === 0) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORY_ALREADY_EXISTS, 400);
     }
@@ -102,6 +103,47 @@ export class StreamingTypeService implements IStreamingTypeService {
     }
 
     return this.repository.removeCategory(id, categoriesIds);
+  }
+
+  async changeCover(): Promise<void> {
+    const allStreamingTypes = await this.repository.findAll(0, 100);
+
+    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
+      throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
+    }
+    // TODO make a upgrade to change all of the categories streaming in same time not only one each time
+    const streamingTypeCategories = await Promise.all(allStreamingTypes[1].categories.map(async (categoryType: ICategory) => { 
+      const url = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&without_genres=${categoryType.id}`;
+      const options = {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+        },
+      };
+      const response = await axios.get(url, options); // TODO use a instance of axios from project not the axios lib directly
+      if (response.data.results.length > 0) {
+        const poster = response.data.results[0].backdrop_path;
+        const updatedCategory = {
+          id: categoryType.id,
+          name: categoryType.name,
+          poster: `https://image.tmdb.org/t/p/original${poster}`         
+
+        };
+        return updatedCategory;
+      } 
+      return categoryType;
+    }));
+
+    const newStreamingTypes = {
+      ...allStreamingTypes[0],
+      categories: streamingTypeCategories,
+    }
+
+    const updatedType = await this.repository.update(newStreamingTypes._id, newStreamingTypes);
+    if (!updatedType) {
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
+    }
   }
 
   private async validateStreamingTypeData(data: Partial<IStreamingType>): Promise<void> {

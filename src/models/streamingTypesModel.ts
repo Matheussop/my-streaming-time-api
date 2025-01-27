@@ -1,17 +1,15 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 import { ErrorMessages } from '../constants/errorMessages';
+import { IStreamingTypeResponse } from '../interfaces/streamingTypes';
 
-export interface ICategory {
+export interface ICategory { // TODO Remover esse ICategory e utilizar apenas o da interface
   id: number;
   name: string;
+  poster?: string;
 }
 
-export interface IStreamingType extends Document {
+export interface IStreamingType extends Document, IStreamingTypeResponse {
   _id: string;
-  name: string;
-  categories: ICategory[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface IStreamingTypeModel extends Model<IStreamingType, {}, {}> {
@@ -28,6 +26,10 @@ const categorySchema = new Schema<ICategory>({
     required: [true, ErrorMessages.STREAMING_TYPE_CATEGORIES_NAME_REQUIRED],
     trim: true,
   },
+  poster: {
+    type: String,
+    trim: true,
+  }
 });
 
 const streamingTypesSchema = new Schema<IStreamingType, IStreamingTypeModel>(

@@ -29,6 +29,7 @@ export interface IStreamingTypeService {
   deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null>;
   addCategoryToStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
   removeCategoryFromStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
+  changeCover(): Promise<void>;
 }
 
 export interface IMovieService {

@@ -121,6 +121,18 @@ export class StreamingTypeController {
     await this.service.deleteStreamingType(req.params.id);
     res.status(204).send(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
   });
+
+  changeCoverStreamingType = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Changing covers of streaming types',
+      streamingTypeId: req.params.id,
+      method: req.method,
+      path: req.path,
+    });
+
+    await this.service.changeCover();
+    res.status(204).send(Messages.STREAMING_TYPE_COVER_CHANGE_SUCCESSFULLY);
+  });
 }
 
 const validateIdFormat = (id: string, type: string) => {

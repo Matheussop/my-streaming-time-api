@@ -29,6 +29,20 @@ router.get('/', controller.getStreamingTypes);
 
 /**
  * @swagger
+ * /streamingTypes/changeCover:
+ *   get:
+ *     summary: Change cover of streaming types data base with data of TMDB
+ *     tags: [StreamingTypes]
+ *     responses:
+ *       200:
+ *         description: Covers changed successfully
+ *       404:
+ *         description: Failed to change covers
+ */
+router.get("/changeCover", controller.changeCoverStreamingType);
+
+/**
+ * @swagger
  * /streamingTypes/{id}:
  *   get:
  *     summary: Retrieve a streaming type by ID

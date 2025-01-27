@@ -9,7 +9,7 @@ import StreamingTypes from '../models/streamingTypesModel';
 
 export class StreamingTypeRepository implements IStreamingTypeRepository {
   async findAll(skip: number, limit: number): Promise<IStreamingTypeResponse[]> {
-    return StreamingTypes.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+    return (await StreamingTypes.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean());
   }
 
   async findById(id: string): Promise<IStreamingTypeResponse | null> {
