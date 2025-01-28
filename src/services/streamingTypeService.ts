@@ -112,22 +112,32 @@ export class StreamingTypeService implements IStreamingTypeService {
       throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
     }
     // TODO make a upgrade to change all of the categories streaming in same time not only one each time
-    const streamingTypeCategories = await Promise.all(allStreamingTypes[1].categories.map(async (categoryType: ICategory) => { 
-      const url = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&without_genres=${categoryType.id}`;
+    const streamingTypeCategories = await Promise.all(allStreamingTypes[0].categories.map(async (categoryType: ICategory) => { 
+      const url = `https://api.themoviedb.org/3/discover/movie`;
       const options = {
         method: 'GET',
         headers: {
           accept: 'application/json',
           Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
         },
+        params: {
+          without_genres: categoryType.id,
+          sort_by: 'popularity.desc',
+          include_adult: false,
+          include_video: false,
+          language:'en-US',
+          page: Math.floor(Math.random() * 5) + 1
+        }
       };
       const response = await axios.get(url, options); // TODO use a instance of axios from project not the axios lib directly
       if (response.data.results.length > 0) {
-        const poster = response.data.results[0].backdrop_path;
+        const randomIndex = Math.floor(Math.random() * response.data.results.length);
+
+        const poster = response.data.results[randomIndex].backdrop_path;
         const updatedCategory = {
           id: categoryType.id,
           name: categoryType.name,
-          poster: `https://image.tmdb.org/t/p/original${poster}`         
+          poster: `https://image.tmdb.org/t/p/original${poster}`        
 
         };
         return updatedCategory;
