@@ -23,7 +23,7 @@ const commonMediaController = new CommonMediaController(movieService, seriesServ
 
 /**
  * @swagger
- * /CommonList/{typeMedia}:
+ * /commonMedia/{typeMedia}:
  *   get:
  *     summary: Retrieve a list of a common media
  *     tags: [Common Media]
@@ -48,5 +48,26 @@ const commonMediaController = new CommonMediaController(movieService, seriesServ
  *         description: A list of series
  */
 commonMediaRouter.get('/', commonMediaController.getCommonMediaList);
+
+
+/**
+ * @swagger
+ * /commonMedia/{id}:
+ *   get:
+ *     summary: Retrieve a streaming by ID
+ *     tags: [Common Media]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A streaming object
+ *       404:
+ *         description: Movie or Serie not found
+ */
+commonMediaRouter.get('/:mediaType/:id', commonMediaController.getMediaById);
 
 export default commonMediaRouter;

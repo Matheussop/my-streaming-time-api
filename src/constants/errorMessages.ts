@@ -1,4 +1,8 @@
 export const ErrorMessages = {
+  // Common Media erros 
+  COMMON_MEDIA_NOT_FOUND: 'Common media not found', 
+  COMMON_MEDIA_ID_INVALID: 'Invalid common media ID format',
+
   // Series erros
   SERIE_NOT_FOUND: 'Serie not found',
   SERIES_NOT_FOUND: 'Series not found',
