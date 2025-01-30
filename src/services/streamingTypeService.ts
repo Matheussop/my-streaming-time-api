@@ -112,45 +112,63 @@ export class StreamingTypeService implements IStreamingTypeService {
       throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
     }
     // TODO make a upgrade to change all of the categories streaming in same time not only one each time
-    const streamingTypeCategories = await Promise.all(allStreamingTypes[0].categories.map(async (categoryType: ICategory) => { 
-      const url = `https://api.themoviedb.org/3/discover/movie`;
-      const options = {
-        method: 'GET',
-        headers: {
-          accept: 'application/json',
-          Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
-        },
-        params: {
-          without_genres: categoryType.id,
-          sort_by: 'popularity.desc',
-          include_adult: false,
-          include_video: false,
-          language:'en-US',
-          page: Math.floor(Math.random() * 5) + 1
+    const streamingTypeCategories = await Promise.all(allStreamingTypes.map(async (streamingType) => {
+      const categories = await Promise.all(streamingType.categories.map(async (category) => {
+        try {
+          let categoryName = 'tv';
+          if (category.name === 'movies'){
+            categoryName = 'movie';
+          }
+
+          const url = `https://api.themoviedb.org/3/discover/${categoryName}`;
+          const options = {
+            method: 'GET',
+            headers: {
+              accept: 'application/json',
+              Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+            },
+            params: {
+              without_genres: category.id,
+              sort_by: 'popularity.desc',
+              include_adult: false,
+              include_video: false,
+              language:'en-US',
+              page: Math.floor(Math.random() * 5) + 1
+            }
+          };
+          const response = await axios.get(url, options); // TODO use a instance of axios from project not the axios lib directly
+
+          if (response.data.results.length > 0) {
+            const randomIndex = Math.floor(Math.random() * response.data.results.length);
+
+            const poster = response.data.results[randomIndex].backdrop_path;
+            const updatedCategory = {
+              id: category.id,
+              name: category.name,
+              poster: `https://image.tmdb.org/t/p/original${poster}`        
+    
+            };
+            return updatedCategory;
+          }
+          return category;
+        } catch (error) {
+          logger.error({
+            message: 'Error fetching cover from TMDB',
+            error,
+          });
+          return category;
         }
-      };
-      const response = await axios.get(url, options); // TODO use a instance of axios from project not the axios lib directly
-      if (response.data.results.length > 0) {
-        const randomIndex = Math.floor(Math.random() * response.data.results.length);
-
-        const poster = response.data.results[randomIndex].backdrop_path;
-        const updatedCategory = {
-          id: categoryType.id,
-          name: categoryType.name,
-          poster: `https://image.tmdb.org/t/p/original${poster}`        
-
-        };
-        return updatedCategory;
-      } 
-      return categoryType;
+      }));
+      return { ...streamingType, categories };
     }));
 
-    const newStreamingTypes = {
-      ...allStreamingTypes[0],
-      categories: streamingTypeCategories,
-    }
-
-    const updatedType = await this.repository.update(newStreamingTypes._id, newStreamingTypes);
+    let updatedType: IStreamingTypeResponse[] = [];
+    streamingTypeCategories.map(async (streamingType) => {
+      const newStreamingTypes = await this.repository.update(streamingType._id, streamingType)
+      if(newStreamingTypes) {
+        updatedType.push(newStreamingTypes);
+      }
+    });
     if (!updatedType) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
     }
