@@ -4,11 +4,13 @@ import { validateRequest } from '../util/validate';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { MovieRepository } from '../repositories/movieRepository';
 import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
+import { SeriesRepository } from '../repositories/seriesRepository';
 
 const router: Router = Router();
 const userStreamingHistoryRepository = new UserStreamingHistoryRepository();
 const movieRepository = new MovieRepository();
-const userStreamingHistoryService = new UserStreamingHistoryService(userStreamingHistoryRepository, movieRepository);
+const seriesRepository = new SeriesRepository();
+const userStreamingHistoryService = new UserStreamingHistoryService(userStreamingHistoryRepository, movieRepository, seriesRepository);
 const controller = new UserStreamingHistoryController(userStreamingHistoryService);
 
 /**

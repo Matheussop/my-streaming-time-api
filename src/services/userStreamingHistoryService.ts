@@ -1,13 +1,16 @@
 import logger from '../config/logger';
-import { IMovieRepository, IUserStreamingHistoryRepository } from '../interfaces/repositories';
 import { IUserStreamingHistoryService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
+import { MovieRepository } from '../repositories/movieRepository';
+import { SeriesRepository } from '../repositories/seriesRepository';
+import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 
 export class UserStreamingHistoryService implements IUserStreamingHistoryService {
   constructor(
-    private repository: IUserStreamingHistoryRepository,
-    private movieRepository: IMovieRepository,
+    private repository: UserStreamingHistoryRepository,
+    private movieRepository: MovieRepository,
+    private seriesRepository: SeriesRepository,
   ) {}
 
   async getUserHistory(userId: string): Promise<IUserStreamingHistory> {
@@ -25,7 +28,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   async addStreamingToHistory(userId: string, streamingData: StreamingHistoryEntry): Promise<IUserStreamingHistory> {
     this.validateStreamingData(streamingData);
 
-    const streaming = await this.movieRepository.findById(streamingData.streamingId);
+    const streaming = await this.movieRepository.findById(streamingData.streamingId) || await this.seriesRepository.findById(streamingData.streamingId);
     if (!streaming) {
       logger.warn({
         message: 'Streaming not found',
