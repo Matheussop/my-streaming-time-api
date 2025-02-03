@@ -80,6 +80,22 @@ export class UserStreamingHistoryController {
     const totalTime = await this.service.getTotalWatchTime(userId);
     res.status(200).json({ totalWatchTimeInMinutes: totalTime });
   });
+
+  getByUserIdAndStreamingId = catchAsync(async (req: Request, res: Response) => {
+    const { streamingId, userId } = req.query as { streamingId: string; userId: string };
+    logger.info({
+      message: 'Fetching user streaming history by user and streaming ID',
+      userId: userId,
+      streamingId: streamingId,
+      method: req.method, 
+    });
+
+    validateIdFormat(userId, 'user');
+    validateIdFormat(streamingId, 'streaming');
+
+    const viewed = await this.service.getByUserIdAndStreamingId(userId, streamingId);
+    res.status(200).json({ viewed });
+  });
 }
 
 const validateIdFormat = (id: string, type: string) => {

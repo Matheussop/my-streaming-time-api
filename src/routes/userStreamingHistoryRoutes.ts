@@ -106,10 +106,41 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.delete(
+router.put(
   '/',
   (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId']),
   controller.removeStreamingFromHistory,
+);
+
+
+/**
+ * @swagger
+ * /streaming-history:
+ *   get:
+ *     summary: Get user's streaming view by id
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - streamingId
+ *     responses:
+ *       200:
+ *         description: 
+ *       404:
+ *         description: Streaming entry not found or Failed to fetch streaming
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  '/',
+  controller.getByUserIdAndStreamingId,
 );
 
 /**

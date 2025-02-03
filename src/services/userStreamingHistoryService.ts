@@ -87,6 +87,11 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return history.totalWatchTimeInMinutes;
   }
 
+  async getByUserIdAndStreamingId(userId: string, streamingId: string): Promise<boolean> {
+    const history = await this.getUserHistory(userId);
+    return history.watchHistory.some((entry) => entry.streamingId === streamingId);
+  }
+
   // TODO: Verificar a necessidade de ficar no service ou no controller
   private validateStreamingData(data: StreamingHistoryEntry): void {
     if (!data.streamingId) {
