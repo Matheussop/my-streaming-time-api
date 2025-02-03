@@ -1,3 +1,4 @@
+import { TMDBService } from './tmdbService';
 import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import logger from '../config/logger';
 import { ErrorMessages } from '../constants/errorMessages';
@@ -7,6 +8,7 @@ import { MovieRepository } from '../repositories/movieRepository';
 
 export class MovieService implements IMovieService {
   constructor(
+    private tmdbService: TMDBService,
     private movieRepository: MovieRepository,
     private streamingTypeRepository: StreamingTypeRepository,
   ) {}
@@ -101,6 +103,11 @@ export class MovieService implements IMovieService {
     }
 
     return movies;
+  }
+
+  async updateMovieFromTMDB(movieId: string, tmdbId: string): Promise<void> {
+    const tmdbData = await this.tmdbService.fetchDataFromTMDB(tmdbId, 'movie');
+    await this.tmdbService.updateData(this.movieRepository, movieId, tmdbData);
   }
 
   // Private validation and processing methods

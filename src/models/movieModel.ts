@@ -9,12 +9,15 @@ interface IGenre {
 }
 export interface IMovie extends Document {
   _id: string;
+  tmdbId: number;
   title: string;
   release_date: string;
   plot: string;
   cast: string[];
   rating: number;
   genre: number[] | IGenre[];
+  durationTime: number;
+  status: string;
   poster: string;
   url: string;
 }
@@ -28,6 +31,7 @@ export interface IMovieModel extends Model<IMovie, {}, IMovieMethods> {
 
 const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
   {
+    tmdbId: { type: Number },
     title: { type: String, required: [true, ErrorMessages.MOVIE_TITLE_REQUIRED] },
     release_date: { type: String },
     plot: { type: String, default: '' },
@@ -46,6 +50,8 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
         message: 'Genre must be an array of numbers',
       },
     },
+    durationTime: { type: Number },
+    status: { type: String, default: 'Released' },
     poster: { type: String },
     url: { type: String, required: true },
   },

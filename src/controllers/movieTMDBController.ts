@@ -69,6 +69,7 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
         plot: externalMovie.overview,
         genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
+        tmdbId: externalMovie.id,
         poster: `https://image.tmdb.org/t/p/original${externalMovie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
@@ -134,6 +135,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         plot: externalMovie.overview,
         rating: externalMovie.vote_average,
         genre: externalMovie.genre_ids,
+        tmdbId: externalMovie.id,
         poster: `https://image.tmdb.org/t/p/original${externalMovie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));

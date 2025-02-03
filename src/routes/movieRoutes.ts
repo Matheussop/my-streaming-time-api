@@ -6,11 +6,13 @@ import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieController } from '../controllers/movieController';
 import { MovieService } from '../services/movieService';
+import { TMDBService } from '../services/tmdbService';
 
 const movieRouter: Router = Router();
 const movieRepository = new MovieRepository();
 const streamingTypeRepository = new StreamingTypeRepository();
-const movieService = new MovieService(movieRepository, streamingTypeRepository);
+const tmdbService = new TMDBService();
+const movieService = new MovieService(tmdbService, movieRepository, streamingTypeRepository);
 const movieController = new MovieController(movieService);
 
 /**
@@ -242,6 +244,29 @@ movieRouter.get('/:id', movieController.getMovieById);
  *         description: Movie updated successfully
  */
 movieRouter.put('/:id', movieController.updateMovie);
+
+/**
+ * @swagger
+ * /movies/{id}/{tmdbId}:
+ *   put:
+ *     summary: Update a movie by ID from TMDB
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: tmdbId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Movie updated successfully
+ */
+movieRouter.put('/:id/:tmdbId', movieController.updateMovieFromTMDB);
 
 /**
  * @swagger

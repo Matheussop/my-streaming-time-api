@@ -153,4 +153,24 @@ export class MovieController {
 
     res.status(200).json({ message: Messages.MOVIE_DELETED_SUCCESSFULLY });
   });
+
+  updateMovieFromTMDB = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const { id, tmdbId } = req.params;
+
+    logger.info({
+      message: 'Updating movie by TMDB',
+      movieId: id,
+      updateData: req.body,
+      method: req.method,
+      path: req.path,
+    });
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
+    }
+
+    const movie = await this.movieService.updateMovieFromTMDB(id, tmdbId);
+    res.status(200).json(movie);
+  });
+  
 }

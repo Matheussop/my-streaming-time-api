@@ -1,3 +1,4 @@
+import { TMDBService } from './../services/tmdbService';
 import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import { SeriesRepository } from './../repositories/seriesRepository';
 import { Router } from 'express';
@@ -11,7 +12,8 @@ const seriesRepository = new SeriesRepository();
 const seriesService = new SeriesService(seriesRepository);
 const movieRepository = new MovieRepository();
 const streamingTypeRepository = new StreamingTypeRepository();
-const movieService = new MovieService(movieRepository, streamingTypeRepository);
+const tmdbService = new TMDBService();
+const movieService = new MovieService(tmdbService, movieRepository, streamingTypeRepository);
 const commonMediaController = new CommonMediaController(movieService, seriesService);
 
 /**
