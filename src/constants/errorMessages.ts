@@ -13,7 +13,6 @@ export const ErrorMessages = {
   SERIES_WITH_TITLE_EXISTS: 'Movie with this title already exists',
   SERIES_RATING_INVALID: 'Rating must be a number between 0 and 10',
   SERIES_RELEASE_DATE_INVALID: 'Release date must be a valid date format',
-  SERIES_RELEASE_DATE_FUTURE: 'Release date cannot be in the future',
   SERIES_URL_INVALID: 'Invalid URL format',
   SERIES_CAST_INVALID: 'Invalid cast format, must be an array of strings',
   SERIES_GENRE_REQUIRED: 'Genre is required',

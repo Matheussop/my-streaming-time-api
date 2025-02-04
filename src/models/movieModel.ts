@@ -81,7 +81,7 @@ movieSchema.pre('insertMany', async function (next, docs) {
         invalidIds.push(genreId as number);
         return null;
       }
-    }).filter((genreItem: any) => genreItem !== null);
+    }).filter((genreItem: { id: number; name: string } | null) => genreItem !== null);
 
     if (invalidIds.length > 0) {
       return next(new StreamingServiceError(`The genre(s) ${invalidIds.join(', ')} is/are not valid or not registered in the database!`, 400));

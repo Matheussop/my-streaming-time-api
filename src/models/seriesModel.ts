@@ -51,6 +51,29 @@ const seriesSchema = new Schema<ISerie, ISeriesModel, ISeriesMethods>(
   },
 );
 
+seriesSchema.pre('insertMany', async function (next, docs) {
+  const streamingTypes = await StreamingTypes.find();
+  const categories = streamingTypes.flatMap((type) => type.categories);
+  
+  for (const serie of docs) {
+    const invalidIds: number[] = [];
+      serie.genre = serie.genre.map((genreId: number | IGenre) => {
+        const category = categories.find((category: any) => category.id === genreId);
+        if (category) {
+          return { id: category.id, name: category.name };
+        } else {
+          invalidIds.push(genreId as number);
+          return null;
+        }
+      }).filter((genreItem: { id: number; name: string } | null) => genreItem !== null);
+
+    if (invalidIds.length > 0) {
+      return next(new StreamingServiceError(`The genre(s) ${invalidIds.join(', ')} is/are not valid or not registered in the database!`, 400));
+    }
+  }
+  next();
+});
+
 seriesSchema.pre('save', async function (next) {
   const series = this;
   const streamingTypes = await StreamingTypes.find();

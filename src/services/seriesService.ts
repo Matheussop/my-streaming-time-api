@@ -123,10 +123,6 @@ export class SeriesService implements ISeriesService {
     if (isNaN(releaseDate.getTime())) {
       throw new StreamingServiceError(ErrorMessages.SERIES_RELEASE_DATE_INVALID, 400);
     }
-    if (releaseDate > new Date()) {
-      // TODO This may need to be removed in the future, as we will accept upcoming serie releases.
-      throw new StreamingServiceError(ErrorMessages.SERIES_RELEASE_DATE_FUTURE, 400);
-    }
     //Return date without time
     return releaseDate.toISOString().split('T')[0];
   }
