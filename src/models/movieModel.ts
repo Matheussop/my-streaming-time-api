@@ -45,9 +45,10 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
           if (!Array.isArray(value)) return false;
           if (value.length === 0) return true; // Allow empty arrays
           const isNumberArray = typeof value[0] === 'number';
-          return isNumberArray;
+          const isObjectArray = typeof value[0] === 'object' && value[0] !== null && 'id' in value[0] && 'name' in value[0];
+          return isNumberArray || isObjectArray;
         },
-        message: 'Genre must be an array of numbers',
+        message: 'Genre must be an array of numbers or an array of objects with id and name properties',
       },
     },
     durationTime: { type: Number },
@@ -65,6 +66,30 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
     },
   },
 );
+
+movieSchema.pre('insertMany', async function (next, docs) {
+  const streamingTypes = await StreamingTypes.find();
+  const categories = streamingTypes.flatMap((type) => type.categories);
+
+  for (const movie of docs) {
+    const invalidIds: number[] = [];
+    movie.genre = movie.genre.map((genreId: number | IGenre) => {
+      const category = categories.find((category: any) => category.id === genreId);
+      if (category) {
+        return { id: category.id, name: category.name };
+      } else {
+        invalidIds.push(genreId as number);
+        return null;
+      }
+    }).filter((genreItem: any) => genreItem !== null);
+
+    if (invalidIds.length > 0) {
+      return next(new StreamingServiceError(`The genre(s) ${invalidIds.join(', ')} is/are not valid or not registered in the database!`, 400));
+    }
+  }
+
+  next();
+});
 
 movieSchema.pre('save', async function (next) {
   const movie = this;

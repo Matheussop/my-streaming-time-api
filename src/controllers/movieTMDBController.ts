@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import Movie from '../models/movieModel';
+import Movie, { IMovie } from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
 
 export interface Movie_TMDB {
@@ -139,16 +139,16 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         poster: `https://image.tmdb.org/t/p/original${externalMovie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
-      const existingMovies = await Movie.find(
-        { title: { $in: externalMovies.map((movie: any) => movie.title) } },
-        'title',
-      ).lean();
+
       const existingTitles = existingMovies.map((movie) => movie.title);
 
-      const newMovies = externalMovies.filter((externalMovie: any) => !existingTitles.includes(externalMovie.title));
+      let newMoviesList: IMovie[] = []
+      externalMovies.filter((externalMovie: any) => {
+        !existingTitles.includes(externalMovie.title) && newMoviesList.push(externalMovie)
+      });
 
-      if (newMovies.length > 0) {
-        const savedMovies = await Movie.insertMany(newMovies);
+      if (newMoviesList.length > 0) {
+        const savedMovies = await Movie.insertMany(newMoviesList);
         res.status(200).json({
           page,
           limit,
@@ -159,8 +159,8 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         res.status(200).json({
           page,
           limit,
-          total: externalMovies.length,
-          movies: externalMovies,
+          total: existingMovies.length,
+          movies: existingMovies,
         });
       }
     } else {
