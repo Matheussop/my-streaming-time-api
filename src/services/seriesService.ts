@@ -36,15 +36,16 @@ export class SeriesService implements ISeriesService {
     return series
   }
 
-  async createManySeries(seriesArray: ISeriesCreate[]) {
+  async createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean) {
     const processedData: ISeriesCreate[] = (
       await Promise.all(
         seriesArray.map(async (serieObj: ISeriesCreate) => {
           const obj = await this.processCreateData(serieObj)
-          const isDuplicate = await this.checkDuplicateTitle(obj.title);
-
-          if (isDuplicate) {
-            return null
+          if (!skipCheckTitle){
+            const isDuplicate = await this.checkDuplicateTitle(obj.title);
+            if (!skipCheckTitle && isDuplicate) {
+              return null
+            }
           }
           return obj;
         })

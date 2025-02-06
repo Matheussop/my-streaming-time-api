@@ -44,5 +44,5 @@ export interface IMovieService {
 
 export interface ISeriesService{
   getSeriesByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
-  createManySeries(seriesArray: ISeriesCreate[]): Promise<ISeriesResponse[] | null>;
+  createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean): Promise<ISeriesResponse[] | null>;
 } 

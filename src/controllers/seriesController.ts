@@ -80,7 +80,8 @@ export class SeriesController {
 
     const seriesArray: ISeriesCreate[] = req.body.series;
 
-    const newSeries = await this.seriesService.createManySeries(seriesArray);
+    const skipCheckTitles = false
+    const newSeries = await this.seriesService.createManySeries(seriesArray, skipCheckTitles );
     res.status(201).json(newSeries);
   });
 
@@ -138,7 +139,8 @@ export class SeriesController {
       const limitedSeries = newSeries.slice(0, limit);
 
       if (newSeries.length > 0) {
-        const savedSeries = await this.seriesService.createManySeries(limitedSeries);
+        const skipCheckTitles = true
+        const savedSeries = await this.seriesService.createManySeries(limitedSeries, skipCheckTitles);
         res.status(200).json({
           page,
           limit,
@@ -149,8 +151,8 @@ export class SeriesController {
         res.status(200).json({
           page,
           limit,
-          total: externalSeries.length,
-          series: externalSeries,
+          total: seriesDataBase!.length,
+          series: seriesDataBase,
         });
       }
     } else {

@@ -33,6 +33,6 @@ export class SeriesRepository implements ISeriesRepository{
   }
 
   async createManySeries(data: ISeriesCreate[]){
-    return Series.create(data);
+    return Series.insertMany(data);
   }
 }

@@ -32,9 +32,10 @@ const seriesSchema = new Schema<ISerie, ISeriesModel, ISeriesMethods>(
           if (!Array.isArray(value)) return false;
           if (value.length === 0) return true; // Allow empty arrays
           const isNumberArray = typeof value[0] === 'number';
-          return isNumberArray;
+          const isObjectArray = typeof value[0] === 'object' && value[0] !== null && 'id' in value[0] && 'name' in value[0];
+          return isNumberArray || isObjectArray;
         },
-        message: 'Genre must be an array of numbers',
+        message: 'Genre must be an array of numbers or an array of objects with id and name properties',
       },
     },
     url: { type: String },
@@ -52,6 +53,7 @@ const seriesSchema = new Schema<ISerie, ISeriesModel, ISeriesMethods>(
 );
 
 seriesSchema.pre('insertMany', async function (next, docs) {
+  console.log('Tentando salvar varios docs', docs);
   const streamingTypes = await StreamingTypes.find();
   const categories = streamingTypes.flatMap((type) => type.categories);
   
