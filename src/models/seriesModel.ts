@@ -53,7 +53,6 @@ const seriesSchema = new Schema<ISerie, ISeriesModel, ISeriesMethods>(
 );
 
 seriesSchema.pre('insertMany', async function (next, docs) {
-  console.log('Tentando salvar varios docs', docs);
   const streamingTypes = await StreamingTypes.find();
   const categories = streamingTypes.flatMap((type) => type.categories);
   

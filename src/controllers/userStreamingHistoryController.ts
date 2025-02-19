@@ -23,7 +23,7 @@ export class UserStreamingHistoryController {
   });
 
   addStreamingToHistory = catchAsync(async (req: Request, res: Response) => {
-    const { userId, streamingId, title, durationInMinutes } = req.body;
+    const { userId, streamingId, title, durationInMinutes, streamingType } = req.body;
 
     logger.info({
       message: 'Adding streaming to history',
@@ -47,6 +47,7 @@ export class UserStreamingHistoryController {
 
     const history = await this.service.addStreamingToHistory(userId, {
       streamingId,
+      streamingType,
       title,
       durationInMinutes,
     });

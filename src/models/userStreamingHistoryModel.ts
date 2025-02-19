@@ -1,10 +1,16 @@
 import { Schema, model, Document } from 'mongoose';
 
+interface IGenre {
+  id: number;
+  name: string;
+}
 export interface StreamingHistoryEntry {
   streamingId: string;
+  streamingType: IGenre[];
   title: string;
   durationInMinutes: number;
 }
+
 export interface IUserStreamingHistory extends Document {
   userId: string;
   watchHistory: StreamingHistoryEntry[];

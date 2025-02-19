@@ -79,7 +79,7 @@ router.get('/:userId', controller.getUserStreamingHistory);
  */
 router.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId', 'title', 'durationInMinutes']),
+  (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId', 'title', 'durationInMinutes', 'streamingType']),
   controller.addStreamingToHistory,
 );
 
