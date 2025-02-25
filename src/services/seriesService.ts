@@ -4,6 +4,7 @@ import { ISeriesCreate, ISeriesUpdate } from "../interfaces/series";
 import { ISeriesService } from "../interfaces/services";
 import { StreamingServiceError } from "../middleware/errorHandler";
 import { SeriesRepository } from "../repositories/seriesRepository";
+import axios from 'axios';
 
 export class SeriesService implements ISeriesService {
   constructor(
@@ -94,6 +95,48 @@ export class SeriesService implements ISeriesService {
       throw new StreamingServiceError(ErrorMessages.SERIE_NOT_FOUND, 404);
     }
     return deletedSerie;
+  }
+
+  async fetchAndSaveExternalSeries() {
+    // Make the external API request
+    const url = 'https://api.themoviedb.org/3/tv/popular?language=pt-BR&page=1';
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+      },
+    };
+    const response = await axios.get(url, options);
+
+    const externalSeries = response.data.results;
+    const externalSeriesMinusInternalSeries = await Promise.all(
+      externalSeries.map(async (externalSerie: any) => {
+      const existingSeries = await this.seriesRepository.findByTitle(externalSerie.name, 0, 1);
+      return existingSeries && existingSeries.length === 0 ? externalSerie : null;
+      })
+    ).then(results => results.filter(serie => serie !== null));
+    
+    const newSeries = externalSeriesMinusInternalSeries
+      .map((externalSerie: any) => ({
+        tmdbId: externalSerie.id,
+        title: externalSerie.name,
+        release_date: externalSerie.first_air_date,
+        plot: externalSerie.overview,
+        rating: externalSerie.vote_average,
+        genre: externalSerie.genre_ids,
+        cast: [],
+        numberEpisodes: externalSerie.number_of_episodes || 0,
+        numberSeasons: externalSerie.number_of_seasons || 0,
+        poster: `https://image.tmdb.org/t/p/original${externalSerie.backdrop_path}`,
+        url: `https://image.tmdb.org/t/p/w500${externalSerie.poster_path}`,
+      }));
+    
+    if (newSeries.length > 0) {
+      return await this.seriesRepository.createManySeries(newSeries);
+    } else {
+      return null;
+    }
   }
 
   private async checkDuplicateTitle(title: string, showError = false) {

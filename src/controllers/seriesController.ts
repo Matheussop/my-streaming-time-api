@@ -9,6 +9,7 @@ import { ErrorMessages } from '../constants/errorMessages';
 import { Messages } from "../constants/messages";
 
 export class SeriesController {
+  skipCheckTitles: boolean = true;
   constructor(private seriesService: SeriesService){}
 
   getSeries = catchAsync(async (req: Request, res: Response) => {
@@ -139,8 +140,7 @@ export class SeriesController {
       const limitedSeries = newSeries.slice(0, limit);
 
       if (newSeries.length > 0) {
-        const skipCheckTitles = true
-        const savedSeries = await this.seriesService.createManySeries(limitedSeries, skipCheckTitles);
+        const savedSeries = await this.seriesService.createManySeries(limitedSeries, this.skipCheckTitles);
         res.status(200).json({
           page,
           limit,
@@ -227,5 +227,17 @@ export class SeriesController {
     await this.seriesService.deleteSerie(id);
 
     res.status(200).json({ message: Messages.SERIE_DELETED_SUCCESSFULLY})
+  });
+
+  fetchAndSaveExternalSeries = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Saved a new series',
+      serieData: req.body,
+      method: req.method,
+      path: req.path,
+    });
+     
+    const savedSeries = await this.seriesService.fetchAndSaveExternalSeries();
+    res.status(201).json(savedSeries);
   });
 }
