@@ -11,6 +11,7 @@ import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
 import seriesRoutes from './routes/seriesRoutes';
 import commonMediaRoutes from './routes/commonMediaRoutes';
+import throttlingMiddleware from './middleware/throttlingMiddleware';
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ const startServer = async () => {
 
     setupSwagger(app);
 
+    app.use(throttlingMiddleware);
+    
     // Routes
     app.use('/commonMedia', commonMediaRoutes)
     app.use('/movies', movieRoutes);
