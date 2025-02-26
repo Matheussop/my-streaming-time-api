@@ -15,6 +15,10 @@ export class MovieRepository implements IMovieRepository {
     return movie.save();
   }
 
+  async createManyMovies(data: IMovie[]){
+    return Movie.insertMany(data);
+  }
+
   async update(id: string, data: any): Promise<IMovie | null> {
     return Movie.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
