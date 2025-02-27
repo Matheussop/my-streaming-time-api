@@ -11,7 +11,7 @@ import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
 import seriesRoutes from './routes/seriesRoutes';
 import commonMediaRoutes from './routes/commonMediaRoutes';
-import throttlingMiddleware from './middleware/throttlingMiddleware';
+import throttlingMiddleware, { setLastRequestTime, getLastRequestTime } from './middleware/throttlingMiddleware';
 
 dotenv.config();
 
@@ -22,6 +22,10 @@ const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log('Connected to MongoDB');
+
+     // Load lastRequestTime from the database
+     const lastRequestTime = await getLastRequestTime();
+     throttlingMiddleware.setLastRequestTime(lastRequestTime);
 
     app.use(cors());
     app.use(express.json());
@@ -43,6 +47,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
+
   } catch (error) {
     console.error('Failed to connect to MongoDB', error);
     process.exit(1);

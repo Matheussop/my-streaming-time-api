@@ -4,6 +4,7 @@ import { SeriesService } from '../services/seriesService';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieService } from '../services/movieService';
 import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
+import LastRequestTime from '../models/lastRequestTimeModel';
 
 
 let lastRequestTime = 0;
@@ -25,15 +26,35 @@ const fetchData = async () => {
   }
 };
 
+export const getLastRequestTime = async (): Promise<number> => {
+  const record = await LastRequestTime.findOne();
+  return record ? record.lastRequestTime : 0;
+};
+
+export const setLastRequestTime = async (time: number) => {
+  console.log('Setting lastRequestTime:', time);
+  await LastRequestTime.updateOne({}, { lastRequestTime: time }, { upsert: true });
+  console.log('lastRequestTime set successfully');
+};
+
 const throttlingMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const now = Date.now();
-  if (now - lastRequestTime >= requestInterval) {
+  if (now - lastRequestTime >= requestInterval && !isFetching) {
     isFetching = true;
-    await fetchData();
-    lastRequestTime = now;
-    isFetching = false;
+    await fetchData().finally(() => {
+      lastRequestTime = now;
+      isFetching = false;
+    });
   }
   next();
+};
+
+throttlingMiddleware.setLastRequestTime = (time: number) => {
+  lastRequestTime = time;
+};
+
+throttlingMiddleware.getLastRequestTime = () => {
+  return lastRequestTime;
 };
 
 export default throttlingMiddleware;

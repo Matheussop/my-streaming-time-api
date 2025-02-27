@@ -10,7 +10,7 @@ export class TMDBService {
     if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
       throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
     }
-    const url = `https://api.themoviedb.org/3/${type}/${tmdbId}?language=en-US`;
+    const url = `https://api.themoviedb.org/3/${type}/${tmdbId}?language=pt-BR`;
     const options = {
       method: 'GET',
       headers: {
