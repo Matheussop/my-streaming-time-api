@@ -1,9 +1,10 @@
-import { Schema, model, Document } from 'mongoose';
-import { IUserStreamingHistoryCreate } from '../interfaces/userStreamingHistory';
+import mongoose, { Schema, model, Document } from 'mongoose';
+import { IUserStreamingHistoryCreate, IUserStreamingHistoryResponse } from '../interfaces/userStreamingHistory';
+import User from './userModel';
 
-export type IUserStreamingSchema = Document & IUserStreamingHistoryCreate;
+export type IUserStreamingHistorySchema = Document & IUserStreamingHistoryResponse;
 
-const userStreamingHistorySchema = new Schema<IUserStreamingSchema>(
+const userStreamingHistorySchema = new Schema<IUserStreamingHistorySchema>(
   {
     userId: {
       type: String,
@@ -72,6 +73,141 @@ const userStreamingHistorySchema = new Schema<IUserStreamingSchema>(
   },
 );
 
+userStreamingHistorySchema.post('save', async function() {
+  if (this.isModified('watchHistory')) {
+    try {
+      const newEntries = this.watchHistory.slice(-this.watchHistory.length);
+      
+      if (newEntries.length > 0) {
+        for (const entry of newEntries) {
+          const contentTypeMapping: Record<string, 'movie' | 'episode'> = {
+            'Movie': 'movie',
+            'Episode': 'episode'
+          };
+          
+          const mappedContentType = contentTypeMapping[entry.contentType] || 'movie';
+          
+          await User.updateWatchStats(
+            this.userId,
+            mappedContentType,
+            entry.watchedDurationInMinutes * (entry.completionPercentage / 100)
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error updating user watch stats:', error);
+    }
+  }
+});
+
+// Método estático para adicionar uma entrada ao histórico
+userStreamingHistorySchema.static('addWatchHistoryEntry', async function(
+  userId: string,
+  entry: Omit<IUserStreamingHistorySchema, 'watchedAt'> & { watchedAt?: Date }
+): Promise<IUserStreamingHistoryResponse> {
+  const completeEntry = {
+    ...entry,
+    watchedAt: entry.watchedAt || new Date()
+  };
+  
+  const userHistory = await this.findOneAndUpdate(
+    { userId },
+    { 
+      $push: { 
+        watchHistory: {
+          $each: [completeEntry],
+          $sort: { watchedAt: -1 },
+          $slice: -1000 
+        }
+      }
+    },
+    { 
+      new: true, 
+      upsert: true,
+      setDefaultsOnInsert: true
+    }
+  );
+  
+  return userHistory;
+});
+
+// Método estático para obter o histórico de visualização paginado
+userStreamingHistorySchema.static('getWatchHistory', async function(
+  userId: string,
+  page: number = 1,
+  limit: number = 20,
+  contentType?: string
+): Promise<{ entries: IUserStreamingHistoryCreate[], total: number, page: number, limit: number }> {
+  const skip = (page - 1) * limit;
+  
+  const query: any = { userId };
+  if (contentType) {
+    query['watchHistory.contentType'] = contentType;
+  }
+  
+  const [result] = await this.aggregate([
+    { $match: query },
+    { $unwind: '$watchHistory' },
+    ...(contentType ? [{ $match: { 'watchHistory.contentType': contentType } }] : []),
+    { $sort: { 'watchHistory.watchedAt': -1 } },
+    {
+      $facet: {
+        entries: [
+          { $skip: skip },
+          { $limit: limit },
+          { $replaceRoot: { newRoot: '$watchHistory' } }
+        ],
+        total: [{ $count: 'count' }]
+      }
+    }
+  ]);
+  
+  return {
+    entries: result.entries || [],
+    total: result.total.length > 0 ? result.total[0].count : 0,
+    page,
+    limit
+  };
+});
+
+// Método estático para verificar se um conteúdo foi assistido
+userStreamingHistorySchema.static('hasWatched', async function(
+  userId: string,
+  contentId: string,
+  contentType: string
+): Promise<boolean> {
+  const result = await this.findOne({
+    userId,
+    'watchHistory.contentId': contentId,
+    'watchHistory.contentType': contentType
+  });
+  
+  return !!result;
+});
+
+// Método estático para obter o progresso de visualização de um conteúdo
+userStreamingHistorySchema.static('getWatchProgress', async function(
+  userId: string,
+  contentId: string,
+  contentType: string
+): Promise<{ completionPercentage: number, stoppedAt: number } | null> {
+  const result = await this.findOne(
+    {
+      userId,
+      'watchHistory.contentId': contentId,
+      'watchHistory.contentType': contentType
+    },
+    { 'watchHistory.$': 1 }
+  );
+  
+  if (!result || !result.watchHistory || result.watchHistory.length === 0) {
+    return null;
+  }
+  
+  const { completionPercentage, stoppedAt } = result.watchHistory[0];
+  return { completionPercentage, stoppedAt };
+});
+
 // Hook to automatically update the user's total streaming time
 userStreamingHistorySchema.pre('save', function (next) {
   this.totalWatchTimeInMinutes = this.watchHistory.reduce(
@@ -81,9 +217,13 @@ userStreamingHistorySchema.pre('save', function (next) {
   next();
 });
 
+
+userStreamingHistorySchema.index({ userId: 1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentId': 1 });
 userStreamingHistorySchema.index({ 'watchHistory.watchedAt': -1 });
+userStreamingHistorySchema.index({ 'watchHistory.contentType': 1 });
 
-const UserStreamingHistory = model<IUserStreamingSchema>('UserStreamingHistory', userStreamingHistorySchema);
+
+const UserStreamingHistory = model<IUserStreamingHistorySchema>('UserStreamingHistory', userStreamingHistorySchema);
 
 export default UserStreamingHistory;
