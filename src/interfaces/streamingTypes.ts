@@ -1,17 +1,16 @@
-export interface ICategory {
-  id: number;
-  name: string;
-  poster?: string;
-}
-
+import { Types } from "mongoose";
 export interface IStreamingTypeCreate {
   name: string;
-  categories: ICategory[];
+  supportedGenres: Types.ObjectId[];
+  description: string;
+  isActive: boolean;
 }
 
 export interface IStreamingTypeUpdate {
   name?: string;
-  categories?: ICategory[];
+  supportedGenres: Types.ObjectId[];
+  description?: string;
+  isActive?: string;
 }
 
 export interface IStreamingTypeResponse extends IStreamingTypeCreate {

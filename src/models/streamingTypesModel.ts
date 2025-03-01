@@ -2,37 +2,13 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 import { ErrorMessages } from '../constants/errorMessages';
 import { IStreamingTypeResponse } from '../interfaces/streamingTypes';
 
-export interface ICategory { // TODO Remover esse ICategory e utilizar apenas o da interface
-  id: number;
-  name: string;
-  poster?: string;
+type IStreamingTypeSchema = Document & IStreamingTypeResponse;
+
+export interface IStreamingTypeModel extends Model<IStreamingTypeSchema, {}, {}> {
+  findByName(name: string): Promise<IStreamingTypeResponse | null>;
 }
 
-export interface IStreamingType extends Document, IStreamingTypeResponse {
-  _id: string;
-}
-
-export interface IStreamingTypeModel extends Model<IStreamingType, {}, {}> {
-  findByName(category: string): Promise<IStreamingType | null>;
-}
-
-const categorySchema = new Schema<ICategory>({
-  id: {
-    type: Number,
-    required: [true, ErrorMessages.STREAMING_TYPE_CATEGORIES_INVALID_ID],
-  },
-  name: {
-    type: String,
-    required: [true, ErrorMessages.STREAMING_TYPE_CATEGORIES_NAME_REQUIRED],
-    trim: true,
-  },
-  poster: {
-    type: String,
-    trim: true,
-  }
-});
-
-const streamingTypesSchema = new Schema<IStreamingType, IStreamingTypeModel>(
+const streamingTypesSchema = new Schema<IStreamingTypeSchema>(
   {
     name: {
       type: String,
@@ -40,7 +16,18 @@ const streamingTypesSchema = new Schema<IStreamingType, IStreamingTypeModel>(
       unique: true,
       trim: true,
     },
-    categories: [categorySchema],
+    description: {
+      type: String,
+      default: '',
+    },
+    supportedGenres: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Genre',
+    }],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
@@ -50,13 +37,13 @@ const streamingTypesSchema = new Schema<IStreamingType, IStreamingTypeModel>(
         return ret;
       },
     },
-  },
+  }
 );
 
-streamingTypesSchema.static('findByName', function (name: string) {
-  return this.findOne({ name: new RegExp(name, 'i') });
+streamingTypesSchema.static('findByGenreId', function(genreId: string): Promise<IStreamingTypeResponse[]> {
+  return this.find({ supportedGenres: genreId });
 });
 
-const StreamingTypes = mongoose.model<IStreamingType, IStreamingTypeModel>('StreamingType', streamingTypesSchema);
+const StreamingTypes = mongoose.model<IStreamingTypeSchema, IStreamingTypeModel>('StreamingType', streamingTypesSchema);
 
 export default StreamingTypes;
