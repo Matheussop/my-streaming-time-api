@@ -1,6 +1,6 @@
 import logger from "../config/logger";
 import { ErrorMessages } from "../constants/errorMessages";
-import { ISeriesCreate, ISeriesUpdate } from "../interfaces/series";
+import { ISeriesCreate, ISeriesUpdate } from "../interfaces/series/series";
 import { ISeriesService } from "../interfaces/services";
 import { StreamingServiceError } from "../middleware/errorHandler";
 import { SeriesRepository } from "../repositories/seriesRepository";
@@ -126,8 +126,8 @@ export class SeriesService implements ISeriesService {
         rating: externalSerie.vote_average,
         genre: externalSerie.genre_ids,
         cast: [],
-        numberEpisodes: externalSerie.number_of_episodes || 0,
-        numberSeasons: externalSerie.number_of_seasons || 0,
+        totalEpisodes: externalSerie.number_of_episodes || 0,
+        totalSeasons: externalSerie.number_of_seasons || 0,
         poster: `https://image.tmdb.org/t/p/original${externalSerie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalSerie.poster_path}`,
       }));
@@ -208,8 +208,8 @@ export class SeriesService implements ISeriesService {
       plot: data.plot,
       cast: data.cast,
       genre: data.genre,
-      numberEpisodes: data.numberEpisodes,
-      numberSeasons: data.numberSeasons,
+      totalEpisodes: data.totalEpisodes,
+      totalSeasons: data.totalSeasons,
       rating: this.validateRating(data.rating),
       poster: this.validateURL(data.poster),
       url: this.validateURL(data.url),

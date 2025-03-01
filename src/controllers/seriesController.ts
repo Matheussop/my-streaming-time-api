@@ -1,4 +1,4 @@
-import { ISeriesCreate } from "./../interfaces/series";
+import { ISeriesCreate } from "../interfaces/series/series";
 import { Request, Response } from 'express';
 import logger from "../config/logger";
 import { catchAsync } from "../util/catchAsync";
@@ -175,8 +175,8 @@ export class SeriesController {
       plot: req.body.plot,
       cast: req.body.cast,
       genre: req.body.genre,
-      numberEpisodes: req.body.numberEpisodes,
-      numberSeasons: req.body.numberSeasons,
+      totalEpisodes: req.body.totalEpisodes,
+      totalSeasons: req.body.totalSeasons,
       rating: parseFloat(req.body.rating),
       poster: req.body.poster,
       url: req.body.url,

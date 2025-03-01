@@ -1,4 +1,4 @@
-interface WatchHistoryEntry {
+export interface WatchHistoryEntry {
   contentId: string;           // Reference to content (movie/series)
   contentType: 'movie' | 'series';
   title: string;               // Denormalized for performance

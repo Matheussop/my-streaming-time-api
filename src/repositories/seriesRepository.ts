@@ -1,6 +1,6 @@
 import { ISeriesRepository } from "../interfaces/repositories";
-import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from "../interfaces/series";
-import Series from "../models/seriesModel";
+import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from "../interfaces/series/series";
+import Series from "../models/series/seriesModel";
 
 export class SeriesRepository implements ISeriesRepository{
   async findAll(skip: number, limit: number): Promise<ISeriesResponse[]> {

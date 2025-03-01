@@ -1,22 +1,22 @@
 import { IMovie } from '../models/movieModel';
-import { IUser } from '../models/userModel';
-import { IUserStreamingHistory, StreamingHistoryEntry } from '../models/userStreamingHistoryModel';
-import { ISeriesCreate, ISeriesResponse } from './series';
-import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
+import { IUserResponse, IUserUpdate, IUserCreate } from './user';
+import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
+import { ISeriesCreate, ISeriesResponse } from './series/series';
+import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 
 export interface IUserService {
-  registerUser(user: IUser): Promise<IUser>;
-  loginUser(email: string, password: string): Promise<IUser>;
-  getUserById(id: string): Promise<IUser | null>;
-  updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
-  deleteUser(id: string): Promise<IUser | null>;
-  getAllUsers(skip: number, limit: number): Promise<IUser[]>;
+  registerUser(user: IUserCreate): Promise<IUserCreate>;
+  loginUser(email: string, password: string): Promise<IUserResponse>;
+  getUserById(id: string): Promise<IUserResponse | null>;
+  updateUser(id: string, data: Partial<IUserUpdate>): Promise<IUserUpdate | null>;
+  deleteUser(id: string): Promise<IUserResponse | null>;
+  getAllUsers(skip: number, limit: number): Promise<IUserResponse[]>;
 }
 
 export interface IUserStreamingHistoryService {
-  getUserHistory(userId: string): Promise<IUserStreamingHistory>;
-  addStreamingToHistory(userId: string, streamingData: StreamingHistoryEntry): Promise<IUserStreamingHistory>;
-  removeStreamingFromHistory(userId: string, streamingId: string): Promise<IUserStreamingHistory | null>;
+  getUserHistory(userId: string): Promise<IUserStreamingHistoryResponse>;
+  addStreamingToHistory(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
+  removeStreamingFromHistory(userId: string, streamingId: string): Promise<IUserStreamingHistoryResponse | null>;
   getTotalWatchTime(userId: string): Promise<number>;
 }
 
@@ -27,9 +27,6 @@ export interface IStreamingTypeService {
   createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate>;
   updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeUpdate | null>;
   deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null>;
-  addCategoryToStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
-  removeCategoryFromStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null>;
-  changeCover(): Promise<void>;
 }
 
 export interface IMovieService {

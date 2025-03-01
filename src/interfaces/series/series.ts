@@ -12,7 +12,6 @@ interface IGenreReference {
   name: string;
 }
 
-
 export interface ISeriesCreate {
   title: string;
   release_date: string;
@@ -20,11 +19,11 @@ export interface ISeriesCreate {
   cast: string[];
   rating: number;
   genre: IGenreReference[];
-  status: string;
-  tmdbId: number;
+  status?: string;
+  tmdbId?: number;
   totalEpisodes: number;
   totalSeasons: number;
-  seasonsSummary: ISeasonSummary[];
+  seasonsSummary?: ISeasonSummary[];
   poster: string;
   url: string;
 }
