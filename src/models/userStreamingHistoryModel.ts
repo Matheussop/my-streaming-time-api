@@ -1,46 +1,57 @@
 import { Schema, model, Document } from 'mongoose';
+import { IUserStreamingHistoryCreate } from '../interfaces/userStreamingHistory';
 
-interface IGenre {
-  id: number;
-  name: string;
-}
-export interface StreamingHistoryEntry {
-  streamingId: string;
-  streamingType: IGenre[];
-  title: string;
-  durationInMinutes: number;
-}
+export type IUserStreamingSchema = Document & IUserStreamingHistoryCreate;
 
-export interface IUserStreamingHistory extends Document {
-  userId: string;
-  watchHistory: StreamingHistoryEntry[];
-  totalWatchTimeInMinutes: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const userStreamingHistorySchema = new Schema<IUserStreamingHistory>(
+const userStreamingHistorySchema = new Schema<IUserStreamingSchema>(
   {
     userId: {
       type: String,
       required: [true, 'User ID is required'],
-      index: true, // Melhora performance de busca
+      index: true,
     },
     watchHistory: [
       {
-        streamingId: {
+        contentId: {
           type: String,
-          required: [true, 'Streaming ID is required'],
+          required: [true, 'Content ID is required'],
+        },
+        contentType: {
+          type: String,
+          enum: {
+            values: ['movie', 'series'],
+            message: "validator failed for attribute `{PATH}` with value `{VALUE}`",
+          },
+          required: [true, 'Content type is required'],
         },
         title: {
           type: String,
           required: [true, 'Title is required'],
           trim: true,
         },
-        durationInMinutes: {
+        episodeId: String,
+        seasonNumber: Number,
+        episodeNumber: Number,
+        watchedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        watchedDurationInMinutes: {
           type: Number,
           required: [true, 'Duration is required'],
           min: [0, 'Duration cannot be negative'],
+        },
+        completionPercentage: {
+          type: Number,
+          required: true,
+          min: 0,
+          max: 100,
+          default: 0,
+        },
+        rating: {
+          type: Number,
+          min: 0,
+          max: 5,
         },
       },
     ],
@@ -61,12 +72,18 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistory>(
   },
 );
 
-// Hook to automatically update the user's total streaming hours
+// Hook to automatically update the user's total streaming time
 userStreamingHistorySchema.pre('save', function (next) {
-  this.totalWatchTimeInMinutes = this.watchHistory.reduce((total, item) => total + item.durationInMinutes, 0);
+  this.totalWatchTimeInMinutes = this.watchHistory.reduce(
+    (total, item) => total + item.watchedDurationInMinutes, 
+    0
+  );
   next();
 });
 
-const UserStreamingHistory = model<IUserStreamingHistory>('UserStreamingHistory', userStreamingHistorySchema);
+userStreamingHistorySchema.index({ 'watchHistory.contentId': 1 });
+userStreamingHistorySchema.index({ 'watchHistory.watchedAt': -1 });
+
+const UserStreamingHistory = model<IUserStreamingSchema>('UserStreamingHistory', userStreamingHistorySchema);
 
 export default UserStreamingHistory;
