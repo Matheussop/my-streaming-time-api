@@ -5,9 +5,9 @@ export interface WatchHistoryEntry {
   episodeId?: string;          // Only for series
   seasonNumber?: number;       // Only for series
   episodeNumber?: number;      // Only for series
-  watchedAt: Date;             // When it was watched
+  watchedAt?: Date;             // When it was watched
   watchedDurationInMinutes: number;
-  completionPercentage: number; // 0-100%
+  completionPercentage?: number; // 0-100%
   rating?: number;             // User rating
 }
 

@@ -23,12 +23,12 @@ export class UserStreamingHistoryController {
   });
 
   addStreamingToHistory = catchAsync(async (req: Request, res: Response) => {
-    const { userId, streamingId, title, durationInMinutes, streamingType } = req.body;
+    const { userId, contentId, title, durationInMinutes, contentType } = req.body;
 
     logger.info({
       message: 'Adding streaming to history',
       userId,
-      streamingId,
+      contentId,
       method: req.method,
       path: req.path,
     });
@@ -43,13 +43,13 @@ export class UserStreamingHistoryController {
     }
 
     validateIdFormat(userId, 'user');
-    validateIdFormat(streamingId, 'streaming');
+    validateIdFormat(contentId, 'streaming');
 
     const history = await this.service.addStreamingToHistory(userId, {
-      streamingId,
-      streamingType,
+      contentId,
+      contentType,
       title,
-      durationInMinutes,
+      watchedDurationInMinutes: durationInMinutes,
     });
 
     res.status(201).json({ message: 'Streaming entry added successfully', history });

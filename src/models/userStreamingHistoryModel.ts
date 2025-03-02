@@ -1,8 +1,12 @@
-import mongoose, { Schema, model, Document } from 'mongoose';
-import { IUserStreamingHistoryCreate, IUserStreamingHistoryResponse } from '../interfaces/userStreamingHistory';
+import { Schema, model, Document, Model } from 'mongoose';
+import { IUserStreamingHistoryCreate, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import User from './userModel';
 
 export type IUserStreamingHistorySchema = Document & IUserStreamingHistoryResponse;
+
+export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistorySchema, {}, {}> {
+  addWatchHistoryEntry(userId: string,newWatchEntry: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
+}
 
 const userStreamingHistorySchema = new Schema<IUserStreamingHistorySchema>(
   {
@@ -90,7 +94,7 @@ userStreamingHistorySchema.post('save', async function() {
           await User.updateWatchStats(
             this.userId,
             mappedContentType,
-            entry.watchedDurationInMinutes * (entry.completionPercentage / 100)
+            entry.watchedDurationInMinutes * ((entry.completionPercentage ?? 0) / 100)
           );
         }
       }
@@ -224,6 +228,6 @@ userStreamingHistorySchema.index({ 'watchHistory.watchedAt': -1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentType': 1 });
 
 
-const UserStreamingHistory = model<IUserStreamingHistorySchema>('UserStreamingHistory', userStreamingHistorySchema);
+const UserStreamingHistory = model<IUserStreamingHistorySchema, IUserStreamingHistoryModel>('UserStreamingHistory', userStreamingHistorySchema);
 
 export default UserStreamingHistory;
