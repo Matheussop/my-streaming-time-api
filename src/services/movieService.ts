@@ -152,20 +152,6 @@ export class MovieService implements IMovieService {
     }
   }
 
-  // Private validation and processing methods
-  private async getGenreId(genre: string): Promise<number> {
-    const genreId = await this.streamingTypeRepository.getIdGenreByName(genre);
-
-    if (!genreId) {
-      logger.warn({
-        message: 'Genre not found',
-        genreId,
-      });
-      throw new StreamingServiceError(ErrorMessages.MOVIE_GENRE_INVALID, 404);
-    }
-    return genreId;
-  }
-
   private async checkDuplicateTitle(title: string) {
     const movies = await this.movieRepository.findByTitle(title, 0, 1);
     if (movies && movies.length > 0) {

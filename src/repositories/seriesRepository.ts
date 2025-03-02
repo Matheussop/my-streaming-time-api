@@ -16,7 +16,7 @@ export class SeriesRepository implements ISeriesRepository{
     return series.save();
   }
 
-  async update(id: string, data: any): Promise<ISeriesUpdate | null> {
+  async update(id: string, data: ISeriesUpdate): Promise<ISeriesResponse | null> {
     return Series.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 

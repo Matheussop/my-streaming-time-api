@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
 import StreamingTypes from './streamingTypesModel';
+import Genre from './genresModel'
 import { ErrorMessages } from '../constants/errorMessages';
 import { StreamingServiceError } from '../middleware/errorHandler';
 
@@ -68,13 +69,12 @@ const movieSchema = new Schema<IMovie, IMovieModel, IMovieMethods>(
 );
 
 movieSchema.pre('insertMany', async function (next, docs) {
-  const streamingTypes = await StreamingTypes.find();
-  const categories = streamingTypes.flatMap((type) => type.categories);
+  const genres = await Genre.find().lean();
 
   for (const movie of docs) {
     const invalidIds: number[] = [];
     movie.genre = movie.genre.map((genreId: number | IGenre) => {
-      const category = categories.find((category: any) => category.id === genreId);
+      const category = genres.find((category: any) => category.id === genreId);
       if (category) {
         return { id: category.id, name: category.name };
       } else {
@@ -93,12 +93,11 @@ movieSchema.pre('insertMany', async function (next, docs) {
 
 movieSchema.pre('save', async function (next) {
   const movie = this;
-  const streamingTypes = await StreamingTypes.find();
-  const categories = streamingTypes.flatMap((type) => type.categories);
+  const genres = await Genre.find().lean();
 
   const invalidIds: number[] = [];
   movie.genre = movie.genre.map((genreId: number | IGenre) => {
-    const category = categories.find((category: any) => category.id === genreId);
+    const category = genres.find((category: any) => category.id === genreId);
     if (category) {
       return { id: category.id, name: category.name };
     } else {
