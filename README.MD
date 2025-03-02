@@ -87,6 +87,7 @@ curl -X POST http://localhost:5000/user/login \
 ### Main Endpoints
 
 - `/movies` - Movie management
+- `/series` - Series management
 - `/streamingTypes` - Streaming type management
 - `/user` - User management
 - `/user-streaming-history` - User streaming history
@@ -105,18 +106,26 @@ The project follows the Repository Pattern with the following structure:
 ### Movie Management
 - CRUD operations for movies
 - Integration with TMDB API
-- Search by title
+- Search by title and genre
 - Validation for movie data
 
+### Series Management
+- CRUD operation for series
+- Integration with TMDB api
+- Search by title and genre
+- Validation to add genre
+
 ### Streaming Types
-- Category management
-- Add/remove categories
-- Validation for duplicate names
+- Streaming type management (movies or series)
+- Add/remove streaming type
+- Validation for duplicate types
 
 ### User Streaming History
-- Track watch history
-- Calculate total watch time
-- Add/remove streaming entries
+- ... in progress
+
+### Genre Management
+- CRUD operation for series
+- ... in progress
 
 ### Error Handling
 - Centralized error handling
@@ -125,33 +134,105 @@ The project follows the Repository Pattern with the following structure:
 - MongoDB error handling
 
 ## Models
-
+  
 ### Movie
-- Title
-- Release date
-- Plot
-- Cast
-- Rating
-- Genre
-- URL
+- _id
+- title
+- plot
+- release_date
+- cast
+- rating
+- genre
+- status
+- poster
+- url
+- tmdbId
+- durationInMinutes
+- createdAt
+- updatedAt
 
+### Series
+- _id
+- title
+- plot
+- release_date
+- cast
+number rating
+- genre
+- status
+- poster
+- url
+number tmdbId
+number totalSeasons
+number totalEpisodes
+- seasonsSummary
+- createdAt
+- updatedAt
+
+### Season
+- _id
+- seriesId
+number seasonNumber
+- title
+- plot
+- releaseDate
+- poster
+- episodes
+- createdAt
+- updatedAt
+
+### Episode
+- _id
+number episodeNumber
+- title
+- plot
+number durationInMinutes
+- releaseDate
+- poster
+  
 ### User
-- Name
-- Email
-- Password (hashed)
-- Timestamps
+- _id
+- email
+- username
+- password
+- passwordChangedAt
+- passwordResetToken
+- passwordResetExpires
+- active
+- verified
+- verificationToken
+- role
+- profile
+- preferences
+- stats
+- watchList
+- createdAt
+- updatedAt
+
+### Genre
+- _id
+- name
+- description
+- isActive
+- createdAt
+- updatedAt
 
 ### Streaming History
-- User ID
-- Watch history
-- Total watch time
-- Timestamps
+- _id
+- userId
+- watchHistory
+number totalWatchTimeInMinutes
+- createdAt
+- updatedAt
 
 ### Streaming Types
-- Name
-- Categories
-- Timestamps
-
+- _id
+- name
+- description
+- supportedGenres
+- isActive
+- createdAt
+- updatedAt
 
 ### Code Standards
 - ESLint for linting
@@ -168,7 +249,7 @@ npm run test:coverage
 
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
-Current version: 1.0.0
+Current version: 1.2.0
 
 For detailed release notes and version history, please see our [CHANGELOG.md](CHANGELOG.md).
 
