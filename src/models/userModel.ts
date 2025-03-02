@@ -5,6 +5,7 @@ import { IUserResponse } from '../interfaces/user';
 
 interface IUserSchema extends Document, IUserResponse {
   _id: string;
+  password: string;
   correctPassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;

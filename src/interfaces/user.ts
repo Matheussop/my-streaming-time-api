@@ -43,7 +43,7 @@ export interface IUserUpdate {
   role?: 'user' | 'admin' | 'moderator';
 }
 
-export interface IUserResponse extends IUserCreate { 
+export interface IUserResponse extends Omit<IUserCreate, 'password'> { 
   _id: string;
   createdAt: Date;
   updatedAt: Date;

@@ -1,7 +1,7 @@
 import { IUserRepository } from '../interfaces/repositories';
 import { IUserService } from '../interfaces/services';
+import { IUserCreate } from '../interfaces/user';
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { IUser } from '../models/userModel';
 
 export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
@@ -18,7 +18,7 @@ export class UserService implements IUserService {
     return user;
   }
 
-  async registerUser(userData: any) {
+  async registerUser(userData: IUserCreate) {
     await this.validateUserData(userData);
     await this.checkDuplicateEmail(userData.email);
 
@@ -28,7 +28,7 @@ export class UserService implements IUserService {
       ...userData,
       // password: hashedPassword
     });
-    const registerUser = newUser.toJSON() as IUser;
+    const registerUser = newUser;
     return registerUser;
   }
 
@@ -43,8 +43,7 @@ export class UserService implements IUserService {
     //   throw new StreamingServiceError('Invalid credentials', 401);
     // }
 
-    const { password: _, ...userWithoutPassword } = user.toObject();
-    return userWithoutPassword;
+    return user;
   }
 
   async updateUser(id: string, updateData: any) {
@@ -61,8 +60,7 @@ export class UserService implements IUserService {
       throw new StreamingServiceError('User not found', 404);
     }
 
-    const { password, ...userWithoutPassword } = updatedUser.toObject();
-    return userWithoutPassword;
+    return updatedUser;
   }
 
   async deleteUser(id: string) {
