@@ -5,7 +5,7 @@ import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 
 export interface IUserService {
-  registerUser(user: IUserCreate): Promise<IUserCreate>;
+  registerUser(user: IUserCreate): Promise<IUserResponse>;
   loginUser(email: string, password: string): Promise<IUserResponse>;
   getUserById(id: string): Promise<IUserResponse | null>;
   updateUser(id: string, data: Partial<IUserUpdate>): Promise<IUserUpdate | null>;
@@ -25,7 +25,7 @@ export interface IStreamingTypeService {
   getStreamingTypeById(id: string): Promise<IStreamingTypeResponse | null>;
   getStreamingTypeByName(name: string): Promise<IStreamingTypeResponse | null>;
   createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate>;
-  updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeUpdate | null>;
+  updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse | null>;
   deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null>;
 }
 

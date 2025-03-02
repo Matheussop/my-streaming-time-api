@@ -2,8 +2,7 @@ import { IStreamingTypeRepository } from '../interfaces/repositories';
 import {
   IStreamingTypeResponse,
   IStreamingTypeCreate,
-  IStreamingTypeUpdate,
-  ICategory,
+  IStreamingTypeUpdate
 } from '../interfaces/streamingTypes';
 import StreamingTypes from '../models/streamingTypesModel';
 
@@ -20,20 +19,6 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
     return StreamingTypes.findByName(name);
   }
 
-  async getIdGenreByName(genre: string): Promise<number | null> {
-    const result = await StreamingTypes.findOne(
-      {
-        'categories.name': new RegExp(`^${genre}$`, 'i'),
-      },
-      {
-        _id: 0,
-        'categories.$': 1,
-      },
-    ).lean();
-
-    return result?.categories?.[0]?.id || null;
-  }
-
   async create(data: IStreamingTypeCreate): Promise<IStreamingTypeResponse> {
     const streamingType = new StreamingTypes(data);
     return streamingType.save();
@@ -45,19 +30,5 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
 
   async delete(id: string): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findByIdAndDelete(id);
-  }
-
-  async addCategory(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null> {
-    return StreamingTypes.findByIdAndUpdate(
-      id,
-      { $addToSet: { categories: category } },
-      { new: true, runValidators: true },
-    );
-  }
-
-  async removeCategory(id: string, categories: Partial<ICategory>[]): Promise<IStreamingTypeResponse | null> {
-    const categoryIds = categories.map((category) => category.id);
-
-    return StreamingTypes.findByIdAndUpdate(id, { $pull: { categories: { id: { $in: categoryIds } } } }, { new: true });
   }
 }

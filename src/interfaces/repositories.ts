@@ -1,6 +1,6 @@
 import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from './series/series';
 import { IMovie } from '../models/movieModel';
-import { IStreamingTypeResponse } from './streamingTypes';
+import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 import { IUserResponse } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 
@@ -8,7 +8,7 @@ export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   findAll(skip: number, limit: number): Promise<T[]>;
   findById(id: string): Promise<T | null>;
   create(data: Partial<TCreate>): Promise<TCreate>;
-  update(id: string, data: Partial<TUpdate>): Promise<TUpdate | null>;
+  update(id: string, data: Partial<TUpdate>): Promise<T | null>;
   delete(id: string): Promise<T | null>;
 }
 
@@ -31,9 +31,8 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
   ): Promise<IUserStreamingHistoryResponse | null>;
 }
 
-export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse> {
+export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate> {
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
-  getIdGenreByName(genre: string): Promise<number | null>;
 }
 
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{

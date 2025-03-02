@@ -2,15 +2,12 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import {
   IStreamingTypeCreate,
   IStreamingTypeUpdate,
-  ICategory,
   IStreamingTypeResponse,
 } from '../interfaces/streamingTypes';
 import logger from '../config/logger';
-import { IStreamingType } from '../models/streamingTypesModel';
 import { IStreamingTypeService } from '../interfaces/services';
 import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
 import { ErrorMessages } from '../constants/errorMessages';
-import axios from 'axios';
 
 export class StreamingTypeService implements IStreamingTypeService {
   constructor(private repository: StreamingTypeRepository) {}
@@ -51,7 +48,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     return dataResponse;
   }
 
-  async updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeUpdate> {
+  async updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse> {
     if (data.name) {
       await this.checkDuplicateName(data.name, id);
     }
@@ -72,140 +69,14 @@ export class StreamingTypeService implements IStreamingTypeService {
     return result;
   }
 
-  async addCategoryToStreamingType(id: string, category: ICategory[]): Promise<IStreamingTypeResponse | null> {
-    const streamingType = await this.getStreamingTypeById(id);
-
-    const existingIds = new Set(streamingType.categories.map((c) => c.id));
-    const newCategories = category.filter((category) => !existingIds.has(category.id));
-    
-    if (newCategories.length === 0) {
-      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORY_ALREADY_EXISTS, 400);
-    }
-    return this.repository.addCategory(id, newCategories);
-  }
-
-  async removeCategoryFromStreamingType(
-    id: string,
-    categoriesIds: Partial<ICategory>[],
-  ): Promise<IStreamingTypeResponse | null> {
-    const streamingType = await this.getStreamingTypeById(id);
-
-    const invalidCategories = categoriesIds.filter(
-      (categoryToRemove) =>
-        !streamingType.categories.some((existingCategory) => existingCategory.id === categoryToRemove.id),
-    );
-
-    if (invalidCategories.length > 0) {
-      throw new StreamingServiceError(
-        `${ErrorMessages.STREAMING_TYPE_CATEGORY_NOT_FOUND}: ${invalidCategories.map((c) => c.id).join(', ')}`,
-        404,
-      );
-    }
-
-    return this.repository.removeCategory(id, categoriesIds);
-  }
-
-  async changeCover(): Promise<void> {
-    const allStreamingTypes = await this.repository.findAll(0, 100);
-
-    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
-      throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
-    }
-    // TODO make a upgrade to change all of the categories streaming in same time not only one each time
-    const streamingTypeCategories = await Promise.all(allStreamingTypes.map(async (streamingType) => {
-      const categories = await Promise.all(streamingType.categories.map(async (category) => {
-        try {
-          let categoryName = 'tv';
-          if (category.name === 'movies'){
-            categoryName = 'movie';
-          }
-
-          const url = `https://api.themoviedb.org/3/discover/${categoryName}`;
-          const options = {
-            method: 'GET',
-            headers: {
-              accept: 'application/json',
-              Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
-            },
-            params: {
-              without_genres: category.id,
-              sort_by: 'popularity.desc',
-              include_adult: false,
-              include_video: false,
-              language:'en-US',
-              page: Math.floor(Math.random() * 5) + 1
-            }
-          };
-          const response = await axios.get(url, options); // TODO use a instance of axios from project not the axios lib directly
-
-          if (response.data.results.length > 0) {
-            const randomIndex = Math.floor(Math.random() * response.data.results.length);
-
-            const poster = response.data.results[randomIndex].backdrop_path;
-            const updatedCategory = {
-              id: category.id,
-              name: category.name,
-              poster: `https://image.tmdb.org/t/p/original${poster}`        
-    
-            };
-            return updatedCategory;
-          }
-          return category;
-        } catch (error) {
-          logger.error({
-            message: 'Error fetching cover from TMDB',
-            error,
-          });
-          return category;
-        }
-      }));
-      return { ...streamingType, categories };
-    }));
-
-    let updatedType: IStreamingTypeResponse[] = [];
-    streamingTypeCategories.map(async (streamingType) => {
-      const newStreamingTypes = await this.repository.update(streamingType._id, streamingType)
-      if(newStreamingTypes) {
-        updatedType.push(newStreamingTypes);
-      }
-    });
-    if (!updatedType) {
-      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
-    }
-  }
-
-  private async validateStreamingTypeData(data: Partial<IStreamingType>): Promise<void> {
+  private async validateStreamingTypeData(data: Partial<IStreamingTypeResponse>): Promise<void> {
     if (!data.name) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_REQUIRED, 400);
     }
-
-    if (!Array.isArray(data.categories) || data.categories.length === 0) {
-      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_REQUIRED, 400);
-    }
-
-    if (data.categories) {
-      this.validateCategories(data.categories);
-    }
-  }
-
-  private validateCategories(categories: ICategory[]): void {
-    const ids = new Set();
-
-    categories.forEach((category) => {
-      if (!category.id || !category.name) {
-        throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_INVALID_DATA, 400);
-      }
-
-      if (ids.has(category.id)) {
-        throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_DUPLICATE_CATEGORY, 400);
-      }
-
-      ids.add(category.id);
-    });
   }
 
   private async checkDuplicateName(name: string, excludeId?: string): Promise<void> {
-    const existing = (await this.repository.findByName(name)) as IStreamingType | null;
+    const existing = (await this.repository.findByName(name)) as IStreamingTypeResponse | null;
     if (existing && (!excludeId || existing._id.toString() !== excludeId)) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400);
     }

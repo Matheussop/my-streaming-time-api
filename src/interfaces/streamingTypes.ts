@@ -8,7 +8,7 @@ export interface IStreamingTypeCreate {
 
 export interface IStreamingTypeUpdate {
   name?: string;
-  supportedGenres: Types.ObjectId[];
+  supportedGenres?: Types.ObjectId[];
   description?: string;
   isActive?: string;
 }

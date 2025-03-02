@@ -65,38 +65,6 @@ export class StreamingTypeController {
     res.status(201).json(streamingType);
   });
 
-  addCategoryToStreamingType = catchAsync(async (req: Request, res: Response) => {
-    logger.info({
-      message: 'Adding category to streaming type',
-      streamingTypeId: req.params.id,
-      category: req.body,
-      method: req.method,
-      path: req.path,
-    });
-
-    const { id } = req.params;
-    const { categories } = req.body;
-
-    const streamingType = await this.service.addCategoryToStreamingType(id, categories);
-    res.status(200).json(streamingType);
-  });
-
-  removeCategoryFromStreamingType = catchAsync(async (req: Request, res: Response) => {
-    logger.info({
-      message: 'Removing category from streaming type',
-      streamingTypeId: req.params.id,
-      categoryId: req.params.categoryId,
-      method: req.method,
-      path: req.path,
-    });
-
-    const { id } = req.params;
-    const { categories } = req.body;
-
-    const streamingType = await this.service.removeCategoryFromStreamingType(id, categories);
-    res.status(200).json(streamingType);
-  });
-
   updateStreamingType = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Updating streaming type',
@@ -120,18 +88,6 @@ export class StreamingTypeController {
 
     await this.service.deleteStreamingType(req.params.id);
     res.status(204).send(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
-  });
-
-  changeCoverStreamingType = catchAsync(async (req: Request, res: Response) => {
-    logger.info({
-      message: 'Changing covers of streaming types',
-      streamingTypeId: req.params.id,
-      method: req.method,
-      path: req.path,
-    });
-
-    await this.service.changeCover();
-    res.status(204).send(Messages.STREAMING_TYPE_COVER_CHANGE_SUCCESSFULLY);
   });
 }
 
