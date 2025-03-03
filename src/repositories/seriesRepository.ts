@@ -11,9 +11,8 @@ export class SeriesRepository implements ISeriesRepository{
     return Series.findById(id);
   }
 
-  async create(data: any): Promise<ISeriesCreate> {
-    const series = new Series(data);
-    return series.save();
+  async create(data: ISeriesCreate): Promise<ISeriesResponse> {
+    return Series.create(data);
   }
 
   async update(id: string, data: ISeriesUpdate): Promise<ISeriesResponse | null> {

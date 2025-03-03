@@ -1,10 +1,10 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
-import { IGenreCreate, IGenreResponse } from '../interfaces/genres';
+import { IGenreResponse } from '../interfaces/genres';
 import { ErrorMessages } from '../constants/errorMessages';
 
-type IGenreSchema = Document & IGenreCreate
+type IGenreSchema = Document & IGenreResponse;
 
-export interface IStreamingTypeModel extends Model<IGenreSchema, {}, {}> {
+export interface IGenreModel extends Model<IGenreSchema, {}, {}> {
   findByName(name: string): Promise<IGenreResponse | null>;
 }
 
@@ -59,6 +59,6 @@ genreSchema.post('findOneAndUpdate', async function(doc) {
   }
 });
 
-const Genre = mongoose.model<IGenreSchema, IStreamingTypeModel>('Genre', genreSchema);
+const Genre = mongoose.model<IGenreSchema, IGenreModel>('Genre', genreSchema);
 
 export default Genre;

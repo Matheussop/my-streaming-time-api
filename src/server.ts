@@ -10,6 +10,7 @@ import streamingTypeRoutes from './routes/streamingTypeRoutes';
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
 import seriesRoutes from './routes/seriesRoutes';
+import genreRoutes from './routes/genreRoute';
 import commonMediaRoutes from './routes/commonMediaRoutes';
 import throttlingMiddleware, { setLastRequestTime, getLastRequestTime } from './middleware/throttlingMiddleware';
 
@@ -38,6 +39,7 @@ const startServer = async () => {
     app.use('/commonMedia', commonMediaRoutes)
     app.use('/movies', movieRoutes);
     app.use('/series', seriesRoutes);
+    app.use('/genre', genreRoutes);
     app.use('/streamingTypes', streamingTypeRoutes);
     app.use('/user', userRoutes);
     app.use('/user-streaming-history', userStreamingHistoryRoutes);

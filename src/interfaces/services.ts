@@ -3,6 +3,7 @@ import { IUserResponse, IUserUpdate, IUserCreate } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
+import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 
 export interface IUserService {
   registerUser(user: IUserCreate): Promise<IUserResponse>;
@@ -43,3 +44,12 @@ export interface ISeriesService{
   getSeriesByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
   createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean): Promise<ISeriesResponse[] | null>;
 } 
+
+export interface IGenreService {
+  getGenreById(id: string): Promise<IGenreResponse | null>;
+  getGenreByName(name: string): Promise<IGenreResponse | null>;
+  getAllGenres(skip: number, limit: number): Promise<IGenreResponse[]>;
+  createGenre(genre: IGenreCreate | IGenreCreate[]): Promise<IGenreResponse | IGenreResponse[]>;
+  updateGenre(id: string, genre: IGenreUpdate): Promise<IGenreResponse | null>;
+  deleteGenre(genreId: string): Promise<IGenreResponse | null>;
+}

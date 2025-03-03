@@ -15,7 +15,8 @@ export const ErrorMessages = {
   GENRE_NOT_FOUND: "Genre is not found",
   GENRE_NAME_REQUIRED: "Genre name is required",
   GENRE_ID_REQUIRED: "Genre id is required",
-  
+  GENRE_FETCH_LIMIT_EXCEEDED: "Limit cannot exceed 100 items",
+  GENRE_ID_INVALID: "Genre id is invalid",
   // Season erros
   SEASON_NUMBER_REQUIRED: "Season number is required",
   SEASON_TITLE_REQUIRED: "Season title is required",

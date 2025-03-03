@@ -1,10 +1,10 @@
-import { IUserRepository } from '../interfaces/repositories';
 import { IUserService } from '../interfaces/services';
-import { IUserCreate } from '../interfaces/user';
+import { IUserCreate, IUserResponse } from '../interfaces/user';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { UserRepository } from '../repositories/userRepository';
 
 export class UserService implements IUserService {
-  constructor(private userRepository: IUserRepository) {}
+  constructor(private userRepository: UserRepository) {}
 
   async getAllUsers(skip: number, limit: number) {
     return this.userRepository.findAll(skip, limit);
@@ -18,7 +18,7 @@ export class UserService implements IUserService {
     return user;
   }
 
-  async registerUser(userData: IUserCreate) {
+  async registerUser(userData: IUserCreate): Promise<IUserResponse> {
     await this.validateUserData(userData);
     await this.checkDuplicateEmail(userData.email);
 
@@ -28,8 +28,7 @@ export class UserService implements IUserService {
       ...userData,
       // password: hashedPassword
     });
-    const registerUser = newUser;
-    return registerUser;
+    return newUser;
   }
 
   async loginUser(email: string, password: string) {
