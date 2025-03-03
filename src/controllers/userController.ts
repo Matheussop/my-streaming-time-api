@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { IUserService } from '../interfaces/services';
+import { UserService } from '../services/userService';
 
 export class UserController {
-  constructor(private userService: IUserService) {}
+  constructor(private userService: UserService) {}
 
   registerUser = catchAsync(async (req: Request, res: Response) => {
     logger.info({

@@ -3,11 +3,12 @@ import { IMovie } from '../models/movieModel';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 import { IUserResponse } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
+import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 
 export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   findAll(skip: number, limit: number): Promise<T[]>;
   findById(id: string): Promise<T | null>;
-  create(data: Partial<TCreate>): Promise<TCreate>;
+  create(data: Partial<TCreate> | Partial<TCreate>[]): Promise<T | T[]>;
   update(id: string, data: Partial<TUpdate>): Promise<T | null>;
   delete(id: string): Promise<T | null>;
 }
@@ -38,4 +39,8 @@ export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{
   findByTitle(title: string, skip?: number, limit?: number): Promise<ISeriesResponse[] | null>;
   findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
+}
+
+export interface IGenreRepository extends IBaseRepository<IGenreResponse, IGenreCreate, IGenreUpdate>{
+  findByName(name: string): Promise<IGenreResponse | null>; 
 }
