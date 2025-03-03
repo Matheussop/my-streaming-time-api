@@ -11,7 +11,7 @@ export class SeriesRepository implements ISeriesRepository{
     return Series.findById(id);
   }
 
-  async create(data: ISeriesCreate): Promise<ISeriesResponse> {
+  async create(data: ISeriesCreate | ISeriesCreate[]): Promise<ISeriesResponse | ISeriesResponse[]> {
     return Series.create(data);
   }
 
@@ -29,9 +29,5 @@ export class SeriesRepository implements ISeriesRepository{
 
   async findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null> {
     return Series.findByGenre(genre, skip, limit)
-  }
-
-  async createManySeries(data: ISeriesCreate[]){
-    return Series.insertMany(data);
   }
 }

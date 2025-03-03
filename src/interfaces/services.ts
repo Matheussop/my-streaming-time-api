@@ -42,7 +42,7 @@ export interface IMovieService {
 
 export interface ISeriesService{
   getSeriesByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
-  createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean): Promise<ISeriesResponse[] | null>;
+  createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean): Promise<ISeriesResponse | ISeriesResponse[]>;
 } 
 
 export interface IGenreService {

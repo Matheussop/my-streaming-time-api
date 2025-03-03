@@ -144,7 +144,7 @@ export class SeriesController {
         res.status(200).json({
           page,
           limit,
-          total: savedSeries.length,
+          total: Array.isArray(savedSeries) ? savedSeries.length : 1,
           series: savedSeries,
         });
       } else {

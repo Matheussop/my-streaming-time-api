@@ -9,6 +9,7 @@ interface ISeasonSummary {
 
 interface IGenreReference {
   _id: Types.ObjectId;
+  id: number;
   name: string;
 }
 
@@ -16,9 +17,9 @@ export interface ISeriesCreate {
   title: string;
   release_date: string;
   plot: string;
-  cast: string[];
+  cast?: string[];
   rating: number;
-  genre: IGenreReference[];
+  genre: number[] | IGenreReference;
   status?: string;
   tmdbId?: number;
   totalEpisodes: number;
@@ -44,8 +45,9 @@ export interface ISeriesUpdate {
   url?: string;
 }
 
-export interface ISeriesResponse extends ISeriesCreate {
+export interface ISeriesResponse extends Omit<ISeriesCreate, "genre"> {
   _id: string;
+  genre: IGenreReference[];
   createdAt: Date;
   updatedAt: Date;
 }

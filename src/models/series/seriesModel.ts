@@ -2,6 +2,7 @@ import mongoose, { Document, Schema, Model } from 'mongoose';
 import { ErrorMessages } from '../../constants/errorMessages';
 import { ISeriesResponse } from '../../interfaces/series/series';
 import { StreamingServiceError } from '../../middleware/errorHandler';
+import Genre from '../genresModel';
 
 type ISerieSchema = Document & ISeriesResponse;
 
@@ -33,17 +34,9 @@ const seriesSchema = new Schema<ISerieSchema, ISeriesModel, ISeriesMethods>(
       min: 0,
       max: 10,
     },
-    genre: [{
-      _id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Genre',
-        required: true
-      },
-      name: {
-        type: String,
-        required: true
-      }
-    }],
+    genre: {
+      type: Schema.Types.Mixed,
+    },
     status: {
       type: String,
       default: 'Released',
@@ -87,49 +80,50 @@ seriesSchema.index({ title: 'text', plot: 'text' });
 seriesSchema.index({ 'genre._id': 1 });
 seriesSchema.index({ tmdbId: 1 });
 
-async function validateGenres(genreReferences: Array<{_id: any, name: string}>) {
-  const Genre = mongoose.model('Genre');
-  
-  if (!genreReferences || genreReferences.length === 0) {
-    return genreReferences;
+async function validateGenres(genreRef: number[] | Array<{ id: number, name: string, _id: any }>) {  
+  if (!genreRef || genreRef.length === 0) {
+    return []; 
   }
+
+  const uniqueGenreIds = [...new Set(genreRef.map(genre => 
+    typeof genre === 'number' ? genre : genre.id
+  ))];
   
-  const genreIds = genreReferences.map(g => g._id);
-  const uniqueGenreIds = [...new Set(genreIds)];
-  
-  const existingGenres = await Genre.find({ _id: { $in: uniqueGenreIds } });
+  const existingGenres = await Genre.find({ id: { $in: uniqueGenreIds } });
   
   if (existingGenres.length !== uniqueGenreIds.length) {
-    const existingIds = existingGenres.map(g => g._id.toString());
+    const existingIds = existingGenres.map(g => g.id);
     const invalidIds = uniqueGenreIds
-      .filter(id => !existingIds.includes(id.toString()))
-      .map(id => id.toString());
+      .filter(id => !existingIds.includes(id))
     
     throw new StreamingServiceError(`The following genre IDs do not exist: ${invalidIds.join(', ')}`, 400);
   }
   
   // Atualizar os nomes dos gêneros para garantir consistência
-  return genreReferences.map(genreRef => {
-    const matchingGenre = existingGenres.find(g => g._id.toString() === genreRef._id.toString());
+  return uniqueGenreIds.map(item => {
+    const matchingGenre = existingGenres.find(g => g.id === item);
+    if (! matchingGenre) {
+      throw new StreamingServiceError("None of the provided genres are registered in our database", 400);
+    }
     return {
-      _id: genreRef._id,
-      name: matchingGenre?.name || genreRef.name || ''
+      id: matchingGenre.id,
+      name: matchingGenre.name,
+      _id: matchingGenre._id,
     };
   });
 }
 
-seriesSchema.pre('validate', async function (next) {
-  seriesSchema.pre('validate', async function(next) {
-    try {
-      if (this.genre) {
-        this.genre = await validateGenres(this.genre);
-      }
-      next();
-    } catch (error: any) {
-      next(error);
+seriesSchema.pre('validate', async function(next) {
+  try {
+    if (this.genre) {
+      this.genre! = await validateGenres(this.genre);
     }
-  });
+    next();
+  } catch (error: any) {
+    next(error);
+  }
 });
+
 
 seriesSchema.pre('insertMany', async function(next, docs) {
   try {

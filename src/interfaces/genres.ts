@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 
 export interface IGenreCreate {
   id: number;
@@ -12,7 +13,7 @@ export interface IGenreUpdate {
 }
 
 export interface IGenreResponse extends IGenreCreate{
-  _id: string;
+  _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

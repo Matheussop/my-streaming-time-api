@@ -53,7 +53,7 @@ export class SeriesService implements ISeriesService {
       )
     ).filter((item): item is ISeriesCreate => item !== null);
 
-    return this.seriesRepository.createManySeries(processedData)
+    return this.seriesRepository.create(processedData)
   }
 
   async createSerie(serieData: ISeriesCreate) {
@@ -133,7 +133,7 @@ export class SeriesService implements ISeriesService {
       }));
     
     if (newSeries.length > 0) {
-      return await this.seriesRepository.createManySeries(newSeries);
+      return await this.seriesRepository.create(newSeries);
     } else {
       return null;
     }
