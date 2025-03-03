@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { IUserResponse } from '../interfaces/user';
+import { ErrorMessages } from '../constants/errorMessages';
 
 interface IUserSchema extends Document, IUserResponse {
   _id: string;
@@ -39,30 +40,30 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
   {
     username: {
       type: String,
-      required: [true, 'Username is required'],
+      required: [true, ErrorMessages.USER_USERNAME_REQUIRED],
       unique: true,
       trim: true,
-      minlength: [3, 'Username must be at least 3 characters long'],
-      maxlength: [20, 'Username cannot be more than 20 characters long'],
+      minlength: [3, ErrorMessages.USER_USERNAME_MIN_LENGTH],
+      maxlength: [20, ErrorMessages.USER_USERNAME_MAX_LENGTH],
       validate: {
         validator: function(value: string) {
           return /^[a-zA-Z0-9_]+$/.test(value);
         },
-        message: 'Username can only contain letters, numbers, and underscores',
+        message: ErrorMessages.USER_USERNAME_VALIDATE,
       },
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, ErrorMessages.USER_EMAIL_REQUIRED],
       unique: true,
       lowercase: true,
-      validate: [isValidEmail, 'Please provide a valid email'],
+      validate: [isValidEmail, ErrorMessages.USER_INVALID_EMAIL],
       trim: true,
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters long'],
+      required: [true, ErrorMessages.USER_PASSWORD_REQUIRED],
+      minlength: [6, ErrorMessages.USER_PASSWORD_MIN_LENGTH],
       select: false,
     },
     passwordChangedAt: Date,

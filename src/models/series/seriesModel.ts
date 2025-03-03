@@ -1,5 +1,4 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
-import StreamingTypes from '../streamingTypesModel';
 import { ErrorMessages } from '../../constants/errorMessages';
 import { ISeriesResponse } from '../../interfaces/series/series';
 import { StreamingServiceError } from '../../middleware/errorHandler';
@@ -17,7 +16,7 @@ const seriesSchema = new Schema<ISerieSchema, ISeriesModel, ISeriesMethods>(
   {
     title: {
       type: String,
-      required: [true, 'Title is required'],
+      required: [true, ErrorMessages.SERIES_TITLE_REQUIRED],
       trim: true,
     },
     plot: {
@@ -30,7 +29,7 @@ const seriesSchema = new Schema<ISerieSchema, ISeriesModel, ISeriesMethods>(
     cast: [{ type: String }],
     rating: {
       type: Number,
-      required: [true, 'Rating is required'],
+      required: [true, ErrorMessages.SERIES_RATING_INVALID],
       min: 0,
       max: 10,
     },

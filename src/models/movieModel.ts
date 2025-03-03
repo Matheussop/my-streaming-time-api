@@ -1,13 +1,9 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
-import StreamingTypes from './streamingTypesModel';
 import Genre from './genresModel'
 import { ErrorMessages } from '../constants/errorMessages';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { IGenreCreate } from '../interfaces/genres';
 
-interface IGenre {
-  id: number;
-  name: string;
-}
 export interface IMovie extends Document {
   _id: string;
   tmdbId: number;
@@ -16,7 +12,7 @@ export interface IMovie extends Document {
   plot: string;
   cast: string[];
   rating: number;
-  genre: number[] | IGenre[];
+  genre: number[] | IGenreCreate[];
   durationTime: number;
   status: string;
   poster: string;
@@ -73,7 +69,7 @@ movieSchema.pre('insertMany', async function (next, docs) {
 
   for (const movie of docs) {
     const invalidIds: number[] = [];
-    movie.genre = movie.genre.map((genreId: number | IGenre) => {
+    movie.genre = movie.genre.map((genreId: number | IGenreCreate) => {
       const category = genres.find((category: any) => category.id === genreId);
       if (category) {
         return { id: category.id, name: category.name };
@@ -96,7 +92,7 @@ movieSchema.pre('save', async function (next) {
   const genres = await Genre.find().lean();
 
   const invalidIds: number[] = [];
-  movie.genre = movie.genre.map((genreId: number | IGenre) => {
+  movie.genre = movie.genre.map((genreId: number | IGenreCreate) => {
     const category = genres.find((category: any) => category.id === genreId);
     if (category) {
       return { id: category.id, name: category.name };

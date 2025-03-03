@@ -1,5 +1,6 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 import { IEpisode, ISeasonResponse } from '../../interfaces/series/season';
+import { ErrorMessages } from '../../constants/errorMessages';
 
 type ISeasonSchema = Document & ISeasonResponse;
 type IEpisodeSchema = Document & IEpisode;
@@ -40,15 +41,15 @@ const seasonSchema = new Schema<ISeasonSchema>(
     seriesId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Series',
-      required: [true, 'Series ID is required'],
+      required: [true, ErrorMessages.SERIE_ID_REQUIRED],
     },
     seasonNumber: {
       type: Number,
-      required: [true, 'Season number is required'],
+      required: [true, ErrorMessages.SEASON_NUMBER_REQUIRED],
     },
     title: {
       type: String,
-      required: [true, 'Season title is required'],
+      required: [true, ErrorMessages.SEASON_TITLE_REQUIRED],
       trim: true,
     },
     plot: {

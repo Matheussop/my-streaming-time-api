@@ -2,7 +2,7 @@
 export interface IGenreCreate {
   id: number;
   name: string;        
-  poster: string; 
+  poster?: string; 
 }
 
 export interface IGenreUpdate {

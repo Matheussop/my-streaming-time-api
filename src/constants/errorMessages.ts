@@ -3,6 +3,23 @@ export const ErrorMessages = {
   COMMON_MEDIA_NOT_FOUND: 'Common media not found', 
   COMMON_MEDIA_ID_INVALID: 'Invalid common media ID format',
 
+  //History
+  HISTORY_CONTENT_ID_REQUIRED: "Content ID is required",
+  HISTORY_CONTENT_TYPE_REQUIRED: "Content TYPE is required",
+  HISTORY_TITLE_REQUIRED: "Streaming Title is required",
+  HISTORY_DURATION_REQUIRED: "Streaming duration is required",
+  HISTORY_DURATION_NEGATIVE: "Streaming duration must be positive",
+  HISTORY_TOTAL_DURATION_NEGATIVE: "Streaming total duration must be positive",
+
+  // Genre errors
+  GENRE_NOT_FOUND: "Genre is not found",
+  GENRE_NAME_REQUIRED: "Genre name is required",
+  GENRE_ID_REQUIRED: "Genre id is required",
+  
+  // Season erros
+  SEASON_NUMBER_REQUIRED: "Season number is required",
+  SEASON_TITLE_REQUIRED: "Season title is required",
+  SERIE_ID_REQUIRED: "Serie id is required",
   // Series erros
   SERIE_NOT_FOUND: 'Serie not found',
   SERIES_NOT_FOUND: 'Series not found',
@@ -70,11 +87,20 @@ export const ErrorMessages = {
   TOKEN_REQUIRED: 'Authentication token is required',
 
   // User related errors
+  USER_ID_REQUIRED: 'User id required',
   USER_NOT_FOUND: 'User not found',
   USER_ALREADY_EXISTS: 'User already exists with this email',
   USER_CREATION_FAILED: 'Unable to create user',
   USER_UPDATE_FAILED: 'Unable to update user',
   USER_DELETION_FAILED: 'Unable to delete user',
+  USER_USERNAME_REQUIRED: "Username is required",
+  USER_USERNAME_MIN_LENGTH: "Username must be at least 3 characters long",
+  USER_USERNAME_MAX_LENGTH: "Username cannot be more than 20 characters long",
+  USER_USERNAME_VALIDATE: "Username can only contain letters, numbers, and underscores",
+  USER_EMAIL_REQUIRED: "Email is required",
+  USER_INVALID_EMAIL: "Email is invalid",
+  USER_PASSWORD_REQUIRED: "Password is required",
+  USER_PASSWORD_MIN_LENGTH: "Password must be at least 6 characters long",
 
   // Validation User errors
   INVALID_EMAIL: 'Invalid email format',

@@ -1,6 +1,7 @@
 import { Schema, model, Document, Model } from 'mongoose';
 import { IUserStreamingHistoryCreate, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import User from './userModel';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export type IUserStreamingHistorySchema = Document & IUserStreamingHistoryResponse;
 
@@ -12,14 +13,14 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistorySchema>(
   {
     userId: {
       type: String,
-      required: [true, 'User ID is required'],
+      required: [true, ErrorMessages.USER_ID_REQUIRED],
       index: true,
     },
     watchHistory: [
       {
         contentId: {
           type: String,
-          required: [true, 'Content ID is required'],
+          required: [true, ErrorMessages.HISTORY_CONTENT_ID_REQUIRED],
         },
         contentType: {
           type: String,
@@ -27,11 +28,11 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistorySchema>(
             values: ['movie', 'series'],
             message: "validator failed for attribute `{PATH}` with value `{VALUE}`",
           },
-          required: [true, 'Content type is required'],
+          required: [true, ErrorMessages.HISTORY_CONTENT_TYPE_REQUIRED],
         },
         title: {
           type: String,
-          required: [true, 'Title is required'],
+          required: [true, ErrorMessages.HISTORY_TITLE_REQUIRED],
           trim: true,
         },
         episodeId: String,
@@ -43,8 +44,8 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistorySchema>(
         },
         watchedDurationInMinutes: {
           type: Number,
-          required: [true, 'Duration is required'],
-          min: [0, 'Duration cannot be negative'],
+          required: [true, ErrorMessages.HISTORY_DURATION_REQUIRED],
+          min: [0, ErrorMessages.HISTORY_DURATION_NEGATIVE],
         },
         completionPercentage: {
           type: Number,

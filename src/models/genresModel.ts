@@ -1,5 +1,6 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 import { IGenreCreate, IGenreResponse } from '../interfaces/genres';
+import { ErrorMessages } from '../constants/errorMessages';
 
 type IGenreSchema = Document & IGenreCreate
 
@@ -11,12 +12,12 @@ const genreSchema = new Schema<IGenreSchema>(
   {
     id: {
       type: Number,
-      required: [true, 'Genre ID is required'],
+      required: [true, ErrorMessages.GENRE_ID_REQUIRED],
       unique: true,
     },
     name: {
       type: String,
-      required: [true, 'Genre name is required'],
+      required: [true, ErrorMessages.GENRE_NAME_REQUIRED],
       trim: true,
       unique: true,
     },
