@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import logger from '../config/logger';
+import { z } from 'zod';
+import { formatZodError } from '../util/errorFormatter';
 
 export class StreamingServiceError extends Error {
   public readonly statusCode: number;
@@ -73,6 +75,15 @@ export const errorHandler = (err: Error | StreamingServiceError, req: Request, r
   // Add stack trace in development environment
   if (process.env.NODE_ENV === 'development') {
     response.stack = err.stack;
+  }
+
+  if (err instanceof z.ZodError) {
+    const formattedErrors = formatZodError(err);
+    return res.status(400).json({
+      success: false,
+      errors: formattedErrors,
+      message: 'Invalid input data'
+    });
   }
 
   res.status(statusCode).json(response);
