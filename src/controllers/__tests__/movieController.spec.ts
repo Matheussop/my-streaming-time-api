@@ -140,7 +140,7 @@ describe('MovieController', () => {
     it('should create new movie successfully', async () => {
       const movieData = {
         title: 'New Movie',
-        release_date: '2024-01-01',
+        releaseDate: '2024-01-01',
         plot: 'Test plot',
         cast: ['Actor 1'],
         genre: [1, 2],

@@ -85,7 +85,7 @@ describe('Movie Routes', () => {
         cast: ['Actor 1', 'Actor 2'],
         rating: 9.0,
         url: 'http://movie.com',
-        release_date: '2024-01-01',
+        releaseDate: '2024-01-01',
       };
 
       mockImplementations.createMovie.mockImplementation((req, res) => {
@@ -187,7 +187,7 @@ describe('Movie Routes', () => {
         cast: ['Actor 1', 'Actor 2'],
         rating: 9.5,
         url: 'http://updated-movie.com',
-        release_date: '2024-02-01',
+        releaseDate: '2024-02-01',
       };
 
       mockImplementations.updateMovie.mockImplementation((req, res) => {

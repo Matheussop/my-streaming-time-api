@@ -31,7 +31,7 @@ describe('Movie Model Integrations Test ', () => {
 
       const validMovie = {
         title: 'Test Movie',
-        release_date: '2024-01-01',
+        releaseDate: '2024-01-01',
         plot: 'Test plot',
         cast: ['Actor 1', 'Actor 2'],
         rating: 4.5,
@@ -49,7 +49,7 @@ describe('Movie Model Integrations Test ', () => {
 
     it('should fail when creating a movie without required fields', async () => {
       const invalidMovie = {
-        release_date: '2024-01-01',
+        releaseDate: '2024-01-01',
         plot: 'Test plot',
       };
 
@@ -64,7 +64,7 @@ describe('Movie Model Integrations Test ', () => {
 
       const invalidMovie = {
         title: 'Test Movie',
-        release_date: '2024-01-01',
+        releaseDate: '2024-01-01',
         plot: 'Test plot',
         cast: ['Actor 1'],
         rating: 4.5,
@@ -86,21 +86,21 @@ describe('Movie Model Integrations Test ', () => {
       const movies = [
         {
           title: 'The Matrix',
-          release_date: '1999-03-31',
+          releaseDate: '1999-03-31',
           rating: 4.8,
           genre: [1],
           url: 'http://matrix.com',
         },
         {
           title: 'Matrix Reloaded',
-          release_date: '2003-05-15',
+          releaseDate: '2003-05-15',
           rating: 4.5,
           genre: [1],
           url: 'http://matrix2.com',
         },
         {
           title: 'Different Movie',
-          release_date: '2024-01-01',
+          releaseDate: '2024-01-01',
           rating: 4.0,
           genre: [1],
           url: 'http://different.com',
@@ -137,21 +137,21 @@ describe('Movie Model Integrations Test ', () => {
       const movies = [
         {
           title: 'The Matrix',
-          release_date: '1999-03-31',
+          releaseDate: '1999-03-31',
           rating: 4.8,
           genre: [1],
           url: 'http://matrix.com',
         },
         {
           title: 'Matrix Reloaded',
-          release_date: '2003-05-15',
+          releaseDate: '2003-05-15',
           rating: 4.5,
           genre: [1],
           url: 'http://matrix2.com',
         },
         {
           title: 'Different Movie',
-          release_date: '2024-01-01',
+          releaseDate: '2024-01-01',
           rating: 4.0,
           genre: [1],
           url: 'http://different.com',
@@ -182,7 +182,7 @@ describe('Movie Model Integrations Test ', () => {
 
       const movie = await Movie.create({
         title: 'Test Movie',
-        release_date: '2024-01-01',
+        releaseDate: '2024-01-01',
         rating: 4.5,
         genre: [1],
         url: 'http://example.com',

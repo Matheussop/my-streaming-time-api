@@ -3,6 +3,7 @@ import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamin
 import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
+import { IMovieResponse } from './movie';
 
 export interface IUserService {
   registerUser(user: IUserCreate): Promise<IUserResponse>;
@@ -39,7 +40,7 @@ export interface IContentService {
 export interface IMovieService {
   getMovies(skip: number, limit: number): Promise<any>;
   getMovieById(id: string): Promise<any>;
-  getMoviesByGenre(genre: string, skip: number, limit: number): Promise<IMovie[]>;
+  getMoviesByGenre(genre: string, skip: number, limit: number): Promise<IMovieResponse[]>;
   createMovie(movieData: any): Promise<any>;
   updateMovie(id: string, updateData: any): Promise<any>;
   deleteMovie(id: string): Promise<any>;

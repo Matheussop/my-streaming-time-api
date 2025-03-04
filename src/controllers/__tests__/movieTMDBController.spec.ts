@@ -33,7 +33,7 @@ describe('Movie Controller', () => {
           {
             id: 1,
             title: 'Test Movie',
-            release_date: '2024-01-01',
+            releaseDate: '2024-01-01',
             overview: 'Test overview',
             genre_ids: [28, 12],
             vote_average: 8.5,
@@ -84,7 +84,7 @@ describe('Movie Controller', () => {
   describe('fetchAndSaveExternalMovies', () => {
     const movieInDataBase = {
       title: 'Other Movie',
-      release_date: '2024-01-01',
+      releaseDate: '2024-01-01',
       overview: 'Test overview',
       genre_ids: [28, 12],
       vote_average: 8.5,
@@ -95,7 +95,7 @@ describe('Movie Controller', () => {
         results: [
           {
             title: 'New Movie',
-            release_date: '2024-01-01',
+            releaseDate: '2024-01-01',
             overview: 'Test overview',
             genre_ids: [28, 12],
             vote_average: 8.5,
@@ -213,7 +213,7 @@ describe('Movie Controller', () => {
           results: [
             {
               title: 'New Movie',
-              release_date: '2024-01-01',
+              releaseDate: '2024-01-01',
               overview: 'Test overview',
               vote_average: 8.5,
               genre_ids: [28, 12],
@@ -276,7 +276,7 @@ describe('Movie Controller', () => {
           results: [
             {
               title: 'New Movie',
-              release_date: '2024-01-01',
+              releaseDate: '2024-01-01',
               overview: 'Test overview',
               vote_average: 8.5,
               genre_ids: [28, 12],

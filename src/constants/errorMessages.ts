@@ -54,6 +54,7 @@ export const ErrorMessages = {
   MOVIE_WITH_TITLE_EXISTS: 'Movie with this title already exists',
   MOVIE_RATING_INVALID: 'Rating must be a number between 0 and 10',
   MOVIE_RELEASE_DATE_INVALID: 'Release date must be a valid date format',
+  MOVIE_RELEASE_DATE_REQUIRED: 'Release date is required',
   MOVIE_RELEASE_DATE_FUTURE: 'Release date cannot be in the future',
   MOVIE_URL_INVALID: 'Invalid URL format',
   MOVIE_CAST_INVALID: 'Invalid cast format, must be an array of strings',
@@ -79,6 +80,9 @@ export const ErrorMessages = {
   STREAMING_TYPE_DUPLICATE_CATEGORY: 'Duplicate category ID',
   INVALID_ID_FORMAT: (type: string) => `Invalid ${type} ID format`,
   STREAMING_TYPE_NAME_EXISTS: 'Streaming type name already exists',
+  
+  // Content errors
+  CONTENT_TYPE_REQUIRED: 'Content type is required',
 
   // Authentication & Authorization errors
   INVALID_CREDENTIALS: 'Invalid email or password',

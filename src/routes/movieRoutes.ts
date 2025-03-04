@@ -72,7 +72,7 @@ movieRouter.get(
  *                 type: string
  *               url:
  *                 type: string
- *               release_date:
+ *               releaseDate:
  *                 type: string
  *                 format: date
  *     responses:
@@ -81,7 +81,7 @@ movieRouter.get(
  */
 movieRouter.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'release_date']),
+  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'releaseDate']),
   movieController.createMovie,
 );
 
@@ -236,7 +236,7 @@ movieRouter.get('/:id', movieController.getMovieById);
  *                 type: string
  *               url:
  *                 type: string
- *               release_date:
+ *               releaseDate:
  *                 type: string
  *                 format: date
  *     responses:

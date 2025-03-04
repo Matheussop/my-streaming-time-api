@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import Movie, { IMovie } from '../models/movieModel';
+import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { IMovieResponse } from '../interfaces/movie';
 
 export interface Movie_TMDB {
   genre_ids: number[];
   original_title: string;
   overview: string;
   poster_path: string;
-  release_date: string;
+  releaseDate: string;
   title: string;
   vote_average: number;
 }
@@ -28,7 +29,7 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
       return {
         id: movie.id,
         title: movie.title,
-        year: movie.release_date,
+        year: movie.releaseDate,
         plot: movie.overview,
         genre: movie.genre_ids,
         rating: movie.vote_average,
@@ -59,13 +60,13 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
     const externalMovies = response.data.results;
 
     const existingMovies = await Movie.find({}, 'title').lean();
-    const existingTitles = existingMovies.map((movie) => movie.title);
+    const existingTitles = existingMovies.map((movie: any) => movie.title);
 
     const newMovies = externalMovies
       .filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
       .map((externalMovie: any) => ({
         title: externalMovie.title,
-        release_date: externalMovie.release_date,
+        releaseDate: externalMovie.releaseDate,
         plot: externalMovie.overview,
         genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
@@ -131,7 +132,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     if (response.data.results.length > 0) {
       const externalMovies = response.data.results.map((externalMovie: any) => ({
         title: externalMovie.title,
-        release_date: externalMovie.release_date,
+        releaseDate: externalMovie.releaseDate,
         plot: externalMovie.overview,
         rating: externalMovie.vote_average,
         genre: externalMovie.genre_ids,
@@ -140,9 +141,9 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
       }));
 
-      const existingTitles = existingMovies.map((movie) => movie.title);
+      const existingTitles = existingMovies.map((movie: any) => movie.title);
 
-      let newMoviesList: IMovie[] = []
+      let newMoviesList: IMovieResponse[] = []
       externalMovies.filter((externalMovie: any) => {
         !existingTitles.includes(externalMovie.title) && newMoviesList.push(externalMovie)
       });

@@ -99,7 +99,7 @@ export class MovieController {
 
     const movie = new Movie({
       title: req.body.title,
-      release_date: req.body.release_date,
+      releaseDate: req.body.releaseDate,
       plot: req.body.plot,
       cast: req.body.cast,
       genre: req.body.genre,
@@ -107,7 +107,7 @@ export class MovieController {
       poster: req.body.poster,
       url: req.body.url,
     });
-
+  
     const newMovie = await this.movieService.createMovie(movie);
     res.status(201).json(newMovie);
   });

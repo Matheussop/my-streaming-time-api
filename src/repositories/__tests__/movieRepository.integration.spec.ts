@@ -38,7 +38,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should create a new movie', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
@@ -53,7 +53,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should find a movie by id', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
@@ -69,7 +69,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should update a movie', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
@@ -86,7 +86,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should find all movies with pagination', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
@@ -101,7 +101,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should delete a movie', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
@@ -117,7 +117,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should find a movie by title', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
@@ -134,7 +134,7 @@ describe('MovieRepository Integration Tests', () => {
   it('should find a movie by genre', async () => {
     const movieData: Partial<IMovie> = {
       title: 'Test Movie',
-      release_date: '2024-03-20',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       genre: categoriesIds,
       rating: 8.5,
