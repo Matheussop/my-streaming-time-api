@@ -4,9 +4,7 @@ import { ErrorMessages } from '../constants/errorMessages';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { IContentResponse, IContentDocument, IContentModel } from '../interfaces/content';
 
-export interface IContentMethods {}
-
-const contentSchema = new Schema<IContentDocument, IContentModel, IContentMethods>(
+const contentSchema = new Schema<IContentDocument, IContentModel>(
   {
     title: { type: String, required: [true, ErrorMessages.MOVIE_TITLE_REQUIRED] },
     releaseDate: { type: String, required: [true, ErrorMessages.MOVIE_RELEASE_DATE_REQUIRED] },
@@ -30,11 +28,7 @@ const contentSchema = new Schema<IContentDocument, IContentModel, IContentMethod
     },
     status: { type: String, default: 'Released' },
     poster: { type: String },
-    url: { type: String, required: true },
-    contentType: { type: String, 
-      required: [true, ErrorMessages.CONTENT_TYPE_REQUIRED],
-      enum: ['movie', 'series'],
-     },
+    url: { type: String, required: true }
   },
   {
     timestamps: true,
@@ -115,6 +109,10 @@ contentSchema.static('findByGenre', function (genreName: string, skip: number, l
   return this.find({ genre: { $elemMatch: { name: genreName } } })
   .skip(skip).limit(limit);
 });
+
+contentSchema.index({ title: 'text', plot: 'text' });
+contentSchema.index({ 'genre._id': 1 });
+contentSchema.index({ tmdbId: 1 });
 
 const Content = mongoose.model<IContentDocument, IContentModel>('Content', contentSchema);
 

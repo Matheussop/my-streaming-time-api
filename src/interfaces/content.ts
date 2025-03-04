@@ -17,7 +17,6 @@ export interface IContentCreate {
   tmdbId?: number;
   poster?: string;
   url?: string;
-  contentType: string;
 }
 
 export interface IContentUpdate {
@@ -31,7 +30,6 @@ export interface IContentUpdate {
   tmdbId?: number;
   poster?: string;
   url?: string;
-  contentType?: string;
 }
 
 export interface IContentResponse extends Omit<IContentCreate, "genre"> {

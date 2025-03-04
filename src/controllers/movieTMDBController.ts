@@ -29,7 +29,7 @@ export const getExternalMovies = async (req: Request, res: Response): Promise<vo
       return {
         id: movie.id,
         title: movie.title,
-        year: movie.releaseDate,
+        year: movie.release_date,
         plot: movie.overview,
         genre: movie.genre_ids,
         rating: movie.vote_average,
@@ -66,7 +66,7 @@ export const fetchAndSaveExternalMovies = async (req: Request, res: Response): P
       .filter((externalMovie: any) => !existingTitles.includes(externalMovie.title))
       .map((externalMovie: any) => ({
         title: externalMovie.title,
-        releaseDate: externalMovie.releaseDate,
+        releaseDate: externalMovie.release_date,
         plot: externalMovie.overview,
         genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
@@ -132,7 +132,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     if (response.data.results.length > 0) {
       const externalMovies = response.data.results.map((externalMovie: any) => ({
         title: externalMovie.title,
-        releaseDate: externalMovie.releaseDate,
+        releaseDate: externalMovie.release_date,
         plot: externalMovie.overview,
         rating: externalMovie.vote_average,
         genre: externalMovie.genre_ids,

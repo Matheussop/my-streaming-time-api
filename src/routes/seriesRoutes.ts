@@ -89,7 +89,7 @@ seriesRouter.get('/:id', seriesController.getSerieById);
  *                 type: string
  *               url:
  *                 type: string
- *               release_date:
+ *               releaseDate:
  *                 type: string
  *                 format: date
  *     responses:
@@ -98,7 +98,7 @@ seriesRouter.get('/:id', seriesController.getSerieById);
  */
 seriesRouter.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'numberEpisodes', 'numberSeasons' , 'release_date', 'genre']),
+  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'numberEpisodes', 'numberSeasons' , 'releaseDate', 'genre']),
   seriesController.createSeries,
 );
 

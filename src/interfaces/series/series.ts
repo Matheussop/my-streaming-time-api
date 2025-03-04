@@ -1,53 +1,29 @@
 import { Types } from "mongoose";
+import { IContentCreate, IContentDocument, IContentModel, IContentResponse, IContentUpdate } from "../content";
 
 interface ISeasonSummary {
+  seasonId: Types.ObjectId;
   seasonNumber: number;
   title: string;
   episodeCount: number;
   releaseDate: string;
 }
 
-interface IGenreReference {
-  _id: Types.ObjectId;
-  id: number;
-  name: string;
-}
-
-export interface ISeriesCreate {
-  title: string;
-  release_date: string;
-  plot: string;
-  cast?: string[];
-  rating: number;
-  genre: number[] | IGenreReference;
-  status?: string;
-  tmdbId?: number;
+export interface ISeriesCreate extends IContentCreate {
   totalEpisodes: number;
   totalSeasons: number;
   seasonsSummary?: ISeasonSummary[];
-  poster: string;
-  url: string;
 }
 
-export interface ISeriesUpdate {
-  title?: string;
-  release_date?: string;
-  plot?: string;
-  cast?: string[];
-  rating?: number;
-  genre?: IGenreReference[];
-  status?: string;
-  tmdbId?: number;
+export interface ISeriesUpdate extends IContentUpdate{
   totalEpisodes?: number;
   totalSeasons?: number;
   seasonsSummary?: ISeasonSummary[];
-  poster?: string;
-  url?: string;
 }
 
-export interface ISeriesResponse extends Omit<ISeriesCreate, "genre"> {
-  _id: string;
-  genre: IGenreReference[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+export interface ISeriesResponse extends Omit<ISeriesCreate, "genre">, IContentResponse {}
+
+export interface ISeriesDocument extends IContentDocument, ISeriesResponse {}
+
+export interface ISeriesModel extends IContentModel {}
+

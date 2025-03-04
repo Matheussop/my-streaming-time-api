@@ -65,7 +65,7 @@ export class SeriesController {
   createManySeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating many series',
-      serieData: req.body,
+      seriesData: req.body,
       method: req.method,
       path: req.path,
     });
@@ -96,7 +96,7 @@ export class SeriesController {
       logger.info({
         message: 'Serie already existed in database with this parameter',
         path: req.path,
-        serieData: req.body,
+        seriesData: req.body,
         method: req.method,
       })
       res.status(200).json({
@@ -124,7 +124,7 @@ export class SeriesController {
     if (response.data.results.length > 0) {
       const externalSeries = response.data.results.map((externalSerie: any) => ({
         title: externalSerie.name,
-        release_date: externalSerie.first_air_date,
+        releaseDate: externalSerie.first_air_date,
         plot: externalSerie.overview,
         rating: externalSerie.vote_average,
         genre: externalSerie.genre_ids,
@@ -171,7 +171,7 @@ export class SeriesController {
 
     const seriesObj: ISeriesCreate = {
       title: req.body.title,
-      release_date: req.body.release_date,
+      releaseDate: req.body.releaseDate,
       plot: req.body.plot,
       cast: req.body.cast,
       genre: req.body.genre,
@@ -214,7 +214,7 @@ export class SeriesController {
 
     logger.info({
       message: 'Deleting a serie',
-      serieData: req.body,
+      seriesData: req.body,
       method: req.method,
       path: req.path,
     });
@@ -232,7 +232,7 @@ export class SeriesController {
   fetchAndSaveExternalSeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Saved a new series',
-      serieData: req.body,
+      seriesData: req.body,
       method: req.method,
       path: req.path,
     });

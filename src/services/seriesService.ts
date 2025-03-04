@@ -121,7 +121,7 @@ export class SeriesService implements ISeriesService {
       .map((externalSerie: any) => ({
         tmdbId: externalSerie.id,
         title: externalSerie.name,
-        release_date: externalSerie.first_air_date,
+        releaseDate: externalSerie.first_air_date,
         plot: externalSerie.overview,
         rating: externalSerie.vote_average,
         genre: externalSerie.genre_ids,
@@ -192,7 +192,7 @@ export class SeriesService implements ISeriesService {
 
     if (data.title) processed.title = data.title.trim();
     if (data.rating) processed.rating = this.validateRating(data.rating);
-    if (data.release_date) processed.release_date = this.validateReleaseDate(data.release_date);
+    if (data.releaseDate) processed.releaseDate = this.validateReleaseDate(data.releaseDate);
     if (data.genre) processed.genre = data.genre;
     if (data.url) processed.url = this.validateURL(data.url);
     if (data.cast) processed.cast = this.processCastList(data.cast);
@@ -204,15 +204,15 @@ export class SeriesService implements ISeriesService {
   private async processCreateData(data: ISeriesCreate): Promise<ISeriesCreate> {
     return {
       title: data.title.trim(),
-      release_date: this.validateReleaseDate(data.release_date),
+      releaseDate: this.validateReleaseDate(data.releaseDate),
       plot: data.plot,
       cast: data.cast,
       genre: data.genre,
       totalEpisodes: data.totalEpisodes,
       totalSeasons: data.totalSeasons,
       rating: this.validateRating(data.rating),
-      poster: this.validateURL(data.poster),
-      url: this.validateURL(data.url),
+      poster: this.validateURL(data?.poster || ''),
+      url: this.validateURL(data?.url || ''),
     }
   }
 }
