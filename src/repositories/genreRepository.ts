@@ -20,7 +20,7 @@ export class GenreRepository implements IGenreRepository{
   };
 
   async update(id: string, data: Partial<IGenreUpdate>): Promise<IGenreResponse | null>{
-    return Genre.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
+    return Genre.findOneAndUpdate({ _id: id }, { $set: data }, { new: true, runValidators: true });
   };
 
   async delete(id: string): Promise<IGenreResponse | null>{

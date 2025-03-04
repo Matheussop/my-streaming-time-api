@@ -40,7 +40,7 @@ export class GenreController {
   });
   
   getAllGenre = catchAsync(async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.body;
+    const { page = 1, limit = 100 } = req.body;
     const skip = (Number(page) - 1) * Number(limit);
 
     logger.info({
@@ -88,22 +88,21 @@ export class GenreController {
   });
 
   updateGenre = catchAsync(async (req: Request, res: Response) => {
-    const { externalID, name, poster } = req.body;
-    const { id } = req.params;
-    const data = { id: externalID, name, poster }
-
+    const { id, name, poster } = req.body;
+    const { _id } = req.params;
+    const data = { id, name, poster }
     logger.info({
       message: 'Update genre',
-      id,
+      _id,
       data,
       method: req.method,
       path: req.path,
     });
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new StreamingServiceError(ErrorMessages.GENRE_ID_INVALID, 400);
     }
     
-    const genre = await this.genreService.updateGenre(id,data);
+    const genre = await this.genreService.updateGenre(_id,data);
     res.status(200).json(genre);
   });
 

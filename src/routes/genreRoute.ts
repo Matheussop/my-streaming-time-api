@@ -151,7 +151,7 @@ router.post('/many', (req, res, next) => validateRequest(req, res, next, ['genre
  *       404:
  *         description: Genre not found
  */
-router.put('/:id', (req, res, next) => validateRequest(req, res, next, ['id', 'name']), controller.updateGenre);
+router.put('/:_id', (req, res, next) => validateRequest(req, res, next, ['id', 'name']), controller.updateGenre);
 
 /**
  * @swagger

@@ -45,20 +45,6 @@ genreSchema.static('findByName', function(name: string): Promise<IGenreResponse 
   return this.findOne({ name: new RegExp(`^${name}$`, 'i') });
 });
 
-genreSchema.post('findOneAndUpdate', async function(doc) {
-  const update = this.getUpdate() as { $set?: { name?: string } };
-
-  if (update?.$set?.name) {
-    const newName = update.$set.name;
-    
-    const Series = mongoose.model('Series');
-    await Series.updateMany(
-      { 'genre._id': doc._id },
-      { $set: { 'genre.$.name': newName } }
-    );
-  }
-});
-
 const Genre = mongoose.model<IGenreSchema, IGenreModel>('Genre', genreSchema);
 
 export default Genre;
