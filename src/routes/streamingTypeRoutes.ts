@@ -158,6 +158,26 @@ router.put('/add-genre/:id', (req, res, next) => validateRequest(req, res, next,
 
 /**
  * @swagger
+ * /streamingTypes/delete-genre/{id}:
+ *   delete:
+ *     summary: Delete a genre from a streaming type by name
+ *     tags: [StreamingTypes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Streaming type deleted successfully
+ *       404:
+ *         description: Streaming type not found
+ */
+router.delete('/delete-genre/:id', (req, res, next) => validateRequest(req, res, next, ['genresName']), controller.deleteGenreFromStreamingTypeByName);
+
+/**
+ * @swagger
  * /streamingTypes/{id}:
  *   delete:
  *     summary: Delete a streaming type by ID

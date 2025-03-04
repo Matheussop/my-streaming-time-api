@@ -44,6 +44,9 @@ const streamingTypesSchema = new Schema<IStreamingTypeDocument, IStreamingTypeMo
   }
 );
 
+streamingTypesSchema.index({ name: 1 }, { unique: true });
+streamingTypesSchema.index({ 'supportedGenres.name': 1 });
+
 streamingTypesSchema.static('findByName', function(name: string): Promise<IStreamingTypeResponse | null> {
   return this.findOne({ name: new RegExp(`^${name}$`, 'i') });
 });
@@ -53,7 +56,29 @@ streamingTypesSchema.static('findByGenreId', function(genreId: string): Promise<
 });
 
 streamingTypesSchema.static('findByGenreName', function(genreName: string, id: string): Promise<IStreamingTypeResponse | null> {
-  return this.findOne({ supportedGenres: { $elemMatch: { name: new RegExp(`^${genreName}$`, 'i') } } });
+  return this.findOne({ 
+    _id: id, 
+    'supportedGenres.name': new RegExp(`^${genreName}$`, 'i') 
+  });
+});
+
+streamingTypesSchema.static('deleteByGenresName', function(genresName: string[], id: string): Promise<IStreamingTypeResponse | null> {
+  const regexPatterns = genresName.map(name => new RegExp(`^${name}$`, 'i'));
+  
+  return this.findOneAndUpdate(
+    { _id: id }, 
+    { 
+      $pull: { 
+        supportedGenres: { 
+          name: { $in: regexPatterns } 
+        } 
+      } 
+    }, 
+    { 
+      new: true,
+      runValidators: false
+    }
+  );
 });
 
 const StreamingTypes = mongoose.model<IStreamingTypeDocument, IStreamingTypeModel>('StreamingType', streamingTypesSchema);

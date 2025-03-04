@@ -29,11 +29,19 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
   }
 
   async addGenre(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null> {
-    return StreamingTypes.findByIdAndUpdate(id, { $push: { supportedGenres: genres } }, { new: true, runValidators: true });
+    return StreamingTypes.findByIdAndUpdate(
+      id, 
+      { $addToSet: { supportedGenres: { $each: genres } } }, 
+      { new: true, runValidators: true }
+    );
   }
 
   async findByGenreName(genreName: string, id: string): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findByGenreName(genreName, id);
+  }
+
+  async deleteByGenresName(genresName: string[], id: string): Promise<IStreamingTypeResponse | null> {
+    return StreamingTypes.deleteByGenresName(genresName, id);
   }
 
   async delete(id: string): Promise<IStreamingTypeResponse | null> {

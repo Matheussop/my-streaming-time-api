@@ -78,6 +78,14 @@ export class StreamingTypeService implements IStreamingTypeService {
     return streamingType;
   }
 
+  async deleteGenresFromStreamingTypeByName(id: string, genresName: string[]): Promise<IStreamingTypeResponse | null> {
+    const result = await this.repository.deleteByGenresName(genresName, id);
+    if (!result) {
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
+    }
+    return result;
+  }
+
   async deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null> {
     const result = await this.repository.delete(id);
     if (!result) {

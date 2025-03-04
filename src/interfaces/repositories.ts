@@ -42,6 +42,7 @@ export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
   addGenre(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null>;
   findByGenreName(genreName: string, id: string): Promise<IStreamingTypeResponse | null>;
+  deleteByGenresName(genresName: string[], id: string): Promise<IStreamingTypeResponse | null>;
 }
 
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{

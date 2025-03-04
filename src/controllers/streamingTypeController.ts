@@ -91,6 +91,21 @@ export class StreamingTypeController {
     res.json(streamingType);
   });
 
+  deleteGenreFromStreamingTypeByName = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { genresName } = req.body;
+    logger.info({
+      message: 'Deleting genre from streaming type',
+      streamingTypeId: id,
+      genresName,
+      method: req.method,
+      path: req.path,
+    });
+
+    const streamingType = await this.service.deleteGenresFromStreamingTypeByName(id, genresName);
+    res.json(streamingType);
+  });
+
   deleteStreamingType = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Deleting streaming type',

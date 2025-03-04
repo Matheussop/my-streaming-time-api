@@ -26,6 +26,7 @@ describe('StreamingTypeService', () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       findByName: jest.fn(),
+      findByGenreName: jest.fn(),
       getIdGenreByName: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -319,6 +320,31 @@ describe('StreamingTypeService', () => {
       
       await expect(streamingTypeService.addGenreToStreamingType('validId', mockGenres))
         .rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_NOT_FOUND, 404));
+    });
+
+    it('should throw error when genre already exists in streaming type', async () => {
+      const streamingTypeId = 'validId';
+      const existingGenres = [
+        { _id: new Types.ObjectId(), id: 1, name: 'Action' }
+      ];
+      
+      // Mock the streaming type with existing genres
+      mockRepository.findById.mockResolvedValue({
+        _id: streamingTypeId,
+        name: 'Netflix',
+        supportedGenres: existingGenres
+      } as IStreamingTypeResponse);
+      
+      // Mock the genre repository to validate the genre
+      mockGenreRepository.findById.mockResolvedValue({ 
+        _id: 'genreId', 
+        id: 1, 
+        name: 'Action' 
+      });
+      
+      // Try to add the same genre again
+      await expect(streamingTypeService.addGenreToStreamingType(streamingTypeId, existingGenres))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_GENRE_NAME_EXISTS('Action'), 400));
     });
   });
 });
