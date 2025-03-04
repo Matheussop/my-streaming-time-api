@@ -78,6 +78,19 @@ export class StreamingTypeController {
     res.json(streamingType);
   });
 
+  addGenreToStreamingType = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { supportedGenres } = req.body;
+    logger.info({
+      message: 'Adding genre to streaming type',
+      streamingTypeId: id,
+      supportedGenres,
+    });
+
+    const streamingType = await this.service.addGenreToStreamingType(id, supportedGenres);
+    res.json(streamingType);
+  });
+
   deleteStreamingType = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Deleting streaming type',

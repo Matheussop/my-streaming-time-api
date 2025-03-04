@@ -1,7 +1,7 @@
 import { IUserResponse, IUserUpdate, IUserCreate } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { ISeriesCreate, ISeriesResponse } from './series/series';
-import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
+import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from './streamingTypes';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 import { IMovieResponse } from './movie';
 
@@ -27,6 +27,7 @@ export interface IStreamingTypeService {
   getStreamingTypeByName(name: string): Promise<IStreamingTypeResponse | null>;
   createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate>;
   updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse | null>;
+  addGenreToStreamingType(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse>;
   deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null>;
 }
 

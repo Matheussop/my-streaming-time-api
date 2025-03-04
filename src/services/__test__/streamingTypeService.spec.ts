@@ -1,13 +1,16 @@
 import { StreamingTypeService } from '../streamingTypeService';
 import { IStreamingTypeRepository } from '../../interfaces/repositories';
+import { IGenreRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IStreamingType } from '../../models/streamingTypesModel';
-import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse } from '../../interfaces/streamingTypes';
+import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse, IGenreReference } from '../../interfaces/streamingTypes';
 import { ErrorMessages } from '../../constants/errorMessages';
+import { Types } from 'mongoose';
 
 describe('StreamingTypeService', () => {
   let streamingTypeService: StreamingTypeService;
   let mockRepository: jest.Mocked<IStreamingTypeRepository>;
+  let mockGenreRepository: jest.Mocked<IGenreRepository>;
 
   const mockStreamingType: Partial<IStreamingType> = {
     _id: 'type1',
@@ -29,9 +32,19 @@ describe('StreamingTypeService', () => {
       delete: jest.fn(),
       addCategory: jest.fn(),
       removeCategory: jest.fn(),
+      addGenre: jest.fn(),
     } as jest.Mocked<IStreamingTypeRepository>;
 
-    streamingTypeService = new StreamingTypeService(mockRepository);
+    mockGenreRepository = {
+      findById: jest.fn(),
+      findByName: jest.fn(),
+      findAll: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    } as jest.Mocked<IGenreRepository>;
+
+    streamingTypeService = new StreamingTypeService(mockRepository, mockGenreRepository);
   });
 
   describe('getAllStreamingTypes', () => {
@@ -258,6 +271,54 @@ describe('StreamingTypeService', () => {
       await expect(streamingTypeService.deleteStreamingType('type1')).rejects.toThrow(
         new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
       );
+    });
+  });
+
+  describe('addGenreToStreamingType', () => {
+    const mockGenres: IGenreReference[] = [
+      { _id: new Types.ObjectId(), id: 1, name: 'Action' },
+      { _id: new Types.ObjectId(), id: 2, name: 'Comedy' }
+    ];
+
+    it('should add genres to streaming type when valid', async () => {
+      const streamingTypeId = 'validId';
+      const updatedStreamingType = { ...mockStreamingType, supportedGenres: mockGenres };
+      
+      mockRepository.addGenre.mockResolvedValue(updatedStreamingType as IStreamingTypeResponse);
+      mockGenreRepository.findById.mockResolvedValue({ _id: 'genreId', name: 'Action', id: 1 });
+      
+      const result = await streamingTypeService.addGenreToStreamingType(streamingTypeId, mockGenres);
+      
+      expect(result).toEqual(updatedStreamingType);
+      expect(mockRepository.addGenre).toHaveBeenCalledWith(streamingTypeId, mockGenres);
+      expect(mockGenreRepository.findById).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw error when streaming type not found', async () => {
+      mockRepository.addGenre.mockResolvedValue(null);
+      mockGenreRepository.findById.mockResolvedValue({ _id: 'genreId', name: 'Action', id: 1 });
+      
+      await expect(streamingTypeService.addGenreToStreamingType('invalidId', mockGenres))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
+    });
+
+    it('should throw error when genres array is empty', async () => {
+      await expect(streamingTypeService.addGenreToStreamingType('validId', []))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_REQUIRED, 400));
+    });
+
+    it('should throw error when genre has invalid _id', async () => {
+      const invalidGenres = [{ id: 1, name: 'Action' }] as IGenreReference[];
+      
+      await expect(streamingTypeService.addGenreToStreamingType('validId', invalidGenres))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_INVALID_ID, 400));
+    });
+
+    it('should throw error when genre does not exist in database', async () => {
+      mockGenreRepository.findById.mockResolvedValue(null);
+      
+      await expect(streamingTypeService.addGenreToStreamingType('validId', mockGenres))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_NOT_FOUND, 404));
     });
   });
 });

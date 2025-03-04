@@ -1,5 +1,5 @@
 import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from './series/series';
-import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
+import { IGenreReference, IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 import { IUserResponse } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
@@ -40,6 +40,8 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
 
 export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate> {
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
+  addGenre(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null>;
+  findByGenreName(genreName: string, id: string): Promise<IStreamingTypeResponse | null>;
 }
 
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{

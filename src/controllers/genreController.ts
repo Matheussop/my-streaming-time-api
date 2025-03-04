@@ -32,7 +32,7 @@ export class GenreController {
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError(ErrorMessages.GENRE_ID_INVALID, 400);
+      throw new StreamingServiceError(ErrorMessages.GENRE_INTERNAL_ID_INVALID, 400);
     }
 
     const genre = await this.genreService.getGenreById(id);
@@ -99,7 +99,7 @@ export class GenreController {
       path: req.path,
     });
     if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError(ErrorMessages.GENRE_ID_INVALID, 400);
+      throw new StreamingServiceError(ErrorMessages.GENRE_INTERNAL_ID_INVALID, 400);
     }
     
     const genre = await this.genreService.updateGenre(_id,data);
@@ -116,7 +116,7 @@ export class GenreController {
     });
 
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError(ErrorMessages.GENRE_ID_INVALID, 400);
+      throw new StreamingServiceError(ErrorMessages.GENRE_INTERNAL_ID_INVALID, 400);
     }
 
     const genre = await this.genreService.deleteGenre(id);

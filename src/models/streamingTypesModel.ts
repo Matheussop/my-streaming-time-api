@@ -1,14 +1,8 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { ErrorMessages } from '../constants/errorMessages';
-import { IStreamingTypeResponse } from '../interfaces/streamingTypes';
+import { IStreamingTypeDocument, IStreamingTypeModel, IStreamingTypeResponse } from '../interfaces/streamingTypes';
 
-type IStreamingTypeSchema = Document & IStreamingTypeResponse;
-
-export interface IStreamingTypeModel extends Model<IStreamingTypeSchema, {}, {}> {
-  findByName(name: string): Promise<IStreamingTypeResponse | null>;
-}
-
-const streamingTypesSchema = new Schema<IStreamingTypeSchema>(
+const streamingTypesSchema = new Schema<IStreamingTypeDocument, IStreamingTypeModel>(
   {
     name: {
       type: String,
@@ -21,8 +15,18 @@ const streamingTypesSchema = new Schema<IStreamingTypeSchema>(
       default: '',
     },
     supportedGenres: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Genre',
+      id: {
+        type: Number,
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Genre',
+      },
     }],
     isActive: {
       type: Boolean,
@@ -40,10 +44,18 @@ const streamingTypesSchema = new Schema<IStreamingTypeSchema>(
   }
 );
 
+streamingTypesSchema.static('findByName', function(name: string): Promise<IStreamingTypeResponse | null> {
+  return this.findOne({ name: new RegExp(`^${name}$`, 'i') });
+});
+
 streamingTypesSchema.static('findByGenreId', function(genreId: string): Promise<IStreamingTypeResponse[]> {
   return this.find({ supportedGenres: genreId });
 });
 
-const StreamingTypes = mongoose.model<IStreamingTypeSchema, IStreamingTypeModel>('StreamingType', streamingTypesSchema);
+streamingTypesSchema.static('findByGenreName', function(genreName: string, id: string): Promise<IStreamingTypeResponse | null> {
+  return this.findOne({ supportedGenres: { $elemMatch: { name: new RegExp(`^${genreName}$`, 'i') } } });
+});
+
+const StreamingTypes = mongoose.model<IStreamingTypeDocument, IStreamingTypeModel>('StreamingType', streamingTypesSchema);
 
 export default StreamingTypes;
