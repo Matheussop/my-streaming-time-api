@@ -1,4 +1,3 @@
-import { Model } from "mongoose";
 import { IContentCreate, IContentDocument, IContentModel, IContentResponse, IContentUpdate } from "./content";
 
 export interface IMovieCreate extends IContentCreate {

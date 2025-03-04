@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import Genre from './genresModel'
 import { ErrorMessages } from '../constants/errorMessages';
 import { StreamingServiceError } from '../middleware/errorHandler';
