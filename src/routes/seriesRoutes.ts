@@ -38,6 +38,24 @@ seriesRouter.get(
   (req, res, next) => validateRequest(req, res, next, ['title']),
   seriesController.getSeriesByTitle,
 );
+/**
+ * @swagger
+ * /series/title:
+ *   get:
+ *     summary: Get series by title
+ *     tags: [series]
+ *     parameters:
+ *       - in: query
+ *         name: title
+ *         type: string
+ *         description: The title of the series
+ *     responses:
+ *       200:
+ *         description: A list of series object
+ *       404:
+ *         description: series not found
+ */
+seriesRouter.get('/', seriesController.getSeries);
 
 /**
  * @swagger

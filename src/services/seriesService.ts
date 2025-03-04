@@ -121,7 +121,7 @@ export class SeriesService implements ISeriesService {
       .map((externalSerie: any) => ({
         tmdbId: externalSerie.id,
         title: externalSerie.name,
-        releaseDate: externalSerie.first_air_date,
+        releaseDate: this.validateReleaseDate(externalSerie.first_air_date),
         plot: externalSerie.overview,
         rating: externalSerie.vote_average,
         genre: externalSerie.genre_ids,
@@ -160,7 +160,7 @@ export class SeriesService implements ISeriesService {
 
   private validateReleaseDate(date: string): string {
     if (date == '') {
-      return date
+      return 'Without release date'
     }
 
     const releaseDate = new Date(date);
@@ -197,7 +197,13 @@ export class SeriesService implements ISeriesService {
     if (data.url) processed.url = this.validateURL(data.url);
     if (data.cast) processed.cast = this.processCastList(data.cast);
     if (data.plot) processed.plot = data.plot;
-
+    if (data.totalEpisodes) processed.totalEpisodes = data.totalEpisodes;
+    if (data.totalSeasons) processed.totalSeasons = data.totalSeasons;
+    if (data.poster) processed.poster = this.validateURL(data.poster);
+    if (data.status) processed.status = data.status;
+    if (data.tmdbId) processed.tmdbId = data.tmdbId;
+    if (data.seasonsSummary) processed.seasonsSummary = data.seasonsSummary;
+    
     return processed;
   }
 
