@@ -6,8 +6,7 @@ import { IMovieService } from '../interfaces/services';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { MovieRepository } from '../repositories/movieRepository';
 import axios from 'axios';
-import { IMovie } from '../models/movieModel';
-
+import { IMovieResponse } from '../interfaces/movie';
 export class MovieService implements IMovieService {
   constructor(
     private tmdbService: TMDBService,
@@ -36,7 +35,7 @@ export class MovieService implements IMovieService {
 
     const processedData = {
       title: movieData.title.trim(),
-      release_date: this.validateReleaseDate(movieData.release_date),
+      releaseDate: this.validateReleaseDate(movieData.releaseDate),
       plot: movieData.plot,
       cast: this.processCastList(movieData.cast),
       genre: movieData.genre,
@@ -112,7 +111,7 @@ export class MovieService implements IMovieService {
     await this.tmdbService.updateData(this.movieRepository, movieId, tmdbData);
   }
 
-  async fetchAndSaveExternalMovies(): Promise<void | IMovie[]>{
+  async fetchAndSaveExternalMovies(): Promise<void | IMovieResponse[]>{
     // Make the external API request
     const url = 'https://api.themoviedb.org/3/movie/popular?language=pt-BR&page=1';
     const options = {
@@ -132,18 +131,18 @@ export class MovieService implements IMovieService {
       })
     ).then(results => results.filter(movies => movies !== null));
 
-    const newMovies: IMovie[] = externalMoviesMinusInternalMovies
+    const newMovies: IMovieResponse[] = externalMoviesMinusInternalMovies
       .map((externalMovie: any) => ({
         cast: externalMovie.cast,
         title: externalMovie.title,
-        release_date: externalMovie.release_date,
+        releaseDate: externalMovie.release_date,
         plot: externalMovie.overview,
         genre: externalMovie.genre_ids,
         rating: externalMovie.vote_average,
         tmdbId: externalMovie.id,
         poster: `https://image.tmdb.org/t/p/original${externalMovie.backdrop_path}`,
         url: `https://image.tmdb.org/t/p/w500${externalMovie.poster_path}`,
-      } as IMovie));
+      } as IMovieResponse));
     
     if (newMovies.length > 0) {
       return await this.movieRepository.createManyMovies(newMovies);
@@ -201,7 +200,7 @@ export class MovieService implements IMovieService {
 
     if (data.title) processed.title = data.title.trim();
     if (data.rating) processed.rating = this.validateRating(data.rating);
-    if (data.release_date) processed.release_date = this.validateReleaseDate(data.release_date);
+    if (data.releaseDate) processed.releaseDate = this.validateReleaseDate(data.releaseDate);
     if (data.genre) processed.genre = data.genre;
     if (data.url) processed.url = this.validateURL(data.url);
     if (data.cast) processed.cast = this.processCastList(data.cast);

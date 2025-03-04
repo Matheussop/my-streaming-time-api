@@ -1,9 +1,10 @@
 import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from './series/series';
-import { IMovie } from '../models/movieModel';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 import { IUserResponse } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
+import { IMovieResponse } from './movie';
+import { IContentResponse } from './content';
 
 export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   findAll(skip: number, limit: number): Promise<T[]>;
@@ -13,9 +14,14 @@ export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   delete(id: string): Promise<T | null>;
 }
 
-export interface IMovieRepository extends IBaseRepository<IMovie> {
-  findByGenre(genre: string, skip: number, limit: number): Promise<IMovie[] | null>;
-  findByTitle(title: string, skip?: number, limit?: number): Promise<IMovie[] | null>;
+export interface IContentRepository extends IBaseRepository<IContentResponse> {
+  findByGenre(genre: string, skip: number, limit: number): Promise<IContentResponse[] | null>;
+  findByTitle(title: string, skip: number, limit: number): Promise<IContentResponse[] | null>;
+}
+
+export interface IMovieRepository extends IBaseRepository<IMovieResponse> {
+  findByTitle(title: string, skip: number, limit: number): Promise<IMovieResponse[] | null>;
+  findByGenre(genre: string, skip: number, limit: number): Promise<IMovieResponse[] | null>;
 }
 
 export interface IUserRepository extends IBaseRepository<IUserResponse> {

@@ -1,4 +1,3 @@
-import { IMovie } from '../models/movieModel';
 import { IUserResponse, IUserUpdate, IUserCreate } from './user';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { ISeriesCreate, ISeriesResponse } from './series/series';
@@ -28,6 +27,13 @@ export interface IStreamingTypeService {
   createStreamingType(data: IStreamingTypeCreate): Promise<IStreamingTypeCreate>;
   updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse | null>;
   deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null>;
+}
+
+export interface IContentService {
+  getContent(skip: number, limit: number): Promise<any>;
+  getContentById(id: string): Promise<any>;
+  getContentByGenre(genre: string, skip: number, limit: number): Promise<any>;
+  getContentByTitle(title: string, skip?: number, limit?: number): Promise<any>;
 }
 
 export interface IMovieService {
