@@ -157,14 +157,14 @@ The project follows the Repository Pattern with the following structure:
 - plot
 - release_date
 - cast
-number rating
+- rating
 - genre
 - status
 - poster
 - url
-number tmdbId
-number totalSeasons
-number totalEpisodes
+- tmdbId
+- totalSeasons
+- totalEpisodes
 - seasonsSummary
 - createdAt
 - updatedAt
@@ -172,7 +172,7 @@ number totalEpisodes
 ### Season
 - _id
 - seriesId
-number seasonNumber
+- seasonNumber
 - title
 - plot
 - releaseDate
@@ -183,10 +183,10 @@ number seasonNumber
 
 ### Episode
 - _id
-number episodeNumber
+- episodeNumber
 - title
 - plot
-number durationInMinutes
+- durationInMinutes
 - releaseDate
 - poster
   
@@ -221,7 +221,7 @@ number durationInMinutes
 - _id
 - userId
 - watchHistory
-number totalWatchTimeInMinutes
+- totalWatchTimeInMinutes
 - createdAt
 - updatedAt
 
