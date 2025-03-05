@@ -1,3 +1,5 @@
+import { Document, Model } from "mongoose";
+
 export interface WatchHistoryEntry {
   contentId: string;           // Reference to content (movie/series)
   contentType: 'movie' | 'series';
@@ -14,7 +16,7 @@ export interface WatchHistoryEntry {
 export interface IUserStreamingHistoryCreate {
   userId: string;
   watchHistory: WatchHistoryEntry[];
-  totalWatchTimeInMinutes: number;
+  totalWatchTimeInMinutes?: number;
 }
 
 export interface IUserStreamingHistoryUpdate {
@@ -27,4 +29,15 @@ export interface IUserStreamingHistoryResponse extends IUserStreamingHistoryCrea
   _id: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type IUserStreamingHistoryDocument = IUserStreamingHistoryResponse & Document;
+
+export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistoryDocument> {
+  findByUserId(userId: string): Promise<IUserStreamingHistoryResponse | null>;
+  addWatchHistoryEntry(userId: string, entry: Omit<WatchHistoryEntry, 'watchedAt'> & { watchedAt?: Date }): Promise<IUserStreamingHistoryResponse>;
+  removeWatchHistoryEntry(userId: string, contentId: string): Promise<IUserStreamingHistoryResponse | null>;
+  getWatchHistory(userId: string, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
+  hasWatched(userId: string, contentId: string): Promise<boolean>;
+  getWatchProgress(userId: string, contentId: string): Promise<number>;
 }

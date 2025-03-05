@@ -23,8 +23,17 @@ export class UserStreamingHistoryController {
   });
 
   addStreamingToHistory = catchAsync(async (req: Request, res: Response) => {
-    const { userId, contentId, title, durationInMinutes, contentType } = req.body;
-
+    const { userId, 
+      contentId, 
+      title,
+      contentType,
+      episodeId,
+      seasonNumber,
+      episodeNumber,
+      watchedDurationInMinutes,
+      completionPercentage,
+      rating } = req.body;
+    
     logger.info({
       message: 'Adding streaming to history',
       userId,
@@ -44,24 +53,29 @@ export class UserStreamingHistoryController {
 
     validateIdFormat(userId, 'user');
     validateIdFormat(contentId, 'streaming');
-
-    const history = await this.service.addStreamingToHistory(userId, {
+    const data = {
       contentId,
       contentType,
       title,
-      watchedDurationInMinutes: durationInMinutes,
-    });
+      watchedDurationInMinutes,
+      episodeId,
+      seasonNumber,
+      episodeNumber,
+      completionPercentage,
+      rating,
+    }
+    const history = await this.service.addStreamingToHistory(userId, data);
 
     res.status(201).json({ message: 'Streaming entry added successfully', history });
   });
 
   removeStreamingFromHistory = catchAsync(async (req: Request, res: Response) => {
-    const { userId, streamingId } = req.body;
+    const { userId, contentId } = req.body;
 
     validateIdFormat(userId, 'user');
-    validateIdFormat(streamingId, 'streaming');
+    validateIdFormat(contentId, 'contentId');
 
-    const history = await this.service.removeStreamingFromHistory(userId, streamingId);
+    const history = await this.service.removeStreamingFromHistory(userId, contentId);
 
     res.status(200).json({ message: 'Streaming entry removed successfully', history });
   });

@@ -1,16 +1,11 @@
-import { Schema, model, Document, Model } from 'mongoose';
-import { IUserStreamingHistoryCreate, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
+import { Schema, model } from 'mongoose';
+import { IUserStreamingHistoryCreate, IUserStreamingHistoryDocument, IUserStreamingHistoryModel, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import User from './userModel';
 import { ErrorMessages } from '../constants/errorMessages';
+import console from 'console';
 
-export type IUserStreamingHistorySchema = Document & IUserStreamingHistoryResponse;
-
-export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistorySchema, {}, {}> {
-  addWatchHistoryEntry(userId: string,newWatchEntry: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
-}
-
-const userStreamingHistorySchema = new Schema<IUserStreamingHistorySchema>(
-  {
+const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument>(
+  { 
     userId: {
       type: String,
       required: [true, ErrorMessages.USER_ID_REQUIRED],
@@ -108,7 +103,7 @@ userStreamingHistorySchema.post('save', async function() {
 // Método estático para adicionar uma entrada ao histórico
 userStreamingHistorySchema.static('addWatchHistoryEntry', async function(
   userId: string,
-  entry: Omit<IUserStreamingHistorySchema, 'watchedAt'> & { watchedAt?: Date }
+  entry: Omit<WatchHistoryEntry, 'watchedAt'> & { watchedAt?: Date }
 ): Promise<IUserStreamingHistoryResponse> {
   const completeEntry = {
     ...entry,
@@ -124,6 +119,9 @@ userStreamingHistorySchema.static('addWatchHistoryEntry', async function(
           $sort: { watchedAt: -1 },
           $slice: -1000 
         }
+      },
+      $inc: {
+        totalWatchTimeInMinutes: completeEntry.watchedDurationInMinutes
       }
     },
     { 
@@ -213,15 +211,35 @@ userStreamingHistorySchema.static('getWatchProgress', async function(
   return { completionPercentage, stoppedAt };
 });
 
-// Hook to automatically update the user's total streaming time
-userStreamingHistorySchema.pre('save', function (next) {
-  this.totalWatchTimeInMinutes = this.watchHistory.reduce(
-    (total, item) => total + item.watchedDurationInMinutes, 
-    0
+userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
+  userId: string,
+  contentId: string
+): Promise<IUserStreamingHistoryResponse | null> {
+  const userHistory = await this.findOne(
+    { 
+      userId, 
+      'watchHistory.contentId': contentId 
+    },
+    { 'watchHistory.$': 1 }
   );
-  next();
-});
 
+  if (!userHistory || !userHistory.watchHistory || userHistory.watchHistory.length === 0) {
+    return null;
+  }
+  const durationToSubtract = userHistory.watchHistory[0].watchedDurationInMinutes;
+
+  const result = await this.findOneAndUpdate(
+    { userId },
+    { $pull: { watchHistory: { contentId } }, 
+      $inc: {
+        totalWatchTimeInMinutes: -durationToSubtract
+      }
+    },
+    { new: true }
+  );
+
+  return result;
+});
 
 userStreamingHistorySchema.index({ userId: 1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentId': 1 });
@@ -229,6 +247,6 @@ userStreamingHistorySchema.index({ 'watchHistory.watchedAt': -1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentType': 1 });
 
 
-const UserStreamingHistory = model<IUserStreamingHistorySchema, IUserStreamingHistoryModel>('UserStreamingHistory', userStreamingHistorySchema);
+const UserStreamingHistory = model<IUserStreamingHistoryDocument, IUserStreamingHistoryModel>('UserStreamingHistory', userStreamingHistorySchema);
 
 export default UserStreamingHistory;

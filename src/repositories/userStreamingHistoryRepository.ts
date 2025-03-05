@@ -20,7 +20,7 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return history.save();
   }
 
-  async addToHistory(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
+  async addWatchHistoryEntry(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
     let history = await this.findByUserId(userId);
 
     if (!history) {
@@ -35,6 +35,18 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.addWatchHistoryEntry(userId, streamingData);
   }
 
+  async getWatchHistory(userId: string, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null> {
+    return UserStreamingHistory.getWatchHistory(userId, skip, limit);
+  }
+
+  async hasWatched(userId: string, contentId: string): Promise<boolean> {
+    return UserStreamingHistory.hasWatched(userId, contentId);
+  }
+
+  async getWatchProgress(userId: string, contentId: string): Promise<number> {
+    return UserStreamingHistory.getWatchProgress(userId, contentId);
+  }
+
   async update(id: string, data: Partial<IUserStreamingHistoryResponse>): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
@@ -43,15 +55,10 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.findByIdAndDelete(id);
   }
 
-  async removeFromHistory(
+  async removeWatchHistoryEntry(
     userId: string,
-    streamingId: string,
-    durationToSubtract: number,
+    contentId: string,
   ): Promise<IUserStreamingHistoryResponse | null> {
-    return UserStreamingHistory.findOneAndUpdate(
-      { userId },
-      { $pull: { watchHistory: { streamingId } }, $inc: { totalWatchTimeInMinutes: -durationToSubtract } },
-      { new: true },
-    );
+    return UserStreamingHistory.removeWatchHistoryEntry(userId, contentId);
   }
 }

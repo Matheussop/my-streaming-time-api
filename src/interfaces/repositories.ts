@@ -30,11 +30,13 @@ export interface IUserRepository extends IBaseRepository<IUserResponse> {
 
 export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserStreamingHistoryResponse> {
   findByUserId(userId: string): Promise<IUserStreamingHistoryResponse | null>;
-  addToHistory(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
-  removeFromHistory(
+  addWatchHistoryEntry(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
+  getWatchHistory(userId: string, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
+  hasWatched(userId: string, contentId: string): Promise<boolean>;
+  getWatchProgress(userId: string, contentId: string): Promise<number>;
+  removeWatchHistoryEntry(
     userId: string,
-    streamingId: string,
-    durationToSubtract: number,
+    contentId: string,
   ): Promise<IUserStreamingHistoryResponse | null>;
 }
 

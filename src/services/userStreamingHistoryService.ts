@@ -26,60 +26,58 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   }
 
   async addStreamingToHistory(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
-    // this.validateStreamingData(streamingData);
+    this.validateStreamingData(streamingData);
 
-    // const streaming = await this.movieRepository.findById(streamingData.streamingId) || await this.seriesRepository.findById(streamingData.streamingId);
-    // if (!streaming) {
-    //   logger.warn({
-    //     message: 'Streaming not found',
-    //     streamingId: streamingData.streamingId,
-    //     userId,
-    //   });
-    //   throw new StreamingServiceError('Streaming not found', 404);
-    // }
+    const streaming = await this.movieRepository.findById(streamingData.contentId) || await this.seriesRepository.findById(streamingData.contentId);
+    if (!streaming) {
+      logger.warn({
+        message: 'Streaming not found',
+        contentId: streamingData.contentId,
+        userId,
+      });
+      throw new StreamingServiceError('Streaming not found', 404);
+    }
 
-    // if (streaming.title !== streamingData.title) {
-    //   logger.warn({
-    //     message: 'Streaming title mismatch',
-    //     providedTitle: streamingData.title,
-    //     actualTitle: streaming.title,
-    //     streamingId: streamingData.streamingId,
-    //   });
-    //   throw new StreamingServiceError('Invalid streaming title', 400);
-    // }
+    if (streaming.title !== streamingData.title) {
+      logger.warn({
+        message: 'Streaming title mismatch',
+        providedTitle: streamingData.title,
+        actualTitle: streaming.title,
+        contentId: streamingData.contentId,
+      });
+      throw new StreamingServiceError('Invalid streaming title', 400);
+    }
 
-    // const history = await this.repository.findByUserId(userId);
+    const history = await this.repository.findByUserId(userId);
 
-    // if (!history) {
-    //   return this.repository.create({ userId, watchHistory: [streamingData] });
-    // }
+    if (!history) {
+      return this.repository.create({ userId, watchHistory: [streamingData] });
+    }
 
-    // const streamingInHistory = history.watchHistory.find((entry) => entry.streamingId === streamingData.streamingId);
-    // if (streamingInHistory) {
-    //   throw new StreamingServiceError('Streaming already in history', 400);
-    // }
+    const streamingInHistory = history.watchHistory.find((entry) => entry.contentId === streamingData.contentId);
+    if (streamingInHistory) {
+      throw new StreamingServiceError('Streaming already in history', 400);
+    }
 
-    return this.repository.addToHistory(userId, streamingData);
+    return this.repository.addWatchHistoryEntry(userId, streamingData);
   }
 
-  async removeStreamingFromHistory(userId: string, streamingId: string): Promise<IUserStreamingHistoryResponse | null> {
+  async removeStreamingFromHistory(userId: string, contentId: string): Promise<IUserStreamingHistoryResponse | null> {
     // TODO: Check if user exists
 
-    // const history = await this.getUserHistory(userId);
+    const history = await this.getUserHistory(userId);
 
-    // const streaming = history.watchHistory.find((entry) => entry.streamingId === streamingId);
-    // if (!streaming) {
-    //   logger.warn({
-    //     message: 'Streaming not found in history',
-    //     streamingId,
-    //     userId,
-    //   });
-    //   throw new StreamingServiceError('Streaming not found in history', 404);
-    // }
-    // const durationToSubtract = streaming.durationInMinutes || 0;
+    const streaming = history.watchHistory.find((entry) => entry.contentId === contentId);
+    if (!streaming) {
+      logger.warn({
+        message: 'Streaming not found in history',
+        contentId,
+        userId,
+      });
+      throw new StreamingServiceError('Streaming not found in history', 404);
+    }
 
-    // const updatedHistory = await this.repository.removeFromHistory(userId, streamingId, durationToSubtract);
-    const updatedHistory = null;
+    const updatedHistory = await this.repository.removeWatchHistoryEntry(userId, contentId);
     
     if (!updatedHistory) {
       throw new StreamingServiceError('Failed to update history', 404);
@@ -89,25 +87,24 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
   async getTotalWatchTime(userId: string): Promise<number> {
     const history = await this.getUserHistory(userId);
-    return history.totalWatchTimeInMinutes;
+    return history.totalWatchTimeInMinutes || 0;
   }
 
-  async getByUserIdAndStreamingId(userId: string, streamingId: string): Promise<boolean> {
+  async getByUserIdAndStreamingId(userId: string, contentId: string): Promise<boolean> {
     const history = await this.getUserHistory(userId);
-    return false;
-  //   return history.watchHistory.some((entry) => entry.streamingId === streamingId);
+    return history.watchHistory.some((entry) => entry.contentId === contentId);
   }
 
   // TODO: Verificar a necessidade de ficar no service ou no controller
-  // private validateStreamingData(data: WatchHistoryEntry): void {
-  //   if (!data.streamingId) {
-  //     throw new StreamingServiceError('Streaming ID is required', 400);
-  //   }
-  //   if (!data.title) {
-  //     throw new StreamingServiceError('Title is required', 400);
-  //   }
-  //   if (typeof data.durationInMinutes !== 'number' || data.durationInMinutes < 0) {
-  //     throw new StreamingServiceError('Invalid duration', 400);
-  //   }
-  // }
+  private validateStreamingData(data: WatchHistoryEntry): void {
+    if (!data.contentId) {
+      throw new StreamingServiceError('Streaming ID is required', 400);
+    }
+    if (!data.title) {
+      throw new StreamingServiceError('Title is required', 400);
+    }
+    if (typeof data.watchedDurationInMinutes !== 'number' || data.watchedDurationInMinutes < 0) {
+      throw new StreamingServiceError('Invalid duration', 400);
+    }
+  }
 }

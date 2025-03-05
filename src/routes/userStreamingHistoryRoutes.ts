@@ -79,13 +79,13 @@ router.get('/:userId', controller.getUserStreamingHistory);
  */
 router.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId', 'title', 'durationInMinutes', 'streamingType']),
+  (req, res, next) => validateRequest(req, res, next, ['userId', 'contentId', 'title', 'watchedDurationInMinutes', 'contentType']),
   controller.addStreamingToHistory,
 );
 
 /**
  * @swagger
- * /streaming-history:
+ * /streaming-history/remove-entry:
  *   delete:
  *     summary: Remove streaming entry from user's history
  *     tags: [Streaming History]
@@ -97,7 +97,7 @@ router.post(
  *             type: object
  *             required:
  *               - userId
- *               - streamingId
+ *               - contentId
  *     responses:
  *       200:
  *         description: Streaming entry removed successfully
@@ -108,9 +108,9 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.put(
-  '/',
-  (req, res, next) => validateRequest(req, res, next, ['userId', 'streamingId']),
+router.delete(
+  '/remove-entry',
+  (req, res, next) => validateRequest(req, res, next, ['userId', 'contentId']),
   controller.removeStreamingFromHistory,
 );
 
