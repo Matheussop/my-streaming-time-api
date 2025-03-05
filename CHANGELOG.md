@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional TMDB features
 
 ### Added
+
 - Genre Management: Comprehensive genre management for streaming types
   - Support for adding and removing genres from streaming types
   - Robust genre validation with detailed error checking
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Genre schema with strict validation rules
   - Custom error formatting for Zod validation errors
   - Enhanced error handling middleware to support Zod validation
+- Documentation: An ARCHITECTURE.md file was created to registry the decisions about the project
 - Documentation: Expanded README with comprehensive model and feature descriptions
   - Detailed model schemas for all entities
   - Enhanced descriptions of existing features

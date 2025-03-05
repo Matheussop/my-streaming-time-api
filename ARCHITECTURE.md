@@ -1,3 +1,44 @@
+# Requisitos Não-Funcionais
+
+Esta seção descreve como a arquitetura do sistema atende aos principais requisitos não-funcionais.
+
+## Escalabilidade
+- **Arquitetura em camadas**: Permite escalar componentes independentemente
+- **MongoDB**: Suporta escalabilidade horizontal através de sharding
+- **Padrão Repository**: Facilita a migração para uma arquitetura de microserviços no futuro
+- **Docker**: Permite implantação em clusters como Kubernetes para escalabilidade
+
+## Desempenho
+- **Throttling**: Controla o uso de recursos para manter o desempenho sob carga
+- **Índices no MongoDB**: Otimizados para consultas frequentes
+- **Processamento assíncrono**: Utilizado para operações que não precisam de resposta imediata
+
+## Segurança
+- **Validação com Zod**: Previne injeção de dados maliciosos
+- **Middleware de autenticação**: Controla acesso a recursos protegidos
+- **Hashing de senhas**: Implementado com bcrypt
+- **Sanitização de entradas**: Aplicada em todos os endpoints
+- **Throttling**: Protege contra ataques de força bruta e DoS
+
+## Manutenibilidade
+- **TypeScript**: Fornece tipagem estática para detecção precoce de erros
+- **Arquitetura em camadas**: Separa responsabilidades e facilita manutenção
+- **Testes automatizados**: Garantem que mudanças não quebrem funcionalidades existentes
+- **Documentação com Swagger**: Mantém a documentação da API atualizada
+- **ADRs**: Documentam decisões arquiteturais para referência futura
+
+## Disponibilidade
+- **Tratamento de erros robusto**: Previne falhas catastróficas
+- **Logging abrangente**: Facilita a identificação e resolução de problemas
+- **Containerização**: Permite recuperação rápida em caso de falhas
+- **Estratégia de fallback**: Implementada para lidar com indisponibilidade da API TMDB
+
+## Usabilidade da API
+- **Documentação com Swagger**: Facilita o entendimento e uso da API
+- **Respostas de erro padronizadas**: Melhoram a experiência do desenvolvedor
+- **Consistência nos endpoints**: Seguem padrões RESTful
+- **Versionamento da API**: Permite evolução sem quebrar compatibilidade
+
 # ADR - Architecture Decision Record
 ##  ADR 001: Escolha do MongoDB como Banco de Dados
 
