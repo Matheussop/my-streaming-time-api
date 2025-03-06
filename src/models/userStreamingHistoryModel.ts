@@ -211,6 +211,8 @@ userStreamingHistorySchema.static('getWatchProgress', async function(
   return { completionPercentage, stoppedAt };
 });
 
+
+//TODO remove the logic to retrieve durationToSubtract from the model and move it to the service
 userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
   userId: string,
   contentId: string

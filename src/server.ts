@@ -13,7 +13,7 @@ import seriesRoutes from './routes/seriesRoutes';
 import genreRoutes from './routes/genreRoute';
 import commonMediaRoutes from './routes/commonMediaRoutes';
 import throttlingMiddleware, { setLastRequestTime, getLastRequestTime } from './middleware/throttlingMiddleware';
-
+import seasonRoutes from './routes/seasonRoutes';
 dotenv.config();
 
 const app = express();
@@ -39,6 +39,7 @@ const startServer = async () => {
     app.use('/commonMedia', commonMediaRoutes)
     app.use('/movies', movieRoutes);
     app.use('/series', seriesRoutes);
+    app.use('/seasons', seasonRoutes);
     app.use('/genre', genreRoutes);
     app.use('/streamingTypes', streamingTypeRoutes);
     app.use('/user', userRoutes);

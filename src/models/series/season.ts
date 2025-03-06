@@ -1,8 +1,7 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
-import { IEpisode, ISeasonResponse } from '../../interfaces/series/season';
+import mongoose, { Document, Schema } from 'mongoose';
+import { IEpisode, ISeasonDocument, ISeasonModel, ISeasonResponse } from '../../interfaces/series/season';
 import { ErrorMessages } from '../../constants/errorMessages';
 
-type ISeasonSchema = Document & ISeasonResponse;
 type IEpisodeSchema = Document & IEpisode;
 
 const episodeSchema = new Schema<IEpisodeSchema>({
@@ -36,7 +35,7 @@ const episodeSchema = new Schema<IEpisodeSchema>({
   },
 });
 
-const seasonSchema = new Schema<ISeasonSchema>(
+const seasonSchema = new Schema<ISeasonDocument>(
   {
     seriesId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -77,6 +76,10 @@ const seasonSchema = new Schema<ISeasonSchema>(
 
 seasonSchema.index({ seriesId: 1, seasonNumber: 1 }, { unique: true });
 
+seasonSchema.static('findBySeriesId', function(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null> {
+  return this.find({ seriesId }).skip(skip).limit(limit);
+});
+
 // Hook to update the season summary in the series when a season is saved
 seasonSchema.post('save', async function() {
   const Series = mongoose.model('Series');
@@ -88,7 +91,7 @@ seasonSchema.post('save', async function() {
         [`seasonsSummary.${this.seasonNumber - 1}`]: {
           seasonNumber: this.seasonNumber,
           title: this.title,
-          episodeCount: this.episodes.length,
+          episodeCount: this.episodes?.length || 0,
           releaseDate: this.releaseDate,
         }
       }
@@ -110,6 +113,6 @@ seasonSchema.post('save', async function() {
   );
 });
 
-const Season = mongoose.model<ISeasonSchema>('Season', seasonSchema);
+const Season = mongoose.model<ISeasonDocument, ISeasonModel>('Season', seasonSchema);
 
 export default Season;

@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Model, Types } from "mongoose";
 
 export interface IEpisode {
   _id: string;
@@ -16,8 +16,8 @@ export interface ISeasonCreate {
   title: string;
   plot: string;
   releaseDate: string;
-  poster: string;
-  episodes: IEpisode[];
+  poster?: string;
+  episodes?: IEpisode[];
 }
 
 export interface ISeasonUpdate {
@@ -34,4 +34,10 @@ export interface ISeasonResponse extends ISeasonCreate {
   _id: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type ISeasonDocument = Document & ISeasonResponse;
+
+export interface ISeasonModel extends Model<ISeasonDocument> {
+  findBySeriesId(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
 }

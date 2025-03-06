@@ -1,0 +1,120 @@
+import { Request, Response } from "express";
+import { SeasonService } from "../services/seasonService";
+import { catchAsync } from "../util/catchAsync";
+import logger from "../config/logger";
+import { StreamingServiceError } from "../middleware/errorHandler";
+import { ErrorMessages } from "../constants/errorMessages";
+import { Types } from "mongoose";
+export class SeasonController {
+  constructor(private seasonService: SeasonService) {}
+
+  getSeasons = catchAsync(async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    logger.info({
+      message: 'Fetching seasons',
+      page,
+      limit,
+      skip,
+      method: req.method,
+      path: req.path,
+    });
+    
+    if (Number(limit) > 100) {
+      throw new StreamingServiceError(ErrorMessages.SEASON_LIMIT_EXCEEDED, 400);
+    }
+
+    const seasons = await this.seasonService.getSeasons(skip, limit);
+    res.status(200).json(seasons);
+  });
+  
+  
+  getSeasonsBySeriesId = catchAsync(async (req: Request, res: Response) => {
+    const { seriesId, page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    logger.info({
+      message: 'Fetching seasons by series id',
+      seriesId,
+      page,
+      limit,
+      skip,
+      method: req.method,
+      path: req.path,
+    });
+
+    if (Number(limit) > 100) {
+      throw new StreamingServiceError(ErrorMessages.SEASON_LIMIT_EXCEEDED, 400);
+    }
+
+    const seasons = await this.seasonService.getSeasonsBySeriesId(seriesId, skip, limit);
+    res.status(200).json(seasons);
+  });
+
+  getSeasonById = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    logger.info({
+      message: 'Fetching season by id',
+      id,
+      method: req.method,
+      path: req.path,
+    });
+
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new StreamingServiceError(ErrorMessages.SEASON_ID_INVALID, 400);
+    }
+
+    const season = await this.seasonService.getSeasonById(id);
+    res.status(200).json(season);
+  });
+
+  createSeason = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Creating season',
+      seasonData: req.body,
+      method: req.method,
+      path: req.path,
+    });
+
+    const season = await this.seasonService.createSeason(req.body);
+    res.status(201).json(season);
+  });
+
+  updateSeason = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    logger.info({
+      message: 'Updating season',
+      id,
+      method: req.method,
+      path: req.path,
+    });
+
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new StreamingServiceError(ErrorMessages.SEASON_ID_INVALID, 400);
+    }
+
+    const season = await this.seasonService.updateSeason(id, req.body);
+    res.status(200).json(season);
+  });
+
+  deleteSeason = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    logger.info({
+      message: 'Deleting season',
+      id,
+      method: req.method,
+      path: req.path,
+    }); 
+
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new StreamingServiceError(ErrorMessages.SEASON_ID_INVALID, 400);
+    }
+
+    const season = await this.seasonService.deleteSeason(id);
+    res.status(200).json(season);
+  });
+}

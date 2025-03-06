@@ -24,6 +24,9 @@ export const ErrorMessages = {
   // Season erros
   SEASON_NUMBER_REQUIRED: "Season number is required",
   SEASON_TITLE_REQUIRED: "Season title is required",
+  SEASON_ID_REQUIRED: "Season id is required",
+  SEASON_ID_INVALID: "Season id is invalid",
+  SEASON_LIMIT_EXCEEDED: "Limit cannot exceed 100 items",
   SERIE_ID_REQUIRED: "Serie id is required",
   // Series erros
   SERIE_NOT_FOUND: 'Serie not found',

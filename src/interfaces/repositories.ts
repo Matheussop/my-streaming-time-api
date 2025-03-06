@@ -5,6 +5,8 @@ import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamin
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 import { IMovieResponse } from './movie';
 import { IContentResponse } from './content';
+import { ISeasonCreate, ISeasonUpdate } from './series/season';
+import { ISeasonResponse } from './series/season';
 
 export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   findAll(skip: number, limit: number): Promise<T[]>;
@@ -50,6 +52,10 @@ export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{
   findByTitle(title: string, skip?: number, limit?: number): Promise<ISeriesResponse[] | null>;
   findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
+}
+
+export interface ISeasonRepository extends IBaseRepository<ISeasonResponse, ISeasonCreate, ISeasonUpdate>{
+  findBySeriesId(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
 }
 
 export interface IGenreRepository extends IBaseRepository<IGenreResponse, IGenreCreate, IGenreUpdate>{

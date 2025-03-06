@@ -4,6 +4,7 @@ import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from './streamingTypes';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 import { IMovieResponse } from './movie';
+import { ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './series/season';
 
 export interface IUserService {
   registerUser(user: IUserCreate): Promise<IUserResponse>;
@@ -53,6 +54,15 @@ export interface ISeriesService{
   getSeriesByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
   createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean): Promise<ISeriesResponse | ISeriesResponse[]>;
 } 
+
+export interface ISeasonService {
+  getSeasons(skip: number, limit: number): Promise<ISeasonResponse[] | null>;
+  getSeasonsBySeriesId(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
+  getSeasonById(id: string): Promise<ISeasonResponse | null>;
+  createSeason(season: ISeasonCreate): Promise<ISeasonResponse>;
+  updateSeason(id: string, season: ISeasonUpdate): Promise<ISeasonResponse | null>;
+  deleteSeason(id: string): Promise<ISeasonResponse | null>;
+}
 
 export interface IGenreService {
   getGenreById(id: string): Promise<IGenreResponse | null>;
