@@ -116,7 +116,7 @@ seriesRouter.get('/:id', seriesController.getSerieById);
  */
 seriesRouter.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'numberEpisodes', 'numberSeasons' , 'releaseDate', 'genre']),
+  (req, res, next) => validateRequest(req, res, next, ['title', 'rating', 'url', 'poster', 'totalEpisodes', 'totalSeasons' , 'releaseDate', 'genre']),
   seriesController.createSeries,
 );
 

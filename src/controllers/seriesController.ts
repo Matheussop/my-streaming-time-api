@@ -7,6 +7,7 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { ErrorMessages } from '../constants/errorMessages';
 import { Messages } from "../constants/messages";
+import { seriesSchema } from "../validators";
 
 export class SeriesController {
   skipCheckTitles: boolean = true;
@@ -245,18 +246,7 @@ export class SeriesController {
       path: req.path,
     });
 
-    const seriesObj: ISeriesCreate = {
-      title: req.body.title,
-      releaseDate: req.body.releaseDate,
-      plot: req.body.plot,
-      cast: req.body.cast,
-      genre: req.body.genre,
-      totalEpisodes: req.body.totalEpisodes,
-      totalSeasons: req.body.totalSeasons,
-      rating: parseFloat(req.body.rating),
-      poster: req.body.poster,
-      url: req.body.url,
-    };
+    const seriesObj: ISeriesCreate = seriesSchema.parse(req.body);
 
     const newSerie = await this.seriesService.createSerie(seriesObj);
     res.status(201).json(newSerie);

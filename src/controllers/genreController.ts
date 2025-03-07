@@ -4,7 +4,7 @@ import { GenreService } from "../services/genreService";
 import { catchAsync } from "../util/catchAsync";
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { ErrorMessages } from '../constants/errorMessages';
-import { createManyGenreSchema } from '../validators';
+import { createManyGenreSchema, genreItemSchema } from '../validators';
 
 export class GenreController {
   constructor(private genreService: GenreService) {}
@@ -70,7 +70,8 @@ export class GenreController {
     });
 
     const data = { id, name, poster }
-    const genre = await this.genreService.createGenre(data);
+    const validatedData = genreItemSchema.parse(data);
+    const genre = await this.genreService.createGenre(validatedData);
     res.status(201).json(genre);
   });
 
