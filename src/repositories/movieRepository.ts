@@ -2,13 +2,14 @@ import { IMovieResponse } from '../interfaces/movie';
 import { IMovieRepository } from '../interfaces/repositories';
 import Movie from '../models/movieModel';
 import { IContentModel } from '../interfaces/content';
+import { Types } from 'mongoose';
 
 export class MovieRepository implements IMovieRepository {
   async findAll(skip: number, limit: number): Promise<IMovieResponse[]> {
     return Movie.find().sort({ releaseDate: -1 }).skip(skip).limit(limit) as unknown as IMovieResponse[];
   }
 
-  async findById(id: string): Promise<IMovieResponse | null> {
+  async findById(id: string | Types.ObjectId): Promise<IMovieResponse | null> {
     return Movie.findById(id) as unknown as IMovieResponse | null;
   }
 
@@ -20,11 +21,11 @@ export class MovieRepository implements IMovieRepository {
     return Movie.insertMany(data) as unknown as IMovieResponse[];
   }
 
-  async update(id: string, data: any): Promise<IMovieResponse | null> {
+  async update(id: string | Types.ObjectId, data: any): Promise<IMovieResponse | null> {
     return Movie.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true }) as unknown as IMovieResponse | null;
   }
 
-  async delete(id: string): Promise<IMovieResponse | null> {
+  async delete(id: string | Types.ObjectId): Promise<IMovieResponse | null> {
     return Movie.findByIdAndDelete(id) as unknown as IMovieResponse | null;
   }
 

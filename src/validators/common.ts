@@ -23,6 +23,7 @@ export const objectIdSchema = z.union([
   })
 ], { errorMap: () => ({ message: "Invalid ID: must be a valid ObjectId" }) });
 
+export type ObjectIdSchemaType = z.infer<typeof objectIdSchema>;
 /**
  * Converts the value to ObjectId, regardless of whether it is a string or already an ObjectId
  */
@@ -40,6 +41,8 @@ export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10)
 });
+
+export type PaginationSchemaType = z.infer<typeof paginationSchema>;
 
 /**
  * Schema to validate dates in ISO format

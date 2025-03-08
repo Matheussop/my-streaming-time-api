@@ -1,8 +1,7 @@
-import { addAbortSignal } from "stream"
-
 import axios from 'axios';
 import logger from '../config/logger';
 import { StreamingServiceError } from '../middleware/errorHandler';
+import { Types } from "mongoose";
 
 export class TMDBService {
 
@@ -31,7 +30,7 @@ export class TMDBService {
     }
   }
 
-  async updateData(repository: any, id: string, tmdbData: any): Promise<void> {
+  async updateData(repository: any, id: string | Types.ObjectId, tmdbData: any): Promise<void> {
     const updatedData = {
       durationTime: tmdbData.runtime,
       status: tmdbData.status,

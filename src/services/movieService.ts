@@ -7,6 +7,7 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import { MovieRepository } from '../repositories/movieRepository';
 import axios from 'axios';
 import { IMovieResponse } from '../interfaces/movie';
+import { Types } from 'mongoose';
 export class MovieService implements IMovieService {
   constructor(
     private tmdbService: TMDBService,
@@ -17,7 +18,7 @@ export class MovieService implements IMovieService {
     return this.movieRepository.findAll(skip, limit);
   }
 
-  async getMovieById(id: string) {
+  async getMovieById(id: string | Types.ObjectId) {
     const movie = await this.movieRepository.findById(id);
     if (!movie) {
       logger.warn({
@@ -46,7 +47,7 @@ export class MovieService implements IMovieService {
     return this.movieRepository.create(processedData);
   }
 
-  async updateMovie(id: string, updateData: any) {
+  async updateMovie(id: string | Types.ObjectId, updateData: any) {
     const existingMovie = await this.movieRepository.findById(id);
 
     if (!existingMovie) {
@@ -67,7 +68,7 @@ export class MovieService implements IMovieService {
     return this.movieRepository.update(id, processedUpdate);
   }
 
-  async deleteMovie(id: string) {
+  async deleteMovie(id: string | Types.ObjectId) {
     const movie = await this.movieRepository.delete(id);
     if (!movie) {
       logger.warn({
@@ -105,7 +106,7 @@ export class MovieService implements IMovieService {
     return movies;
   }
 
-  async updateMovieFromTMDB(movieId: string, tmdbId: string): Promise<void> {
+  async updateMovieFromTMDB(movieId: string | Types.ObjectId, tmdbId: string): Promise<void> {
     const tmdbData = await this.tmdbService.fetchDataFromTMDB(tmdbId, 'movie');
     await this.tmdbService.updateData(this.movieRepository, movieId, tmdbData);
   }

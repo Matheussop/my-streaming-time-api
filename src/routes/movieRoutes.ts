@@ -1,11 +1,14 @@
 import { Router } from 'express';
 
 import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '../controllers/movieTMDBController';
-import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieController } from '../controllers/movieController';
 import { MovieService } from '../services/movieService';
 import { TMDBService } from '../services/tmdbService';
+import { validate } from '../middleware/validationMiddleware';
+import { movieByGenreParamSchema, movieByTitleParamSchema, movieCreateSchema, movieUpdateFromTMDBSchema } from '../validators/movieSchema';
+import { paginationSchema } from '../validators/common';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 
 const movieRouter: Router = Router();
 const movieRepository = new MovieRepository();
@@ -39,7 +42,7 @@ const movieController = new MovieController(movieService);
  */
 movieRouter.get(
   '/title',
-  (req, res, next) => validateRequest(req, res, next, ['title']),
+  validate(movieByTitleParamSchema),
   movieController.getMoviesByTitle,
 );
 
@@ -79,7 +82,7 @@ movieRouter.get(
  */
 movieRouter.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'cast', 'rating', 'url', 'poster', 'releaseDate']),
+  validate(movieCreateSchema),
   movieController.createMovie,
 );
 
@@ -104,7 +107,7 @@ movieRouter.post(
  *       200:
  *         description: A list of movies
  */
-movieRouter.get('/', movieController.getMovies);
+movieRouter.get('/', validate(paginationSchema), movieController.getMovies);
 
 /**
  * @swagger
@@ -116,7 +119,7 @@ movieRouter.get('/', movieController.getMovies);
  *       200:
  *         description: A list of movies
  */
-movieRouter.get('/external', getExternalMovies);
+movieRouter.get('/external', validate(paginationSchema), getExternalMovies);
 
 /**
  * @swagger
@@ -128,7 +131,7 @@ movieRouter.get('/external', getExternalMovies);
  *       201:
  *         description: External movies fetched and saved successfully
  */
-movieRouter.post('/saveExternalMovies', fetchAndSaveExternalMovies);
+movieRouter.post('/saveExternalMovies', validate(paginationSchema), fetchAndSaveExternalMovies);
 
 /**
  * @swagger
@@ -155,7 +158,7 @@ movieRouter.post('/saveExternalMovies', fetchAndSaveExternalMovies);
  *       400:
  *         description: Invalid input
  */
-movieRouter.post('/findOrAddMovie', (req, res, next) => validateRequest(req, res, next, ['title']), findOrAddMovie);
+movieRouter.post('/findOrAddMovie', validate(movieByTitleParamSchema), findOrAddMovie);
 
 /**
  * @swagger
@@ -177,7 +180,7 @@ movieRouter.post('/findOrAddMovie', (req, res, next) => validateRequest(req, res
  */
 movieRouter.post(
   '/byGenre',
-  (req, res, next) => validateRequest(req, res, next, ['genre']),
+  validate(movieByGenreParamSchema),
   movieController.getMoviesByGenre,
 );
 
@@ -199,7 +202,7 @@ movieRouter.post(
  *       404:
  *         description: Movie not found
  */
-movieRouter.get('/:id', movieController.getMovieById);
+movieRouter.get('/:id', validateObjectId('params'), movieController.getMovieById);
 
 /**
  * @swagger
@@ -241,7 +244,7 @@ movieRouter.get('/:id', movieController.getMovieById);
  *       200:
  *         description: Movie updated successfully
  */
-movieRouter.put('/:id', movieController.updateMovie);
+movieRouter.put('/:id', validateObjectId('params'), movieController.updateMovie);
 
 /**
  * @swagger
@@ -264,7 +267,7 @@ movieRouter.put('/:id', movieController.updateMovie);
  *       200:
  *         description: Movie updated successfully
  */
-movieRouter.put('/:id/:tmdbId', movieController.updateMovieFromTMDB);
+movieRouter.put('/:id/:tmdbId', validate(movieUpdateFromTMDBSchema), movieController.updateMovieFromTMDB);
 
 /**
  * @swagger
@@ -282,6 +285,6 @@ movieRouter.put('/:id/:tmdbId', movieController.updateMovieFromTMDB);
  *       200:
  *         description: Movie deleted successfully
  */
-movieRouter.delete('/:id', movieController.deleteMovie);
+movieRouter.delete('/:id', validateObjectId('params'), movieController.deleteMovie);
 
 export default movieRouter;
