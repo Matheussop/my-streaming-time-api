@@ -1,6 +1,5 @@
 import { Router } from 'express';
 
-import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import { findOrAddMovie, fetchAndSaveExternalMovies, getExternalMovies } from '../controllers/movieTMDBController';
 import { validateRequest } from '../util/validate';
 import { MovieRepository } from '../repositories/movieRepository';
@@ -10,9 +9,8 @@ import { TMDBService } from '../services/tmdbService';
 
 const movieRouter: Router = Router();
 const movieRepository = new MovieRepository();
-const streamingTypeRepository = new StreamingTypeRepository();
 const tmdbService = new TMDBService();
-const movieService = new MovieService(tmdbService, movieRepository, streamingTypeRepository);
+const movieService = new MovieService(tmdbService, movieRepository);
 const movieController = new MovieController(movieService);
 
 /**

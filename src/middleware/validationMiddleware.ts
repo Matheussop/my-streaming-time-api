@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { AnyZodObject } from 'zod';
 import { catchAsync } from '../util/catchAsync';
+import { StreamingServiceError } from './errorHandler';
+import { ErrorMessages } from '../constants/errorMessages';
 
 /**
  * Generic middleware for Zod validation

@@ -11,7 +11,6 @@ export class MovieService implements IMovieService {
   constructor(
     private tmdbService: TMDBService,
     private movieRepository: MovieRepository,
-    private streamingTypeRepository: StreamingTypeRepository,
   ) {}
 
   async getMovies(skip: number, limit: number) {
