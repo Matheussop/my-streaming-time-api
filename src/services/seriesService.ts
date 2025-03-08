@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import logger from "../config/logger";
 import { ErrorMessages } from "../constants/errorMessages";
 import { ISeriesCreate, ISeriesUpdate } from "../interfaces/series/series";
@@ -14,7 +15,7 @@ export class SeriesService implements ISeriesService {
     return this.seriesRepository.findAll(skip, limit);
   }
 
-  async getSeriesById(id: string) {
+  async getSeriesById(id: string | Types.ObjectId) {
     const serie = this.seriesRepository.findById(id)
     if (!serie) {
       logger.warn({
@@ -64,7 +65,7 @@ export class SeriesService implements ISeriesService {
     return this.seriesRepository.create(processedData)
   }
 
-  async updateSerie(id: string, updateData: ISeriesUpdate){
+  async updateSerie(id: string | Types.ObjectId, updateData: ISeriesUpdate){
     const existingSerie = await this.seriesRepository.findById(id);
 
     if (!existingSerie) {
@@ -85,7 +86,7 @@ export class SeriesService implements ISeriesService {
     return this.seriesRepository.update(id, processedUpdate);
   }
 
-  async deleteSerie(id: string){
+  async deleteSerie(id: string | Types.ObjectId){
     const deletedSerie = await this.seriesRepository.delete(id);
     if (!deletedSerie) {
       logger.warn({

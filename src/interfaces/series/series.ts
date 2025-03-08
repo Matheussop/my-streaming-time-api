@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { IContentCreate, IContentDocument, IContentModel, IContentResponse, IContentUpdate } from "../content";
 
 interface ISeasonSummary {
-  seasonId: Types.ObjectId;
+  seasonId: Types.ObjectId | string;
   seasonNumber: number;
   title: string;
   episodeCount: number;

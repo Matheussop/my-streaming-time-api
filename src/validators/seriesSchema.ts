@@ -1,16 +1,13 @@
-import { Types } from "mongoose";
 import { z } from "zod";
+import { dateSchema, objectIdSchema, paginationSchema } from "./common";
 
-export const seriesSchema = z.object({
+export const seriesCreateSchema = z.object({
   title: z.string({
     required_error: "Title is required",  
     invalid_type_error: "Title must be text"
   }).min(2, "Title must have at least 2 characters"),
-  releaseDate: z.string({
-    required_error: "Release date is required",
-    invalid_type_error: "Release date must be text and in the format YYYY-MM-DD"
-  }).regex(/^\d{4}-\d{2}-\d{2}$/, "Release date must be in the format YYYY-MM-DD"),
-    plot: z.string({
+  releaseDate: dateSchema,
+  plot: z.string({
     invalid_type_error: "Plot must be text"
   }).min(2, "Plot must have at least 2 characters").optional(),
   cast: z.array(z.string(), {
@@ -19,21 +16,24 @@ export const seriesSchema = z.object({
   rating: z.number({
     invalid_type_error: "Rating must be a number"
   }).min(0, "Rating must be equal or greater than 0").optional(),  
-  genre: z.array(z.number({
-    invalid_type_error: "Genre must be a number"
-  }) || z.object({
-    _id: z.string({
-      invalid_type_error: "Genre ID must be text"
-    }),
-    id: z.number({
-      invalid_type_error: "Genre ID must be a number"
-    }),
-    name: z.string({
-      invalid_type_error: "Genre name must be text"
-    }),
-  }, {
-    invalid_type_error: "Genre must be an array of numbers or objects of Genre"
-  })).min(1, "At least one genre must be provided"),
+  genre: z.union([
+    z.array(z.number({
+      invalid_type_error: "Genre must be a number or an object of Genre with the following properties: _id, id, name"
+    })).min(1, "At least one genre must be provided"),
+    z.array(z.object({
+      _id: objectIdSchema,
+      id: z.number({
+        invalid_type_error: "Genre ID must be a number"
+      }),
+      name: z.string({
+        invalid_type_error: "Genre name must be text"
+      }),
+    }, {
+      invalid_type_error: "Genre must be an array of numbers or objects of Genre"
+    })).min(1, "At least one genre must be provided")
+  ], {
+    errorMap: () => ({ message: "Genre must be an array of numbers or objects of Genre" })
+  }),
   status: z.string({
     invalid_type_error: "Status must be text"
   }).min(3, "Status must have at least 3 characters").optional(),
@@ -55,9 +55,7 @@ export const seriesSchema = z.object({
     invalid_type_error: "Total seasons must be a number"
   }).min(1, "Total seasons must be equal or greater than 1"),
   seasonsSummary: z.array(z.object({
-    seasonId: z.instanceof(Types.ObjectId).refine((val) => Types.ObjectId.isValid(val), {
-      message: "Season ID must be a valid ObjectId"
-    }),
+    seasonId: objectIdSchema,
     seasonNumber: z.number({
       required_error: "Season number is required",
       invalid_type_error: "Season number must be a number and not empty"
@@ -70,27 +68,37 @@ export const seriesSchema = z.object({
       required_error: "Episode count is required",
       invalid_type_error: "Episode count must be a number and not empty"
     }),
-    releaseDate: z.string({
-      required_error: "Release date is required",
-      invalid_type_error: "Release date must be text and not empty"
-    })    
+    releaseDate: dateSchema
+  }, {
+    invalid_type_error: "Seasons summary must be an array of ISeasonSummary objects with the following properties: seasonId, seasonNumber, title, episodeCount, releaseDate",
   })).optional(),
 }).strict("Additional fields are not allowed");
 
+export type SeriesCreatePayload = z.infer<typeof seriesCreateSchema>;
+
 export const createManySeriesSchema = z.object({
-  series: z.array(seriesSchema,{
+  series: z.array(seriesCreateSchema,{
     required_error: "Series list is required",  
     invalid_type_error: "Series list must be an array"
   }).min(1, "At least one series must be provided")
 });
 
-export const updateSeriesSchema = z.object({
-  series: seriesSchema.partial(),
-});
-
-export type Series = z.infer<typeof seriesSchema>;
 export type CreateManySeriesPayload = z.infer<typeof createManySeriesSchema>;
+
+export const updateSeriesSchema = seriesCreateSchema.extend({
+  seasonId: objectIdSchema
+}).partial();
+
 export type UpdateSeriesPayload = z.infer<typeof updateSeriesSchema>;
+
+export const seriesByTitleParamSchema = paginationSchema.extend({
+  title: z.string({
+    required_error: "Title is required",
+    invalid_type_error: "Title must be text"
+  }).min(2, "Title must have at least 2 characters")
+}).partial();
+
+export type SeriesByTitleParamSchemaType = z.infer<typeof seriesByTitleParamSchema>;
 
 
 

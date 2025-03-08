@@ -3,6 +3,10 @@ import { validateRequest } from '../util/validate';
 import { SeriesController } from '../controllers/seriesController';
 import { SeriesRepository } from '../repositories/seriesRepository';
 import { SeriesService } from '../services/seriesService';
+import { seriesByTitleParamSchema, seriesCreateSchema, updateSeriesSchema } from '../validators/seriesSchema';
+import { validate } from '../middleware/validationMiddleware';
+import { paginationSchema } from '../validators/common';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 
 const seriesRouter: Router = Router();
 const seriesRepository = new SeriesRepository();
@@ -35,7 +39,7 @@ const seriesController = new SeriesController(seriesService);
  */
 seriesRouter.get(
   '/title',
-  (req, res, next) => validateRequest(req, res, next, ['title']),
+  validate(seriesByTitleParamSchema),
   seriesController.getSeriesByTitle,
 );
 /**
@@ -55,7 +59,7 @@ seriesRouter.get(
  *       404:
  *         description: series not found
  */
-seriesRouter.get('/', seriesController.getSeries);
+seriesRouter.get('/', validate(paginationSchema), seriesController.getSeries);
 
 /**
  * @swagger
@@ -78,7 +82,7 @@ seriesRouter.get('/', seriesController.getSeries);
  *       200:
  *         description: A list of series
  */
-seriesRouter.get('/:id', seriesController.getSerieById);
+seriesRouter.get('/:id', validateObjectId('params'), seriesController.getSerieById);
 
 /**
  * @swagger
@@ -116,7 +120,7 @@ seriesRouter.get('/:id', seriesController.getSerieById);
  */
 seriesRouter.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['title', 'rating', 'url', 'poster', 'totalEpisodes', 'totalSeasons' , 'releaseDate', 'genre']),
+  validate(seriesCreateSchema),
   seriesController.createSeries,
 );
 
@@ -134,7 +138,7 @@ seriesRouter.post(
  */
 seriesRouter.post(
   '/findOrAddSerie',
-  (req, res, next) => validateRequest(req, res, next, ['title']),
+  validate(seriesByTitleParamSchema),
   seriesController.findOrAddSerie,
 );
 
@@ -157,7 +161,7 @@ seriesRouter.post(
  *       404:
  *         description: Series not found
  */
-seriesRouter.get('/:id', seriesController.getSerieById);
+seriesRouter.get('/:id', validateObjectId('params'), seriesController.getSerieById);
 
 /**
  * @swagger
@@ -203,7 +207,9 @@ seriesRouter.get('/:id', seriesController.getSerieById);
  *       200:
  *         description: Serie updated successfully
  */
-seriesRouter.put('/:id', seriesController.updateSerie);
+seriesRouter.put('/:id', 
+  validateObjectId('params'), 
+  validate(updateSeriesSchema), seriesController.updateSerie);
 
 
 /**
@@ -222,6 +228,6 @@ seriesRouter.put('/:id', seriesController.updateSerie);
  *       200:
  *         description: Serie deleted successfully
  */
-seriesRouter.delete('/:id', seriesController.deleteSerie);
+seriesRouter.delete('/:id', validateObjectId('params'), seriesController.deleteSerie);
 
 export default seriesRouter;

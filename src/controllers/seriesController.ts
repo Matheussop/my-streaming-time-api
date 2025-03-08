@@ -7,7 +7,6 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { ErrorMessages } from '../constants/errorMessages';
 import { Messages } from "../constants/messages";
-import { seriesSchema } from "../validators";
 
 export class SeriesController {
   skipCheckTitles: boolean = true;
@@ -25,10 +24,6 @@ export class SeriesController {
       method: req.method,
       path: req.path,
     });
-    
-    if (Number(limit) > 100) {
-      throw new StreamingServiceError(ErrorMessages.SERIES_FETCH_LIMIT_EXCEEDED, 400);
-    }
 
     const series = await this.seriesService.getSeries(skip, limit);
     res.status(200).json(series);
@@ -49,8 +44,7 @@ export class SeriesController {
   });
 
   getSerieById = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
-
+    const id = req.validatedIds.id;
     logger.info({
       message: 'Fetching series by id',
       serieId: id,
@@ -71,19 +65,8 @@ export class SeriesController {
       path: req.path,
     });
 
-    if (!req.body || Object.keys(req.body).length === 0) {
-      logger.warn({
-        message: 'Request body is missing',
-        method: req.method,
-        path: req.path,
-      });
-      throw new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400);
-    }
-
-    const seriesArray: ISeriesCreate[] = req.body.series;
-
     const skipCheckTitles = false
-    const newSeries = await this.seriesService.createManySeries(seriesArray, skipCheckTitles );
+    const newSeries = await this.seriesService.createManySeries(req.body.series, skipCheckTitles );
     res.status(201).json(newSeries);
   });
 
@@ -246,14 +229,13 @@ export class SeriesController {
       path: req.path,
     });
 
-    const seriesObj: ISeriesCreate = seriesSchema.parse(req.body);
-
-    const newSerie = await this.seriesService.createSerie(seriesObj);
+    const newSerie = await this.seriesService.createSerie(req.body);
     res.status(201).json(newSerie);
   });
 
   updateSerie = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.validatedIds.id;
+    
     logger.info({
       message: 'Updating serie',
       serieId: id,
@@ -262,21 +244,12 @@ export class SeriesController {
       path: req.path,
     });
 
-    
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
-    }
-
-    if (!req.body || Object.keys(req.body).length === 0) {
-      throw new StreamingServiceError(ErrorMessages.BODY_REQUIRED, 400);
-    }
-
     const serie = await this.seriesService.updateSerie(id, req.body);
     res.status(200).json(serie);
   });
 
   deleteSerie = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.validatedIds.id;
 
     logger.info({
       message: 'Deleting a serie',
@@ -284,11 +257,6 @@ export class SeriesController {
       method: req.method,
       path: req.path,
     });
-
-    
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError(ErrorMessages.MOVIE_ID_INVALID, 400);
-    }
 
     await this.seriesService.deleteSerie(id);
 
