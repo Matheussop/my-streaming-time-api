@@ -7,13 +7,13 @@ import { IMovieResponse } from './movie';
 import { IContentResponse } from './content';
 import { ISeasonCreate, ISeasonUpdate } from './series/season';
 import { ISeasonResponse } from './series/season';
-
+import { Types } from 'mongoose';
 export interface IBaseRepository<T, TCreate = T, TUpdate = T> {
   findAll(skip: number, limit: number): Promise<T[]>;
-  findById(id: string): Promise<T | null>;
+  findById(id: string | Types.ObjectId): Promise<T | null>;
   create(data: Partial<TCreate> | Partial<TCreate>[]): Promise<T | T[]>;
-  update(id: string, data: Partial<TUpdate>): Promise<T | null>;
-  delete(id: string): Promise<T | null>;
+  update(id: string | Types.ObjectId, data: Partial<TUpdate>): Promise<T | null>;
+  delete(id: string | Types.ObjectId): Promise<T | null>;
 }
 
 export interface IContentRepository extends IBaseRepository<IContentResponse> {
@@ -31,14 +31,14 @@ export interface IUserRepository extends IBaseRepository<IUserResponse> {
 }
 
 export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserStreamingHistoryResponse> {
-  findByUserId(userId: string): Promise<IUserStreamingHistoryResponse | null>;
-  addWatchHistoryEntry(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
-  getWatchHistory(userId: string, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
-  hasWatched(userId: string, contentId: string): Promise<boolean>;
-  getWatchProgress(userId: string, contentId: string): Promise<number>;
+  findByUserId(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null>;
+  addWatchHistoryEntry(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
+  getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
+  hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
+  getWatchProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<number>;
   removeWatchHistoryEntry(
-    userId: string,
-    contentId: string,
+    userId: string | Types.ObjectId,
+    contentId: string | Types.ObjectId,
   ): Promise<IUserStreamingHistoryResponse | null>;
 }
 
@@ -55,7 +55,7 @@ export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISer
 }
 
 export interface ISeasonRepository extends IBaseRepository<ISeasonResponse, ISeasonCreate, ISeasonUpdate>{
-  findBySeriesId(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
+  findBySeriesId(seriesId: string | Types.ObjectId, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
 }
 
 export interface IGenreRepository extends IBaseRepository<IGenreResponse, IGenreCreate, IGenreUpdate>{

@@ -1,7 +1,7 @@
 import { Document, Model, Types } from "mongoose";
 
 interface IGenreReference {
-  _id: Types.ObjectId;
+  _id: Types.ObjectId | string;
   id: number;
   name: string;
 }
@@ -12,7 +12,7 @@ export interface IContentCreate {
   plot?: string;
   cast?: string[];
   rating?: number;
-  genre: number[] | IGenreReference;
+  genre: number[] | IGenreReference[];
   status?: string;
   tmdbId?: number;
   poster?: string;
@@ -25,7 +25,7 @@ export interface IContentUpdate {
   plot?: string;
   cast?: string[];
   rating?: number;
-  genre?: IGenreReference[];
+  genre?: number[] | IGenreReference[];
   status?: string;
   tmdbId?: number;
   poster?: string;

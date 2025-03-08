@@ -39,5 +39,5 @@ export interface ISeasonResponse extends ISeasonCreate {
 export type ISeasonDocument = Document & ISeasonResponse;
 
 export interface ISeasonModel extends Model<ISeasonDocument> {
-  findBySeriesId(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
+  findBySeriesId(seriesId: string | Types.ObjectId, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
 }

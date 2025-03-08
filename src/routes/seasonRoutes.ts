@@ -2,6 +2,14 @@ import { Router } from 'express';
 import { SeasonController } from '../controllers/seasonController';
 import { SeasonService } from '../services/seasonService';
 import { SeasonRepository } from '../repositories/seasonRepository';
+import { validate } from '../middleware/validationMiddleware';
+import { 
+  seasonCreateSchema, 
+  seasonUpdateSchema, 
+  seasonsBySeriesParamSchema
+} from '../validators/seasonSchema';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
+import { paginationSchema } from '../validators/common';
 
 const seasonRouter = Router();
 const seasonRepository = new SeasonRepository();
@@ -25,7 +33,7 @@ const seasonController = new SeasonController(seasonService);
  *       200:
  *         description: A list of seasons
  */
-seasonRouter.get('/', seasonController.getSeasons);
+seasonRouter.get('/', validate(paginationSchema), seasonController.getSeasons);
 
 /**
  * @swagger
@@ -43,7 +51,7 @@ seasonRouter.get('/', seasonController.getSeasons);
  *       200:
  *         description: A season
  */
-seasonRouter.get('/:id', seasonController.getSeasonById);
+seasonRouter.get('/:id', validateObjectId('params'), seasonController.getSeasonById);
 
 /**
  * @swagger
@@ -79,7 +87,7 @@ seasonRouter.get('/:id', seasonController.getSeasonById);
  *       201:
  *         description: A season
  */
-seasonRouter.post('/', seasonController.createSeason);
+seasonRouter.post('/', validate(seasonCreateSchema), seasonController.createSeason);
 
 /**
  * @swagger
@@ -125,7 +133,33 @@ seasonRouter.post('/', seasonController.createSeason);
  *       200:
  *         description: A season
  */
-seasonRouter.put('/:id', seasonController.updateSeason);
+seasonRouter.put('/:id', 
+  validateObjectId('params'),
+  validate(seasonUpdateSchema),
+  seasonController.updateSeason
+);
+
+/**
+ * @swagger
+ * /seasons/series/{seriesId}:
+ *   get:
+ *     summary: Get seasons by series ID
+ *     tags: [Seasons]
+ *     parameters:
+ *       - in: path
+ *         name: seriesId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A list of seasons by series ID
+ */
+seasonRouter.get('/series/:seriesId', 
+  validate(paginationSchema),
+  validateObjectId('params', 'seriesId'),
+  seasonController.getSeasonsBySeriesId
+);
 
 /**
  * @swagger
@@ -143,7 +177,7 @@ seasonRouter.put('/:id', seasonController.updateSeason);
  *       200:
  *         description: A season object
  */
-seasonRouter.delete('/:id', seasonController.deleteSeason);
+seasonRouter.delete('/:id', validateObjectId('params'), seasonController.deleteSeason);
 
 export default seasonRouter;
 
