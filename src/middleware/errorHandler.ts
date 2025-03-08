@@ -22,6 +22,7 @@ interface ErrorResponse {
   message: string;
   stack?: string;
   errors?: any;
+  details?: string;
 }
 
 export const errorHandler = (err: Error | StreamingServiceError, req: Request, res: Response, next: NextFunction) => {
@@ -92,6 +93,26 @@ export const errorHandler = (err: Error | StreamingServiceError, req: Request, r
       success: false,
       message: 'Missing or invalid ID'
     });
+  }
+
+  if(err instanceof SyntaxError) {
+    if (err.message.includes('JSON')) {
+      statusCode = 400;
+      
+      if (err.message.includes('undefined')) {
+        return res.status(statusCode).json({
+          success: false,
+          message: 'Invalid JSON: The value "undefined" is not allowed in JSON. Use null for missing values.',
+          details: 'Check your payload and replace undefined values with null or remove them.'
+        });
+      }
+      
+      return res.status(statusCode).json({
+        success: false,
+        message: 'Invalid JSON: Syntax error in payload',
+        details: 'Check if your JSON is formatted correctly.'
+      });
+    }
   }
 
   res.status(statusCode).json(response);
