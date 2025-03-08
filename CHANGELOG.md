@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- ObjectID Validation: Robust validation for MongoDB ObjectIDs using Zod
+  - Reusable `objectIdSchema` for consistent ID validation across the application
+  - Middleware for validating single and multiple ObjectIDs in requests
+  - Type-safe conversion between string IDs and MongoDB ObjectIDs
+  - Integration with existing error handling middleware
+  - Extended Express Request interface to include validated IDs
 - Genre Management: Comprehensive genre management for streaming types
   - Support for adding and removing genres from streaming types
   - Robust genre validation with detailed error checking
@@ -43,8 +49,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added streamingType field to user streaming history model
   - New endpoint to fetch user streaming history by user and streaming ID
   - Support for series in streaming history retrieval
+- Season: Implement full season management features for the streaming platform:
+  - Create SeasonController with CRUD operations for seasons
+  - Develop SeasonService and SeasonRepository
+  - Extend error messages with season-specific validation
+  - Update interfaces for season repositories and services
+  - Modify season model to support dynamic episode tracking
 
 ### Changed
+- Validation Architecture: Improved validation architecture with Zod
+  - Moved validation logic to route level for better separation of concerns
+  - Standardized validation approach across all routes
+  - Enhanced type safety with Zod schema inference
+  - Improved error messages for validation failures
 - Series Model: Standardized series model with content base model
   - Updated interfaces to support flexible genre references
   - Modified model to handle dynamic genre input
@@ -55,14 +72,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Streaming Type: Enhanced with improved genre management
   - Updated repository and service to support genre operations
   - Improved database query performance with optimized index creation
+- Season: 
+  - Add new routes for season-related endpoints
+
 - User Streaming History: Enhanced with improved data handling
   - Updated flow after model refactoring
+  - Add support for episode-specific tracking (episodeId, seasonNumber, episodeNumber)
+  - Implement new methods for watch progress and history management
   - Enhanced validation for streaming history entries
   - Optimized queries for better performance
   - Improved error handling for user streaming history operations
 - Error Messages: Standardized error messages across models and interfaces
   - Centralized error message constants
   - Consistent error formatting across the application
+  - refactor: Enhance User Streaming History with Comprehensive Tracking Features
 
 ### Fixed
 - Genre Validation: Enhanced validation for genre ID, name, and uniqueness
