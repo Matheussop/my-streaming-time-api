@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { ErrorMessages } from '../constants/errorMessages';
 
+//TODO: Remove this function when the validationMiddleware is implemented in all the controllers
 export const validateRequiredFields = (body: any, requiredFields: string[]): string[] => {
   const missingFields: string[] = [];
   requiredFields.forEach((field) => {

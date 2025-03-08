@@ -121,6 +121,7 @@ export const ErrorMessages = {
   INVALID_NAME: 'Name is required',
   REQUIRED_FIELD: 'Required field',
   INVALID_DATA: 'Invalid data',
+  INVALID_ID: 'Invalid ID',
 
   // Request errors
   INVALID_REQUEST: 'Invalid request',

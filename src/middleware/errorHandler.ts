@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import logger from '../config/logger';
 import { z } from 'zod';
 import { formatZodError } from '../util/errorFormatter';
+import { ErrorMessages } from '../constants/errorMessages';
 
 export class StreamingServiceError extends Error {
   public readonly statusCode: number;
@@ -79,10 +80,17 @@ export const errorHandler = (err: Error | StreamingServiceError, req: Request, r
 
   if (err instanceof z.ZodError) {
     const formattedErrors = formatZodError(err);
-    return res.status(400).json({
+    return res.status(statusCode).json({
       success: false,
       errors: formattedErrors,
       message: 'Invalid input data'
+    });
+  }
+
+  if (err.message === ErrorMessages.INVALID_ID) {
+    return res.status(statusCode).json({
+      success: false,
+      message: 'Missing or invalid ID'
     });
   }
 
