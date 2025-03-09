@@ -88,13 +88,6 @@ export const errorHandler = (err: Error | StreamingServiceError, req: Request, r
     });
   }
 
-  if (err.message === ErrorMessages.INVALID_ID) {
-    return res.status(statusCode).json({
-      success: false,
-      message: 'Missing or invalid ID'
-    });
-  }
-
   if(err instanceof SyntaxError) {
     if (err.message.includes('JSON')) {
       statusCode = 400;

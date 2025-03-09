@@ -85,7 +85,7 @@ export const ErrorMessages = {
   STREAMING_TYPE_CATEGORIES_INVALID_ID: 'Invalid category type ID',
   STREAMING_TYPE_INVALID_DATA: 'Invalid streaming type data',
   STREAMING_TYPE_DUPLICATE_CATEGORY: 'Duplicate category ID',
-  INVALID_ID_FORMAT: (type: string) => `Invalid ${type} ID format`,
+  STREAMING_TYPE_INVALID_ID_FORMAT: (type: string) => `Invalid ${type} ID format`,
   STREAMING_TYPE_NAME_EXISTS: 'Streaming type name already exists',
   STREAMING_TYPE_GENRE_NAME_EXISTS: (genreName: string) => `Streaming type genre name "${genreName}" already exists`,
   
@@ -121,9 +121,10 @@ export const ErrorMessages = {
   INVALID_NAME: 'Name is required',
   REQUIRED_FIELD: 'Required field',
   INVALID_DATA: 'Invalid data',
-  INVALID_ID: 'Invalid ID',
 
   // Request errors
+  INVALID_ID: `Missing or invalid id`,
+  INVALID_ID_FORMAT: (params: string) => `Failed to format id, param: '${params}' is not a valid id`,
   INVALID_REQUEST: 'Invalid request',
   REQUIRED_PARAMETERS: 'The following parameters are required:',
   MISSING_PARAMETERS: 'Missing required parameters',
