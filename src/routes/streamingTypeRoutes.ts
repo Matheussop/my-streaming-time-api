@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { StreamingTypeRepository } from '../repositories/streamingTypeRepository';
 import { GenreRepository } from '../repositories/genreRepository';
 import { StreamingTypeController } from '../controllers/streamingTypeController';
-import { validateRequest } from '../util/validate';
 import { StreamingTypeService } from '../services/streamingTypeService';
-
+import { paginationSchema } from '../validators';
+import { validate } from '../middleware/validationMiddleware';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
+import { streamingTypeAddGenreSchema, streamingTypeByNameParamSchema, streamingTypeCreateSchema, streamingTypeUpdateSchema } from '../validators/streamingTypeSchema';
 const router = Router();
 const repository = new StreamingTypeRepository();
 const genreRepository = new GenreRepository();
@@ -27,7 +29,7 @@ const controller = new StreamingTypeController(service);
  *       200:
  *         description: A list of streaming types
  */
-router.get('/', controller.getStreamingTypes);
+router.get('/', validate(paginationSchema), controller.getStreamingTypes);
 
 /**
  * @swagger
@@ -47,7 +49,7 @@ router.get('/', controller.getStreamingTypes);
  *       404:
  *         description: Streaming type not found
  */
-router.get('/:id', controller.getStreamingTypeById);
+router.get('/:id', validateObjectId('params'),controller.getStreamingTypeById);
 
 /**
  * @swagger
@@ -67,7 +69,7 @@ router.get('/:id', controller.getStreamingTypeById);
  *       404:
  *         description: Streaming type not found
  */
-router.get('/name/:name', controller.getStreamingTypeByName);
+router.get('/name/:name', validate(streamingTypeByNameParamSchema, 'params'), controller.getStreamingTypeByName);
 
 /**
  * @swagger
@@ -92,7 +94,7 @@ router.get('/name/:name', controller.getStreamingTypeByName);
  *       400:
  *         description: Invalid input
  */
-router.post('/', (req, res, next) => validateRequest(req, res, next, ['name']), controller.createStreamingType);
+router.post('/', validate(streamingTypeCreateSchema), controller.createStreamingType);
 
 /**
  * @swagger
@@ -123,7 +125,10 @@ router.post('/', (req, res, next) => validateRequest(req, res, next, ['name']), 
  *       404:
  *         description: Streaming type not found
  */
-router.put('/:id', (req, res, next) => validateRequest(req, res, next, ['name']), controller.updateStreamingType);
+router.put('/:id', 
+  validateObjectId('params'),
+  validate(streamingTypeUpdateSchema), 
+  controller.updateStreamingType);
 
 /**
  * @swagger
@@ -154,7 +159,10 @@ router.put('/:id', (req, res, next) => validateRequest(req, res, next, ['name'])
  *       404:
  *         description: Streaming type not found
  */
-router.put('/add-genre/:id', (req, res, next) => validateRequest(req, res, next, ['supportedGenres']), controller.addGenreToStreamingType);
+router.put('/add-genre/:id', 
+  validateObjectId('params'),
+  validate(streamingTypeAddGenreSchema), 
+  controller.addGenreToStreamingType);
 
 /**
  * @swagger
@@ -174,7 +182,9 @@ router.put('/add-genre/:id', (req, res, next) => validateRequest(req, res, next,
  *       404:
  *         description: Streaming type not found
  */
-router.delete('/delete-genre/:id', (req, res, next) => validateRequest(req, res, next, ['genresName']), controller.deleteGenreFromStreamingTypeByName);
+router.delete('/delete-genre/:id', 
+  validateObjectId('params'),
+  controller.deleteGenreFromStreamingTypeByName);
 
 /**
  * @swagger
@@ -194,6 +204,8 @@ router.delete('/delete-genre/:id', (req, res, next) => validateRequest(req, res,
  *       404:
  *         description: Streaming type not found
  */
-router.delete('/:id', controller.deleteStreamingType);
+router.delete('/:id', 
+  validateObjectId('params'),
+  controller.deleteStreamingType);
 
 export default router;

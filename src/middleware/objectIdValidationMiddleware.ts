@@ -25,7 +25,6 @@ export const validateObjectId = (
 ) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const value = req[source][paramName];
-
     if (!value) {
       throw new StreamingServiceError(ErrorMessages.INVALID_ID, 400);
     }
@@ -34,7 +33,7 @@ export const validateObjectId = (
     const result = objectIdSchema.safeParse(value);
     
     if (!result.success) {
-      throw new StreamingServiceError(ErrorMessages.INVALID_ID, 400);
+      throw new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT(value), 400);
     }
     
     // Initialize validatedIds if it doesn't exist
@@ -67,14 +66,14 @@ export const validateMultipleObjectIds = (
       const value = req[source][name];
       
       if (!value) {
-        throw new StreamingServiceError(ErrorMessages.INVALID_DATA, 400);
+        throw new StreamingServiceError(ErrorMessages.INVALID_ID, 400);
       }
       
       // Validate the ID using the schema
       const result = objectIdSchema.safeParse(value);
       
       if (!result.success) {
-        throw new StreamingServiceError(ErrorMessages.INVALID_DATA, 400);
+        throw new StreamingServiceError(ErrorMessages.INVALID_ID, 400);
       }
       
       // Convert the ID to ObjectId and store it
