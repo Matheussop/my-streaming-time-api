@@ -28,6 +28,6 @@ export interface IStreamingTypeResponse extends IStreamingTypeCreate {
 export type IStreamingTypeDocument = IStreamingTypeResponse & Document;
 export interface IStreamingTypeModel extends Model<IStreamingTypeDocument> {
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
-  findByGenreName(genreName: string, id: string): Promise<IStreamingTypeResponse | null>;
-  deleteByGenresName(genresName: string[], id: string): Promise<IStreamingTypeResponse | null>;
+  findByGenreName(genreName: string, id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null>;
+  deleteByGenresName(genresName: string[], id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null>;
 }

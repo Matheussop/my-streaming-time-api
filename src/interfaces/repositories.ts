@@ -44,9 +44,9 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
 
 export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate> {
   findByName(name: string): Promise<IStreamingTypeResponse | null>;
-  addGenre(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null>;
-  findByGenreName(genreName: string, id: string): Promise<IStreamingTypeResponse | null>;
-  deleteByGenresName(genresName: string[], id: string): Promise<IStreamingTypeResponse | null>;
+  addGenre(id: string | Types.ObjectId, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null>;
+  findByGenreName(genreName: string, id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null>;
+  deleteByGenresName(genresName: string[], id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null>;
 }
 
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{

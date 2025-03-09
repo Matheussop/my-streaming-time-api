@@ -6,13 +6,13 @@ import {
   IGenreReference
 } from '../interfaces/streamingTypes';
 import StreamingTypes from '../models/streamingTypesModel';
-
+import { Types } from 'mongoose';
 export class StreamingTypeRepository implements IStreamingTypeRepository {
   async findAll(skip: number, limit: number): Promise<IStreamingTypeResponse[]> {
     return await StreamingTypes.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
   }
 
-  async findById(id: string): Promise<IStreamingTypeResponse | null> {
+  async findById(id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findById(id);
   }
 
@@ -24,11 +24,11 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
     return StreamingTypes.create(data);
   }
 
-  async update(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse | null> {
+  async update(id: string | Types.ObjectId, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 
-  async addGenre(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null> {
+  async addGenre(id: string | Types.ObjectId, genres: IGenreReference[]): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findByIdAndUpdate(
       id, 
       { $addToSet: { supportedGenres: { $each: genres } } }, 
@@ -36,15 +36,15 @@ export class StreamingTypeRepository implements IStreamingTypeRepository {
     );
   }
 
-  async findByGenreName(genreName: string, id: string): Promise<IStreamingTypeResponse | null> {
+  async findByGenreName(genreName: string, id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findByGenreName(genreName, id);
   }
 
-  async deleteByGenresName(genresName: string[], id: string): Promise<IStreamingTypeResponse | null> {
+  async deleteByGenresName(genresName: string[], id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.deleteByGenresName(genresName, id);
   }
 
-  async delete(id: string): Promise<IStreamingTypeResponse | null> {
+  async delete(id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null> {
     return StreamingTypes.findByIdAndDelete(id);
   }
 }

@@ -22,7 +22,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     return this.repository.findAll(skip, limit);
   }
 
-  async getStreamingTypeById(id: string): Promise<IStreamingTypeResponse> {
+  async getStreamingTypeById(id: string | Types.ObjectId): Promise<IStreamingTypeResponse> {
     const streamingType = await this.repository.findById(id);
     if (!streamingType) {
       logger.warn({
@@ -54,7 +54,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     return dataResponse;
   }
 
-  async updateStreamingType(id: string, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse> {
+  async updateStreamingType(id: string | Types.ObjectId, data: IStreamingTypeUpdate): Promise<IStreamingTypeResponse> {
     if (data.name) {
       await this.checkDuplicateName(data.name, id);
     }
@@ -67,7 +67,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     return updatedType;
   }
 
-  async addGenreToStreamingType(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse> {
+  async addGenreToStreamingType(id: string | Types.ObjectId, genres: IGenreReference[]): Promise<IStreamingTypeResponse> {
     await this.validateGenreIds(genres);
     
     await this.checkDuplicateGenreName(genres, id);
@@ -78,7 +78,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     return streamingType;
   }
 
-  async deleteGenresFromStreamingTypeByName(id: string, genresName: string[]): Promise<IStreamingTypeResponse | null> {
+  async deleteGenresFromStreamingTypeByName(id: string | Types.ObjectId, genresName: string[]): Promise<IStreamingTypeResponse | null> {
     const result = await this.repository.deleteByGenresName(genresName, id);
     if (!result) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
@@ -86,7 +86,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     return result;
   }
 
-  async deleteStreamingType(id: string): Promise<IStreamingTypeResponse | null> {
+  async deleteStreamingType(id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null> {
     const result = await this.repository.delete(id);
     if (!result) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
@@ -100,7 +100,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     }
   }
 
-  private async checkDuplicateName(name: string, excludeId?: string): Promise<void> {
+  private async checkDuplicateName(name: string, excludeId?: string | Types.ObjectId): Promise<void> {
     const existing = (await this.repository.findByName(name)) as IStreamingTypeResponse | null;
     if (existing && (!excludeId || existing._id.toString() !== excludeId)) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400);
@@ -147,7 +147,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     }
   }
   
-  private async checkDuplicateGenreName(genres: IGenreReference[], id: string): Promise<void> {
+  private async checkDuplicateGenreName(genres: IGenreReference[], id: string | Types.ObjectId): Promise<void> {
     const errors: string[] = [];
     await Promise.all(genres.map(async (genre) => {
       const existing = (await this.repository.findByGenreName(genre.name, id)) as IStreamingTypeResponse | null;

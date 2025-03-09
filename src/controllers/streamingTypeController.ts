@@ -26,15 +26,14 @@ export class StreamingTypeController {
   });
 
   getStreamingTypeById = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.validatedIds.id;
+
     logger.info({
       message: 'Fetching streaming type by ID',
       streamingTypeId: id,
       method: req.method,
       path: req.path,
     });
-
-    validateIdFormat(id, 'streamingType');
 
     const streamingType = await this.service.getStreamingTypeById(id);
     res.status(200).json(streamingType);
@@ -66,25 +65,29 @@ export class StreamingTypeController {
   });
 
   updateStreamingType = catchAsync(async (req: Request, res: Response) => {
+    const id = req.validatedIds.id;
+
     logger.info({
       message: 'Updating streaming type',
-      streamingTypeId: req.params.id,
+      streamingTypeId: id,
       data: req.body,
       method: req.method,
       path: req.path,
     });
 
-    const streamingType = await this.service.updateStreamingType(req.params.id, req.body);
+    const streamingType = await this.service.updateStreamingType(id, req.body);
     res.json(streamingType);
   });
 
   addGenreToStreamingType = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.validatedIds.id;
     const { supportedGenres } = req.body;
     logger.info({
       message: 'Adding genre to streaming type',
       streamingTypeId: id,
       supportedGenres,
+      method: req.method,
+      path: req.path,
     });
 
     const streamingType = await this.service.addGenreToStreamingType(id, supportedGenres);
@@ -92,7 +95,7 @@ export class StreamingTypeController {
   });
 
   deleteGenreFromStreamingTypeByName = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.validatedIds.id;
     const { genresName } = req.body;
     logger.info({
       message: 'Deleting genre from streaming type',
@@ -107,20 +110,16 @@ export class StreamingTypeController {
   });
 
   deleteStreamingType = catchAsync(async (req: Request, res: Response) => {
+    const id = req.validatedIds.id;
+    
     logger.info({
       message: 'Deleting streaming type',
-      streamingTypeId: req.params.id,
+      streamingTypeId: id,
       method: req.method,
       path: req.path,
     });
 
-    await this.service.deleteStreamingType(req.params.id);
+    await this.service.deleteStreamingType(id);
     res.status(204).send(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
   });
 }
-
-const validateIdFormat = (id: string, type: string) => {
-  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-    throw new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT(type), 400);
-  }
-};
