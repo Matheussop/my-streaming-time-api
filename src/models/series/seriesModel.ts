@@ -23,6 +23,6 @@ const seriesSchema = new Schema({
   }]
 });
 
-const Series = Content.discriminator<ISeriesDocument, ISeriesModel>('Series', seriesSchema);
+const Series = Content.discriminator<ISeriesDocument, ISeriesModel>('series', seriesSchema);
 
 export default Series;
