@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { IUserStreamingHistoryRepository } from '../interfaces/repositories';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import UserStreamingHistory from '../models/userStreamingHistoryModel';
@@ -7,57 +8,57 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.find().skip(skip).limit(limit);
   }
 
-  async findById(id: string): Promise<IUserStreamingHistoryResponse | null> {
+  async findById(id: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findById(id);
   }
 
-  async findByUserId(userId: string): Promise<IUserStreamingHistoryResponse | null> {
+  async findByUserId(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findOne({ userId });
   }
 
   async create(data: Partial<IUserStreamingHistoryResponse>): Promise<IUserStreamingHistoryResponse> {
-    const history = new UserStreamingHistory(data);
-    return history.save();
+    return UserStreamingHistory.create(data);
   }
 
-  async addWatchHistoryEntry(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
-    let history = await this.findByUserId(userId);
+  async addWatchHistoryEntry(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
+    // TODO: Check if the above commented code is necessary
+    // let history = await this.findByUserId(userId);
 
-    if (!history) {
-      history = await this.create({
-        userId,
-        watchHistory: [],
-        totalWatchTimeInMinutes: 0,
-      });
-    }
+    // if (!history) {
+    //   history = await this.create({
+    //     userId,
+    //     watchHistory: [],
+    //     totalWatchTimeInMinutes: 0,
+    //   });
+    // }
 
-    history.watchHistory.push(streamingData);
+    // history.watchHistory.push(streamingData);
     return UserStreamingHistory.addWatchHistoryEntry(userId, streamingData);
   }
 
-  async getWatchHistory(userId: string, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null> {
+  async getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null> {
     return UserStreamingHistory.getWatchHistory(userId, skip, limit);
   }
 
-  async hasWatched(userId: string, contentId: string): Promise<boolean> {
+  async hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean> {
     return UserStreamingHistory.hasWatched(userId, contentId);
   }
 
-  async getWatchProgress(userId: string, contentId: string): Promise<number> {
+  async getWatchProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<number> {
     return UserStreamingHistory.getWatchProgress(userId, contentId);
   }
 
-  async update(id: string, data: Partial<IUserStreamingHistoryResponse>): Promise<IUserStreamingHistoryResponse | null> {
+  async update(id: string | Types.ObjectId, data: Partial<IUserStreamingHistoryResponse>): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 
-  async delete(id: string): Promise<IUserStreamingHistoryResponse | null> {
+  async delete(id: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findByIdAndDelete(id);
   }
 
   async removeWatchHistoryEntry(
-    userId: string,
-    contentId: string,
+    userId: string | Types.ObjectId,
+    contentId: string | Types.ObjectId,
   ): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.removeWatchHistoryEntry(userId, contentId);
   }

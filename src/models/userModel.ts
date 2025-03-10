@@ -1,11 +1,11 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { IUserResponse } from '../interfaces/user';
 import { ErrorMessages } from '../constants/errorMessages';
 
 interface IUserSchema extends Document, IUserResponse {
-  _id: string;
+  _id: string | Types.ObjectId;
   password: string;
   correctPassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
@@ -28,7 +28,7 @@ interface IUserMethods {
 export interface IUserModel extends Model<IUserSchema, {}, IUserMethods> {
   findByEmail(email: string): Promise<IUserResponse | null>;
   findByLogin: (login: string) => Promise<IUserResponse | null>;
-  updateWatchStats: (userId: string, contentType: 'movie' | 'episode', durationInMinutes: number) => Promise<void>;
+  updateWatchStats: (userId: string | Types.ObjectId, contentType: 'movie' | 'episode', durationInMinutes: number) => Promise<void>;
 }
 
 export const isValidEmail = (email: string): boolean => {

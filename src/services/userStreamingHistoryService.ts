@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import logger from '../config/logger';
 import { IUserStreamingHistoryService } from '../interfaces/services';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
@@ -13,7 +14,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     private seriesRepository: SeriesRepository,
   ) {}
 
-  async getUserHistory(userId: string): Promise<IUserStreamingHistoryResponse> {
+  async getUserHistory(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse> {
     const history = await this.repository.findByUserId(userId);
     if (!history) {
       logger.warn({
@@ -25,9 +26,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return history;
   }
 
-  async addStreamingToHistory(userId: string, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
-    this.validateStreamingData(streamingData);
-
+  async addStreamingToHistory(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
     const streaming = await this.movieRepository.findById(streamingData.contentId) || await this.seriesRepository.findById(streamingData.contentId);
     if (!streaming) {
       logger.warn({
@@ -38,20 +37,15 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       throw new StreamingServiceError('Streaming not found', 404);
     }
 
-    if (streaming.title !== streamingData.title) {
-      logger.warn({
-        message: 'Streaming title mismatch',
-        providedTitle: streamingData.title,
-        actualTitle: streaming.title,
-        contentId: streamingData.contentId,
-      });
-      throw new StreamingServiceError('Invalid streaming title', 400);
-    }
 
     const history = await this.repository.findByUserId(userId);
 
     if (!history) {
-      return this.repository.create({ userId, watchHistory: [streamingData] });
+      return this.repository.create({ 
+        userId, 
+        watchHistory: [streamingData],
+        totalWatchTimeInMinutes: streamingData.watchedDurationInMinutes,
+      });
     }
 
     const streamingInHistory = history.watchHistory.find((entry) => entry.contentId === streamingData.contentId);
@@ -62,7 +56,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return this.repository.addWatchHistoryEntry(userId, streamingData);
   }
 
-  async removeStreamingFromHistory(userId: string, contentId: string): Promise<IUserStreamingHistoryResponse | null> {
+  async removeStreamingFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
     // TODO: Check if user exists
 
     const history = await this.getUserHistory(userId);
@@ -85,26 +79,13 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return updatedHistory;
   }
 
-  async getTotalWatchTime(userId: string): Promise<number> {
+  async getTotalWatchTime(userId: string | Types.ObjectId): Promise<number> {
     const history = await this.getUserHistory(userId);
     return history.totalWatchTimeInMinutes || 0;
   }
 
-  async getByUserIdAndStreamingId(userId: string, contentId: string): Promise<boolean> {
+  async getByUserIdAndStreamingId(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean> {
     const history = await this.getUserHistory(userId);
     return history.watchHistory.some((entry) => entry.contentId === contentId);
-  }
-
-  // TODO: Verificar a necessidade de ficar no service ou no controller
-  private validateStreamingData(data: WatchHistoryEntry): void {
-    if (!data.contentId) {
-      throw new StreamingServiceError('Streaming ID is required', 400);
-    }
-    if (!data.title) {
-      throw new StreamingServiceError('Title is required', 400);
-    }
-    if (typeof data.watchedDurationInMinutes !== 'number' || data.watchedDurationInMinutes < 0) {
-      throw new StreamingServiceError('Invalid duration', 400);
-    }
   }
 }

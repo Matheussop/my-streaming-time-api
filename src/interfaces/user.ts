@@ -14,7 +14,7 @@ interface IUserStats {
   seriesCompleted: number;
   lastActive: Date;
   joinDate: Date;
-  favoriteStreamingType: Types.ObjectId;
+  favoriteStreamingType: Types.ObjectId | string;
   episodesWatched: number;
   moviesWatched: number;
   totalWatchTimeInMinutes: number;
@@ -27,7 +27,7 @@ export interface IUserCreate {
   active: boolean;
   profilePicture?: string;
   preferences?: IUserPreferences;
-  watchList?: Types.ObjectId[];
+  watchList?: Types.ObjectId[] ;
   stats?: IUserStats;
   role?: 'user' | 'admin' | 'moderator';
 }
@@ -44,7 +44,7 @@ export interface IUserUpdate {
 }
 
 export interface IUserResponse extends Omit<IUserCreate, 'password'> { 
-  _id: string;
+  _id: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
