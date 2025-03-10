@@ -35,6 +35,7 @@ export interface IContentUpdate {
 export interface IContentResponse extends Omit<IContentCreate, "genre"> {
   _id: Types.ObjectId;
   genre: IGenreReference[];
+  contentType?: 'movie' | 'series';
   createdAt: Date;
   updatedAt: Date;
 }

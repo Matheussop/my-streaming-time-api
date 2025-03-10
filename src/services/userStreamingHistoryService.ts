@@ -6,6 +6,8 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import { MovieRepository } from '../repositories/movieRepository';
 import { SeriesRepository } from '../repositories/seriesRepository';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
+import { IMovieResponse } from '../interfaces/movie';
+import { ISeriesResponse } from '../interfaces/series/series';
 
 export class UserStreamingHistoryService implements IUserStreamingHistoryService {
   constructor(
@@ -27,30 +29,15 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   }
 
   async addStreamingToHistory(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
-    const streaming = await this.movieRepository.findById(streamingData.contentId) || await this.seriesRepository.findById(streamingData.contentId);
-    if (!streaming) {
-      logger.warn({
-        message: 'Streaming not found',
-        contentId: streamingData.contentId,
-        userId,
-      });
-      throw new StreamingServiceError('Streaming not found', 404);
-    }
-
+    await this.checkIfStreamingExistsAndValid(streamingData);
 
     const history = await this.repository.findByUserId(userId);
 
-    if (!history) {
-      return this.repository.create({ 
-        userId, 
-        watchHistory: [streamingData],
-        totalWatchTimeInMinutes: streamingData.watchedDurationInMinutes,
-      });
-    }
-
-    const streamingInHistory = history.watchHistory.find((entry) => entry.contentId === streamingData.contentId);
-    if (streamingInHistory) {
-      throw new StreamingServiceError('Streaming already in history', 400);
+    if (history) {
+      const streamingInHistory = history.watchHistory.find((entry) => entry.contentId === streamingData.contentId);
+      if (streamingInHistory) {
+        throw new StreamingServiceError('Streaming already in history', 400);
+      }
     }
 
     return this.repository.addWatchHistoryEntry(userId, streamingData);
@@ -87,5 +74,37 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   async getByUserIdAndStreamingId(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean> {
     const history = await this.getUserHistory(userId);
     return history.watchHistory.some((entry) => entry.contentId === contentId);
+  }
+
+  private async checkIfStreamingExistsAndValid(streamingData: WatchHistoryEntry): Promise<void> {
+    const streaming = await this.getStreamingById(streamingData.contentId);
+    this.validateStreamingData(streaming, streamingData);
+  }
+  
+  private async getStreamingById(contentId: string | Types.ObjectId): Promise<IMovieResponse | ISeriesResponse> {
+    const streaming = await this.movieRepository.findById(contentId) || 
+                      await this.seriesRepository.findById(contentId);
+    
+    if (!streaming) {
+      logger.warn({
+        message: 'Streaming not found',
+        contentId,
+      });
+      throw new StreamingServiceError('Streaming not found', 404);
+    }
+    
+    return streaming;
+  }
+
+  private validateStreamingData(streaming: IMovieResponse | ISeriesResponse, streamingData: WatchHistoryEntry): void {
+    if (streaming.title !== streamingData.title) {
+      throw new StreamingServiceError('Streaming title does not match', 400);
+    }
+    
+    if (streaming.contentType !== streamingData.contentType) {
+      throw new StreamingServiceError('Content type does not match', 400);
+    }
+    
+    // TODO: Validate the rest of history entry data
   }
 }
