@@ -1,10 +1,17 @@
 import { Router } from 'express';
 import { UserStreamingHistoryController } from '../controllers/userStreamingHistoryController';
-import { validateRequest } from '../util/validate';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { MovieRepository } from '../repositories/movieRepository';
 import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
 import { SeriesRepository } from '../repositories/seriesRepository';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
+import { validate } from '../middleware/validationMiddleware';
+import { paginationSchema } from '../validators';
+import { 
+  userStreamingHistoryAddEntrySchema, 
+  userStreamingHistoryRemoveEntrySchema,
+  userStreamingHistoryGetByUserIdAndStreamingIdSchema, 
+} from '../validators/userStreamingHistorySchema';
 
 const router: Router = Router();
 const userStreamingHistoryRepository = new UserStreamingHistoryRepository();
@@ -41,7 +48,10 @@ const controller = new UserStreamingHistoryController(userStreamingHistoryServic
  *       500:
  *         description: Server error
  */
-router.get('/:userId', controller.getUserStreamingHistory);
+router.get('/:userId', 
+  validateObjectId('params', 'userId'),
+  validate(paginationSchema),
+  controller.getUserStreamingHistory);
 
 /**
  * @swagger
@@ -79,7 +89,7 @@ router.get('/:userId', controller.getUserStreamingHistory);
  */
 router.post(
   '/',
-  (req, res, next) => validateRequest(req, res, next, ['userId', 'contentId', 'title', 'watchedDurationInMinutes', 'contentType']),
+  validate(userStreamingHistoryAddEntrySchema),
   controller.addStreamingToHistory,
 );
 
@@ -110,7 +120,7 @@ router.post(
  */
 router.delete(
   '/remove-entry',
-  (req, res, next) => validateRequest(req, res, next, ['userId', 'contentId']),
+  validate(userStreamingHistoryRemoveEntrySchema),
   controller.removeStreamingFromHistory,
 );
 
@@ -142,12 +152,13 @@ router.delete(
  */
 router.get(
   '/',
+  validate(userStreamingHistoryGetByUserIdAndStreamingIdSchema, 'query'),
   controller.getByUserIdAndStreamingId,
 );
 
 /**
  * @swagger
- * /streaming-history/{userId}/total-watch-time:
+ * /streaming-history/total-watch-time/{userId}:
  *   get:
  *     summary: Get user's total watch time
  *     tags: [Streaming History]
@@ -166,6 +177,8 @@ router.get(
  *       500:
  *         description: Server error
  */
-router.get('/:userId/total-watch-time', controller.calculateTotalWatchTime);
+router.get('/total-watch-time/:userId', 
+  validateObjectId('params', 'userId'),
+  controller.calculateTotalWatchTime);
 
 export default router;
