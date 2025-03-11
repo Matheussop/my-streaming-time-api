@@ -15,9 +15,12 @@ export class UserRepository implements IUserRepository {
     return User.findOne({ email }).select('-password');
   }
 
+  async findByEmailWithPassword(email: string): Promise<IUserResponse | null> {
+    return User.findOne({ email }).select('+password');
+  }
+
   async create(data: IUserCreate): Promise<IUserResponse> {
-    const user = new User(data);
-    return user.save();
+    return User.create(data);
   }
 
   async update(id: string | Types.ObjectId, data: Partial<IUserUpdate>): Promise<IUserResponse | null> {
@@ -28,7 +31,15 @@ export class UserRepository implements IUserRepository {
         new: true,
         runValidators: true,
       },
-    ).select('-password');
+    );
+  }
+  
+  async checkPassword(id: string | Types.ObjectId, password: string): Promise<boolean> {
+    const user = await User.findById(id).select('+password');
+    if (!user) {
+      return false;
+    }
+    return user.correctPassword(password);
   }
 
   async delete(id: string | Types.ObjectId): Promise<IUserResponse | null> {

@@ -21,18 +21,6 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
   }
 
   async addWatchHistoryEntry(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse> {
-    // TODO: Check if the above commented code is necessary
-    // let history = await this.findByUserId(userId);
-
-    // if (!history) {
-    //   history = await this.create({
-    //     userId,
-    //     watchHistory: [],
-    //     totalWatchTimeInMinutes: 0,
-    //   });
-    // }
-
-    // history.watchHistory.push(streamingData);
     return UserStreamingHistory.addWatchHistoryEntry(userId, streamingData);
   }
 

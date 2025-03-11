@@ -1,7 +1,9 @@
+import { Types } from 'mongoose';
 import { IUserService } from '../interfaces/services';
 import { IUserCreate, IUserResponse } from '../interfaces/user';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { UserRepository } from '../repositories/userRepository';
+import bcrypt from 'bcrypt';
 
 export class UserService implements IUserService {
   constructor(private userRepository: UserRepository) {}
@@ -21,11 +23,11 @@ export class UserService implements IUserService {
   async registerUser(userData: IUserCreate): Promise<IUserResponse> {
     await this.checkDuplicateEmail(userData.email);
 
-    // const hashedPassword = await bcrypt.hash(userData.password, 10); // TODO: Implement bcrypt
+    const hashedPassword = await bcrypt.hash(userData.password, 10); // TODO: Implement bcrypt
 
     const newUser = await this.userRepository.create({
       ...userData,
-      // password: hashedPassword
+      password: hashedPassword
     });
     return newUser;
   }
@@ -36,10 +38,10 @@ export class UserService implements IUserService {
       throw new StreamingServiceError('Invalid credentials', 401);
     }
 
-    // const isPasswordValid = await bcrypt.compare(password, user.password); // TODO: Implement bcrypt
-    // if (!isPasswordValid) {
-    //   throw new StreamingServiceError('Invalid credentials', 401);
-    // }
+    const isPasswordValid = await this.userRepository.checkPassword(user._id, password);
+    if (!isPasswordValid) {
+      throw new StreamingServiceError('Invalid credentials', 401);
+    }
 
     return user;
   }
@@ -49,9 +51,9 @@ export class UserService implements IUserService {
       await this.checkDuplicateEmail(updateData.email, id);
     }
 
-    // if (updateData.password) {
-    //   updateData.password = await bcrypt.hash(updateData.password, 10); // TODO: Implement bcrypt
-    // }
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10); // TODO: Implement bcrypt
+    }
 
     const updatedUser = await this.userRepository.update(id, updateData);
     if (!updatedUser) {
