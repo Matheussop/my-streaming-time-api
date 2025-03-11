@@ -19,7 +19,7 @@ interface IUserSchema extends Document, IUserResponse {
 }
 
 interface IUserMethods {
-  correctPassword(candidatePassword: string, userPassword: string): Promise<boolean>;
+  correctPassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
   createVerificationToken(): string;
@@ -84,6 +84,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
       default: "",
     },
     preferences: {
+      // TODO: Add favoriteActors
       favoriteGenres: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Genre',
@@ -168,17 +169,6 @@ userSchema.index({ username: 1 });
 userSchema.index({ 'preferences.favoriteGenres': 1 });
 userSchema.index({ 'stats.lastActive': -1 });
 
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  this.password = await bcrypt.hash(this.password, 12);
-  
-  this.passwordConfirm = undefined;
-  
-  next();
-});
-
-
 userSchema.pre(/^find/, function(this: any, next) {
   this.find({ active: { $ne: false } });
   next();
@@ -189,10 +179,9 @@ userSchema.static('findByEmail', function (email: string) {
 });
 
 userSchema.methods.correctPassword = async function(
-  candidatePassword: string,
-  userPassword: string
+  candidatePassword: string
 ): Promise<boolean> {
-  return await bcrypt.compare(candidatePassword, userPassword);
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp: number): boolean {

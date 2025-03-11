@@ -1,13 +1,13 @@
 import { IUserRepository } from '../interfaces/repositories';
 import { IUserCreate, IUserResponse, IUserUpdate } from '../interfaces/user';
 import User from '../models/userModel';
-
+import { Types } from 'mongoose';
 export class UserRepository implements IUserRepository {
   async findAll(skip: number, limit: number): Promise<IUserResponse[]> {
     return User.find().skip(skip).limit(limit).select('-password');
   }
 
-  async findById(id: string): Promise<IUserResponse | null> {
+  async findById(id: string | Types.ObjectId): Promise<IUserResponse | null> {
     return User.findById(id).select('-password');
   }
 
@@ -20,7 +20,7 @@ export class UserRepository implements IUserRepository {
     return user.save();
   }
 
-  async update(id: string, data: Partial<IUserUpdate>): Promise<IUserResponse | null> {
+  async update(id: string | Types.ObjectId, data: Partial<IUserUpdate>): Promise<IUserResponse | null> {
     return User.findByIdAndUpdate(
       id,
       { $set: data }, // Using $set to update only the provided fields
@@ -31,7 +31,7 @@ export class UserRepository implements IUserRepository {
     ).select('-password');
   }
 
-  async delete(id: string): Promise<IUserResponse | null> {
+  async delete(id: string | Types.ObjectId): Promise<IUserResponse | null> {
     return User.findByIdAndDelete(id);
   }
 }

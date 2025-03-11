@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 interface IUserPreferences {
-  favoriteActors: string[];
+  favoriteActors: Types.ObjectId[];
   favoriteGenres: Types.ObjectId[];
   contentMaturity?: ['G', 'PG', 'PG-13', 'R', 'NC-17', 'All'];
   emailNotifications?: boolean;
