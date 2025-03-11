@@ -19,7 +19,6 @@ export class UserService implements IUserService {
   }
 
   async registerUser(userData: IUserCreate): Promise<IUserResponse> {
-    await this.validateUserData(userData);
     await this.checkDuplicateEmail(userData.email);
 
     // const hashedPassword = await bcrypt.hash(userData.password, 10); // TODO: Implement bcrypt
@@ -75,25 +74,10 @@ export class UserService implements IUserService {
     return user;
   }
 
-  private async validateUserData(data: any) {
-    if (!this.isValidEmail(data.email)) {
-      throw new StreamingServiceError('Invalid email format', 400);
-    }
-
-    if (data.password.length < 6) {
-      throw new StreamingServiceError('Password must be at least 6 characters long', 400);
-    }
-  }
-
-  private async checkDuplicateEmail(email: string, userId?: string) {
+  private async checkDuplicateEmail(email: string, userId?: string | Types.ObjectId) {
     const existingUser = await this.userRepository.findByEmail(email);
-    if (existingUser && (!userId || existingUser._id.toString() !== userId)) {
+    if (existingUser && (!userId || existingUser._id.toString() !== userId.toString())) {
       throw new StreamingServiceError('Email already in use', 400);
     }
-  }
-
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
   }
 }

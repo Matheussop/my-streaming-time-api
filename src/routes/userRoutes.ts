@@ -2,7 +2,10 @@ import { UserService } from './../services/userService';
 import { Router } from 'express';
 import { UserController } from '../controllers/userController';
 import { UserRepository } from '../repositories/userRepository';
-import { validateRequest } from '../util/validate';
+import { UserCreateSchema, UserLoginSchema, UserUpdateSchema } from '../validators/userSchema';
+import { validate } from '../middleware/validationMiddleware';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
+import { paginationSchema } from '../validators';
 
 const userRoutes: Router = Router();
 const userRepository = new UserRepository();
@@ -43,7 +46,7 @@ const userController = new UserController(userService);
  */
 userRoutes.post(
   '/register',
-  (req, res, next) => validateRequest(req, res, next, ['name', 'email', 'password']),
+  validate(UserCreateSchema),
   userController.registerUser,
 );
 
@@ -72,7 +75,7 @@ userRoutes.post(
  */
 userRoutes.post(
   '/login',
-  (req, res, next) => validateRequest(req, res, next, ['email', 'password']),
+  validate(UserLoginSchema),
   userController.loginUser,
 );
 
@@ -94,7 +97,9 @@ userRoutes.post(
  *       404:
  *         description: User not found
  */
-userRoutes.get('/:id', userController.getUserById);
+userRoutes.get('/:id', 
+  validateObjectId(),
+  userController.getUserById);
 
 /**
  * @swagger
@@ -129,7 +134,8 @@ userRoutes.get('/:id', userController.getUserById);
  */
 userRoutes.put(
   '/:id',
-  (req, res, next) => validateRequest(req, res, next, ['name', 'email']),
+  validateObjectId(),
+  validate(UserUpdateSchema),
   userController.updateUser,
 );
 
@@ -151,7 +157,9 @@ userRoutes.put(
  *       404:
  *         description: User not found
  */
-userRoutes.delete('/:id', userController.deleteUser);
+userRoutes.delete('/:id', 
+  validateObjectId(),
+  userController.deleteUser);
 
 /**
  * @swagger
@@ -163,6 +171,8 @@ userRoutes.delete('/:id', userController.deleteUser);
  *       200:
  *         description: A list of users
  */
-userRoutes.get('/', userController.listUsers);
+userRoutes.get('/', 
+  validate(paginationSchema),
+  userController.listUsers);
 
 export default userRoutes;

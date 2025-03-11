@@ -11,18 +11,10 @@ export class UserController {
     logger.info({
       message: 'Registering new user',
       email: req.body.email,
+      username: req.body.username,
       method: req.method,
       path: req.path,
     });
-
-    if (!req.body || Object.keys(req.body).length === 0) {
-      logger.warn({
-        message: 'Request body is missing',
-        method: req.method,
-        path: req.path,
-      });
-      throw new StreamingServiceError('Request body is missing', 400);
-    }
 
     const user = await this.userService.registerUser(req.body);
     res.status(201).json({ message: 'User created successfully', user });
@@ -41,43 +33,44 @@ export class UserController {
   });
 
   getUserById = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.validatedIds.id;
+
     logger.info({
       message: 'Fetching user by ID',
-      userId: req.params.id,
+      userId: id,
       method: req.method,
       path: req.path,
     });
 
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      throw new StreamingServiceError('Invalid user ID format', 400);
-    }
-
-    const user = await this.userService.getUserById(req.params.id);
+    const user = await this.userService.getUserById(id);
     res.status(200).json(user);
   });
 
   updateUser = catchAsync(async (req: Request, res: Response) => {
+    const id = req.validatedIds.id;
+
     logger.info({
       message: 'Updating user',
-      userId: req.params.id,
+      userId: id,
       method: req.method,
       path: req.path,
     });
 
-    const user = await this.userService.updateUser(req.params.id, req.body);
+    const user = await this.userService.updateUser(id, req.body);
     res.status(200).json(user);
   });
 
   deleteUser = catchAsync(async (req: Request, res: Response) => {
+    const id = req.validatedIds.id;
+
     logger.info({
       message: 'Deleting user',
-      userId: req.params.id,
+      userId: id,
       method: req.method,
       path: req.path,
     });
 
-    const deletedUser = await this.userService.deleteUser(req.params.id);
+    const deletedUser = await this.userService.deleteUser(id);
     res.status(200).json({ message: 'User deleted successfully', deletedUser });
   });
 
