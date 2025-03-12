@@ -34,7 +34,7 @@ export interface IStreamingTypeService {
 }
 
 export interface IContentService {
-  getContent(skip: number, limit: number): Promise<any>;
+  getContentList(skip: number, limit: number): Promise<any>;
   getContentById(id: string | Types.ObjectId): Promise<any>;
   getContentByGenre(genre: string, skip: number, limit: number): Promise<any>;
   getContentByTitle(title: string, skip?: number, limit?: number): Promise<any>;

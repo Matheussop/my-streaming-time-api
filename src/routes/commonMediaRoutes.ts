@@ -1,18 +1,13 @@
-import { TMDBService } from './../services/tmdbService';
-import { SeriesRepository } from './../repositories/seriesRepository';
 import { Router } from 'express';
 import { CommonMediaController } from '../controllers/commonMediaController';
-import { SeriesService } from '../services/seriesService';
-import { MovieRepository } from '../repositories/movieRepository';
-import { MovieService } from '../services/movieService';
+import { ContentRepository } from '../repositories/contentRepository';
+import { ContentService } from '../services/commonService';
 
 const commonMediaRouter: Router = Router();
-const seriesRepository = new SeriesRepository();
-const seriesService = new SeriesService(seriesRepository);
-const movieRepository = new MovieRepository();
-const tmdbService = new TMDBService();
-const movieService = new MovieService(tmdbService, movieRepository);
-const commonMediaController = new CommonMediaController(movieService, seriesService);
+const contentRepository = new ContentRepository();
+const contentService = new ContentService(contentRepository);
+
+const commonMediaController = new CommonMediaController(contentService);
 
 /**
  * @swagger
@@ -48,26 +43,5 @@ const commonMediaController = new CommonMediaController(movieService, seriesServ
  *         description: A list of series
  */
 commonMediaRouter.get('/', commonMediaController.getCommonMediaList);
-
-
-/**
- * @swagger
- * /commonMedia/{id}:
- *   get:
- *     summary: Retrieve a streaming by ID
- *     tags: [Common Media]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: A streaming object
- *       404:
- *         description: Movie or Serie not found
- */
-commonMediaRouter.get('/:mediaType/:id', commonMediaController.getMediaById);
 
 export default commonMediaRouter;
