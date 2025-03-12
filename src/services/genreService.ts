@@ -54,11 +54,11 @@ export class GenreService implements IGenreService {
     const genreUpdated = await this.genreRepository.update(id, genre);
     if (!genreUpdated) {
       logger.warn({
-        message: "Genre cannot be updated",
+        message: "Genre cannot be found",
         genreData: genre,
       })
 
-      throw new StreamingServiceError("Genre cannot be updated", 404)
+      throw new StreamingServiceError("Genre cannot be found", 404)
     }
     return genreUpdated
   };

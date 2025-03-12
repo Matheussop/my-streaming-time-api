@@ -75,7 +75,7 @@ export class GenreController {
 
   updateGenre = catchAsync(async (req: Request, res: Response) => {
     const { id, name, poster } = req.body;
-    const _id = req.validatedIds.id;
+    const _id = req.validatedIds._id;
     const data = { id, name, poster }
     logger.info({
       message: 'Update genre',

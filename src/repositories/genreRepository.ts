@@ -1,7 +1,7 @@
+import { Types } from "mongoose";
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from "../interfaces/genres";
 import { IGenreRepository } from "../interfaces/repositories";
 import Genre from "../models/genresModel"
-import { Types } from "mongoose";
 
 export class GenreRepository implements IGenreRepository{
   async findByName(name: string): Promise<IGenreResponse | null> {
