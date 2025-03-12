@@ -107,7 +107,7 @@ movieRouter.post(
  *       200:
  *         description: A list of movies
  */
-movieRouter.get('/', validate(paginationSchema), movieController.getMovies);
+movieRouter.get('/', validate(paginationSchema, 'query'), movieController.getMovies);
 
 /**
  * @swagger

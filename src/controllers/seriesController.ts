@@ -7,13 +7,14 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { ErrorMessages } from '../constants/errorMessages';
 import { Messages } from "../constants/messages";
+import { PaginationSchemaType } from "../validators";
 
 export class SeriesController {
   skipCheckTitles: boolean = true;
   constructor(private seriesService: SeriesService){}
 
   getSeries = catchAsync(async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.body;
+    const { page = 1, limit = 10 } = req.query as unknown as PaginationSchemaType;
     const skip = (Number(page) - 1) * Number(limit);
 
     logger.info({

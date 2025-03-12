@@ -4,6 +4,7 @@ import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
 import { Messages } from '../constants/messages';
 import { MovieService } from '../services/movieService';
+import { PaginationSchemaType } from '../validators';
 
 export class MovieController {
   constructor(private movieService: MovieService) {}
@@ -38,9 +39,9 @@ export class MovieController {
   });
 
   getMovies = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    const { page = 1, limit = 10 } = req.body;
+    const { page = 1, limit = 10 } = req.query as unknown as PaginationSchemaType;
     const skip = (Number(page) - 1) * Number(limit);
-
+    
     logger.info({
       message: 'Fetching movies list',
       page,

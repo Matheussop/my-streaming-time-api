@@ -58,7 +58,7 @@ seriesRouter.get(
  *       404:
  *         description: series not found
  */
-seriesRouter.get('/', validate(paginationSchema), seriesController.getSeries);
+seriesRouter.get('/', validate(paginationSchema, 'query'), seriesController.getSeries);
 
 /**
  * @swagger
