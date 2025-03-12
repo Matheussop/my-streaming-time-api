@@ -120,7 +120,7 @@ router.post(
  */
 router.delete(
   '/remove-entry',
-  validate(userStreamingHistoryRemoveEntrySchema),
+  validate(userStreamingHistoryRemoveEntrySchema, 'query'),
   controller.removeStreamingFromHistory,
 );
 

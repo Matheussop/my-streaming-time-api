@@ -57,7 +57,15 @@ export class UserStreamingHistoryController {
   });
 
   removeStreamingFromHistory = catchAsync(async (req: Request, res: Response) => {
-    const { userId, contentId } = req.body;
+    const { userId, contentId } = req.query as { userId: string; contentId: string; };
+
+    logger.info({
+      message: 'Removing streaming from history',
+      userId: userId,
+      contentId: contentId,
+      method: req.method,
+      path: req.path,
+    });
 
     const history = await this.service.removeStreamingFromHistory(userId, contentId);
 
