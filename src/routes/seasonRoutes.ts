@@ -6,7 +6,6 @@ import { validate } from '../middleware/validationMiddleware';
 import { 
   seasonCreateSchema, 
   seasonUpdateSchema, 
-  seasonsBySeriesParamSchema
 } from '../validators/seasonSchema';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { paginationSchema } from '../validators/common';

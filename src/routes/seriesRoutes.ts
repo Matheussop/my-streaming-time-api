@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { validateRequest } from '../util/validate';
 import { SeriesController } from '../controllers/seriesController';
 import { SeriesRepository } from '../repositories/seriesRepository';
 import { SeriesService } from '../services/seriesService';

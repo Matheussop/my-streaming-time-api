@@ -4,11 +4,12 @@ import { IGenreCreate, IGenreResponse, IGenreUpdate } from '../interfaces/genres
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { ErrorMessages } from '../constants/errorMessages';
 import logger from '../config/logger';
+import { Types } from 'mongoose';
 
 export class GenreService implements IGenreService {
   constructor(private genreRepository: GenreRepository) {}
 
-  async getGenreById(id: string): Promise<IGenreResponse | null>{
+  async getGenreById(id: string | Types.ObjectId): Promise<IGenreResponse | null>{
     const genre = await this.genreRepository.findById(id);
     if (!genre) {
       logger.warn({
@@ -49,7 +50,7 @@ export class GenreService implements IGenreService {
     return genreCreated
   };
 
-  async updateGenre(id: string, genre: IGenreUpdate): Promise<IGenreResponse | null>{
+  async updateGenre(id: string | Types.ObjectId, genre: IGenreUpdate): Promise<IGenreResponse | null>{
     const genreUpdated = await this.genreRepository.update(id, genre);
     if (!genreUpdated) {
       logger.warn({
@@ -62,7 +63,7 @@ export class GenreService implements IGenreService {
     return genreUpdated
   };
 
-  async deleteGenre(genreId: string): Promise<IGenreResponse | null>{
+  async deleteGenre(genreId: string | Types.ObjectId): Promise<IGenreResponse | null>{
     const genreDeleted = await this.genreRepository.delete(genreId)
     if (!genreDeleted) {
       logger.warn({
