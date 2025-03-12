@@ -1,8 +1,11 @@
 import { Router } from 'express';
-import { validateRequest } from '../util/validate';
 import { GenreRepository } from '../repositories/genreRepository';
 import { GenreService } from '../services/genreService';
 import { GenreController } from '../controllers/genreController';
+import { validate } from '../middleware/validationMiddleware';
+import { paginationSchema } from '../validators/common';
+import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
+import { createManyGenreSchema, genreByNameSchema, genreCreateSchema, genreUpdateSchema } from '../validators';
 
 
 const router = Router();
@@ -26,7 +29,7 @@ const controller = new GenreController(service);
  *       200:
  *         description: A list of genres
  */
-router.get('/', controller.getAllGenre);
+router.get('/', validate(paginationSchema), controller.getAllGenre);
 
 /**
  * @swagger
@@ -46,7 +49,7 @@ router.get('/', controller.getAllGenre);
  *       404:
  *         description: Genre not found
  */
-router.get('/:id', controller.getGenreById);
+router.get('/:id', validateObjectId(), controller.getGenreById);
 
 /**
  * @swagger
@@ -66,7 +69,7 @@ router.get('/:id', controller.getGenreById);
  *       404:
  *         description: Genre not found
  */
-router.get('/byName/:name', controller.getGenreByName);
+router.get('/byName/:name', validate(genreByNameSchema, 'params'), controller.getGenreByName);
 
 /**
  * @swagger
@@ -91,7 +94,7 @@ router.get('/byName/:name', controller.getGenreByName);
  *       400:
  *         description: Invalid input
  */
-router.post('/', (req, res, next) => validateRequest(req, res, next, ['id', 'name']), controller.createGenre);
+router.post('/', validate(genreCreateSchema, 'body'), controller.createGenre);
 
 /**
  * @swagger
@@ -119,7 +122,7 @@ router.post('/', (req, res, next) => validateRequest(req, res, next, ['id', 'nam
  *       400:
  *         description: Invalid input
  */
-router.post('/many', (req, res, next) => validateRequest(req, res, next, ['genres']), controller.createManyGenre);
+router.post('/many', validate(createManyGenreSchema, 'body'), controller.createManyGenre);
 
 
 /**
@@ -151,7 +154,7 @@ router.post('/many', (req, res, next) => validateRequest(req, res, next, ['genre
  *       404:
  *         description: Genre not found
  */
-router.put('/:_id', (req, res, next) => validateRequest(req, res, next, ['id', 'name']), controller.updateGenre);
+router.put('/:_id', validateObjectId('params', '_id'), validate(genreUpdateSchema, 'body'), controller.updateGenre);
 
 /**
  * @swagger
@@ -171,6 +174,6 @@ router.put('/:_id', (req, res, next) => validateRequest(req, res, next, ['id', '
  *       404:
  *         description: Genre not found
  */
-router.delete('/:id', controller.deleteGenre);
+router.delete('/:id', validateObjectId(), controller.deleteGenre);
 
 export default router;
