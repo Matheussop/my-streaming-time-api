@@ -25,6 +25,20 @@ interface ErrorResponse {
   details?: string;
 }
 
+/**
+ * Extracts the duplicate field and value from MongoDB error message
+ * @param keyValue Object containing the duplicate field and value
+ * @returns Object with the field name and duplicate value
+ */
+const extractDuplicateFieldInfo = (keyValue: Record<string, any>) => {
+  if (!keyValue) return { field: 'unknown', value: 'unknown' };
+  
+  const field = Object.keys(keyValue)[0];
+  const value = keyValue[field];
+  
+  return { field, value };
+};
+
 export const errorHandler = (err: Error | StreamingServiceError, req: Request, res: Response, next: NextFunction) => {
   let error = err as StreamingServiceError;
   let statusCode = error.statusCode || 500;
@@ -67,7 +81,12 @@ export const errorHandler = (err: Error | StreamingServiceError, req: Request, r
   // Mongoose Duplicate Key Error
   if (err.name === 'MongoServerError' && (err as any).code === 11000) {
     statusCode = 400;
-    response.message = 'Duplicate field value entered';
+    
+    const keyValue = (err as any).keyValue;
+    const { field, value } = extractDuplicateFieldInfo(keyValue);
+    
+    response.message = `A record already exists with value '${value}' for field '${field}'`;
+    response.details = `The value '${value}' is already in use for the field '${field}'. Please choose a unique value for the field '${field}'.`;
   }
 
   if (statusCode === 500) {
