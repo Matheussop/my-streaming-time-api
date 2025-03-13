@@ -11,6 +11,7 @@ import { StreamingTypeRepository } from '../repositories/streamingTypeRepository
 import { GenreRepository } from '../repositories/genreRepository';
 import { ErrorMessages } from '../constants/errorMessages';
 import { Types } from 'mongoose';
+import axios from 'axios';
 
 export class StreamingTypeService implements IStreamingTypeService {
   constructor(
@@ -92,6 +93,130 @@ export class StreamingTypeService implements IStreamingTypeService {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
     }
     return result;
+  }
+
+  /**
+   * Updates the cover images for supported genres of all streaming types
+   * @returns Promise<void>
+   * @throws StreamingServiceError if the TMDB token is invalid or if no streaming types are found
+   */
+  async changeCover(): Promise<void> {
+    this.validateTmdbToken();
+    
+    const allStreamingTypes = await this.repository.findAll(0, 100);
+    
+    // Process each streaming type and update its covers
+    const updatedStreamingTypes = await this.processStreamingTypes(allStreamingTypes);
+    
+    // Persist the updates in the database
+    await this.saveUpdatedStreamingTypes(updatedStreamingTypes);
+  }
+  
+  private validateTmdbToken(): void {
+    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
+      throw new StreamingServiceError(ErrorMessages.TMDB_TOKEN_INVALID, 401);
+    }
+  }
+  
+  /**
+   * Processes each streaming type to update the covers of the genres
+   * @param streamingTypes List of streaming types to be processed
+   * @returns List of streaming types with updated covers
+   */
+  private async processStreamingTypes(streamingTypes: IStreamingTypeResponse[]): Promise<IStreamingTypeResponse[]> {
+    return Promise.all(streamingTypes.map(async (streamingType) => {
+      const supportedGenres = streamingType.supportedGenres ?? [];
+      const updatedGenres = await this.updateGenreCovers(supportedGenres);
+      
+      return {
+        ...streamingType,
+        supportedGenres: updatedGenres
+      };
+    }));
+  }
+  
+  /**
+   * Updates the covers for each supported genre
+   * @param genres List of genres to be updated
+   * @returns List of genres with updated covers
+   */
+  private async updateGenreCovers(genres: IGenreReference[]): Promise<IGenreReference[]> {
+    return Promise.all(genres.map(async (genre) => {
+      try {
+        const updatedGenre = await this.fetchCoverForGenre(genre);
+        return updatedGenre;
+      } catch (error) {
+        logger.error({
+          message: ErrorMessages.TMDB_COVER_FETCH_ERROR,
+          error,
+          genreId: genre.id,
+          genreName: genre.name
+        });
+        return genre; // Return the original genre in case of error
+      }
+    }));
+  }
+  
+  /**
+   * Searches for a new cover for a specific genre in the TMDB API
+   * @param genre Genre for which to search for a new cover
+   * @returns Genre with the updated cover
+   */
+  private async fetchCoverForGenre(genre: IGenreReference): Promise<IGenreReference> {
+    // Determine the correct category for the TMDB API
+    const categoryName = genre.name === 'movies' ? 'movie' : 'tv';
+    
+    // Configure the request to the TMDB API
+    const url = `https://api.themoviedb.org/3/discover/${categoryName}`;
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`,
+      },
+      params: {
+        without_genres: genre.id,
+        sort_by: 'popularity.desc',
+        include_adult: false,
+        include_video: false,
+        language: 'en-US',
+        page: Math.floor(Math.random() * 5) + 1
+      }
+    };
+    
+    const response = await axios.get(url, options); // TODO: use a project instance of axios
+    
+    if (response.data.results.length > 0) {
+      const randomIndex = Math.floor(Math.random() * response.data.results.length);
+      const poster = response.data.results[randomIndex].backdrop_path;
+      
+      return {
+        ...genre,
+        poster: `https://image.tmdb.org/t/p/original${poster}`
+      };
+    }
+    
+    return genre; // Return the original genre if no results are found
+  }
+  
+  /**
+   * Saves the updated streaming types in the database
+   * @param streamingTypes List of streaming types with updated covers
+   * @throws StreamingServiceError if no streaming types are updated
+   */
+  private async saveUpdatedStreamingTypes(streamingTypes: IStreamingTypeResponse[]): Promise<void> {
+    const updatePromises = streamingTypes.map(streamingType => 
+      this.repository.update(streamingType._id, { 
+        supportedGenres: streamingType.supportedGenres 
+      })
+    );
+    
+    const updatedTypes = await Promise.all(updatePromises);
+    const successfulUpdates = updatedTypes.filter(Boolean);
+    
+    if (successfulUpdates.length === 0) {
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404);
+    }
   }
 
   private async validateStreamingTypeData(data: Partial<IStreamingTypeResponse>): Promise<void> {

@@ -33,6 +33,22 @@ router.get('/', validate(paginationSchema), controller.getStreamingTypes);
 
 /**
  * @swagger
+ * /streamingTypes/change-cover:
+ *   post:
+ *     summary: Change the cover of the genres
+ *     tags: [StreamingTypes]
+ *     responses:
+ *       200:
+ *         description: Cover changed successfully
+ *       401:
+ *         description: Invalid TMDB_Bearer_Token
+ *       500:
+ *         description: Error changing cover
+ */
+router.get('/change-cover', controller.changeCover);
+
+/**
+ * @swagger
  * /streamingTypes/{id}:
  *   get:
  *     summary: Retrieve a streaming type by ID

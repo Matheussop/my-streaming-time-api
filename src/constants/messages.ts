@@ -1,4 +1,6 @@
 export const Messages = {
+  COVER_CHANGED_SUCCESSFULLY: 'Cover changed successfully',
+
   // Series 
   SERIE_FOUND: 'Serie found',
   SERIES_FOUND: 'Series found',

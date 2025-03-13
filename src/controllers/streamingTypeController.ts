@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
-import { StreamingServiceError } from '../middleware/errorHandler';
 import { StreamingTypeService } from '../services/streamingTypeService';
 import { Messages } from '../constants/messages';
-import { ErrorMessages } from '../constants/errorMessages';
 
 export class StreamingTypeController {
   constructor(private service: StreamingTypeService) {}
@@ -121,5 +119,16 @@ export class StreamingTypeController {
 
     await this.service.deleteStreamingType(id);
     res.status(204).send(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
+  });
+
+  changeCover = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Changing genres cover',
+      method: req.method,
+      path: req.path,
+    });
+
+    await this.service.changeCover();
+    res.status(204).send(Messages.COVER_CHANGED_SUCCESSFULLY);
   });
 }

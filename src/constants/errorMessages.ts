@@ -1,4 +1,8 @@
 export const ErrorMessages = {
+  // TMDB errors
+  TMDB_TOKEN_INVALID: 'Invalid TMDB_Bearer_Token',
+  TMDB_COVER_FETCH_ERROR: 'Error fetching cover from TMDB',
+
   // Common Media erros 
   COMMON_MEDIA_NOT_FOUND: 'Common media not found', 
   COMMON_MEDIA_ID_INVALID: 'Invalid common media ID format',

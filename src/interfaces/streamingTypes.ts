@@ -4,6 +4,7 @@ export interface IGenreReference {
   _id: Types.ObjectId;
   id: number;
   name: string;
+  poster: string;
 }
 export interface IStreamingTypeCreate {
   name: string;

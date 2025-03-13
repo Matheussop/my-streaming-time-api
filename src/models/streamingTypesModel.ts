@@ -23,6 +23,10 @@ const streamingTypesSchema = new Schema<IStreamingTypeDocument, IStreamingTypeMo
         type: String,
         required: true,
       },
+      poster: {
+        type: String,
+        default: '',
+      },
       _id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Genre',
