@@ -21,7 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional TMDB features
 
 ### Added
-
+- User Streaming History: Enhanced tracking features
+  - Added support for episode-specific tracking (episodeId, seasonNumber, episodeNumber)
+  - Implemented watch progress tracking with completion percentage
+  - Added watchedDurationInMinutes for better time tracking
+  - Enhanced validation for streaming history entries
+  - Optimized queries for better performance
+  - Improved error handling for user streaming history operations
+- Season Management: Comprehensive season and episode tracking
+  - Added Season model with support for multiple episodes
+  - Implemented episode tracking with detailed metadata
+  - Added automatic season summary updates in Series model
+  - Enhanced validation for season and episode data
+  - Added support for episode-specific metadata (duration, release date, poster)
+  - Implemented automatic recalculation of series statistics
 - ObjectID Validation: Robust validation for MongoDB ObjectIDs using Zod
   - Reusable `objectIdSchema` for consistent ID validation across the application
   - Middleware for validating single and multiple ObjectIDs in requests
@@ -45,18 +58,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detailed model schemas for all entities
   - Enhanced descriptions of existing features
   - Added Series management section
-- User Streaming History: New features and enhancements
-  - Added streamingType field to user streaming history model
-  - New endpoint to fetch user streaming history by user and streaming ID
-  - Support for series in streaming history retrieval
-- Season: Implement full season management features for the streaming platform:
-  - Create SeasonController with CRUD operations for seasons
-  - Develop SeasonService and SeasonRepository
-  - Extend error messages with season-specific validation
-  - Update interfaces for season repositories and services
-  - Modify season model to support dynamic episode tracking
 
 ### Changed
+- User Streaming History: Enhanced data model and operations
+  - Updated model to support detailed episode tracking
+  - Improved validation with Zod schemas
+  - Enhanced error messages for better debugging
+  - Optimized database queries for better performance
+  - Added support for pagination in history retrieval
+- Series Model: Enhanced with season management
+  - Added seasonsSummary array for quick access to season information
+  - Implemented automatic updates of total seasons and episodes
+  - Enhanced validation for season-related operations
+  - Improved error handling for season operations
 - Validation Architecture: Improved validation architecture with Zod
   - Moved validation logic to route level for better separation of concerns
   - Standardized validation approach across all routes
@@ -75,19 +89,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Season: 
   - Add new routes for season-related endpoints
 
-- User Streaming History: Enhanced with improved data handling
-  - Updated flow after model refactoring
-  - Add support for episode-specific tracking (episodeId, seasonNumber, episodeNumber)
-  - Implement new methods for watch progress and history management
-  - Enhanced validation for streaming history entries
-  - Optimized queries for better performance
-  - Improved error handling for user streaming history operations
 - Error Messages: Standardized error messages across models and interfaces
   - Centralized error message constants
   - Consistent error formatting across the application
   - refactor: Enhance User Streaming History with Comprehensive Tracking Features
 
 ### Fixed
+- Fixed validation issues in streaming history entries
+- Improved error handling for season and episode operations
+- Enhanced performance of series statistics calculations
+- Fixed issues with episode tracking in user history
 - Genre Validation: Enhanced validation for genre ID, name, and uniqueness
 - Error Messages: Improved error messages for genre-related operations
 - Database Queries: Optimized queries for better performance

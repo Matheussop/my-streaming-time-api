@@ -377,6 +377,11 @@ classDiagram
         +String status
         +Date createdAt
         +Date updatedAt
+        +Number watchedDurationInMinutes
+        +Number completionPercentage
+        +String episodeId
+        +Number seasonNumber
+        +Number episodeNumber
     }
     
     class Content {
@@ -406,6 +411,28 @@ classDiagram
         +Number tmdbId
         +Date firstAirDate
         +Date lastAirDate
+        +ISeasonSummary[] seasonsSummary
+    }
+    
+    class Season {
+        +String id
+        +String seriesId
+        +Number seasonNumber
+        +String title
+        +String plot
+        +String releaseDate
+        +String poster
+        +Episode[] episodes
+    }
+    
+    class Episode {
+        +String id
+        +Number episodeNumber
+        +String title
+        +String plot
+        +Number durationInMinutes
+        +String releaseDate
+        +String poster
     }
     
     class Genre {
@@ -429,6 +456,8 @@ classDiagram
     UserStreamingHistory "n" -- "1" Content : references
     Content <|-- Movie : extends
     Content <|-- Series : extends
+    Series "1" -- "n" Season : has
+    Season "1" -- "n" Episode : has
     Content "n" -- "n" Genre : has
     Content "n" -- "n" StreamingType : available on
 ```
