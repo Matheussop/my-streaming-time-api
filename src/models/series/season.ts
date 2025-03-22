@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { IEpisode, ISeasonDocument, ISeasonModel, ISeasonResponse } from '../../interfaces/series/season';
 import { ErrorMessages } from '../../constants/errorMessages';
+import Series from './seriesModel';
 
 type IEpisodeSchema = Document & IEpisode;
 
@@ -62,6 +63,10 @@ const seasonSchema = new Schema<ISeasonDocument>(
       type: String,
     },
     episodes: [episodeSchema],
+    episodeCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -82,7 +87,6 @@ seasonSchema.static('findBySeriesId', function(seriesId: string, skip: number, l
 
 // Hook to update the season summary in the series when a season is saved
 seasonSchema.post('save', async function() {
-  const Series = mongoose.model('Series');
   
   await Series.findByIdAndUpdate(
     this.seriesId,

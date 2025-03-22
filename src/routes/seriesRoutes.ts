@@ -6,10 +6,14 @@ import { seriesByTitleParamSchema, seriesCreateSchema, updateSeriesSchema } from
 import { validate } from '../middleware/validationMiddleware';
 import { paginationSchema } from '../validators/common';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
+import { TMDBService } from '../services/tmdbService';
+import { SeasonRepository } from '../repositories/seasonRepository';
 
 const seriesRouter: Router = Router();
 const seriesRepository = new SeriesRepository();
-const seriesService = new SeriesService(seriesRepository);
+const tmdbService = new TMDBService();  
+const seasonRepository = new SeasonRepository();
+const seriesService = new SeriesService(seriesRepository, seasonRepository, tmdbService);
 const seriesController = new SeriesController(seriesService);
 
 /**

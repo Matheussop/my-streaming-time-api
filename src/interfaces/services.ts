@@ -59,7 +59,7 @@ export interface ISeasonService {
   getSeasons(skip: number, limit: number): Promise<ISeasonResponse[] | null>;
   getSeasonsBySeriesId(seriesId: string | Types.ObjectId, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
   getSeasonById(id: string | Types.ObjectId): Promise<ISeasonResponse | null>;
-  createSeason(season: ISeasonCreate): Promise<ISeasonResponse>;
+  createSeason(season: ISeasonCreate | ISeasonCreate[]): Promise<ISeasonResponse | ISeasonResponse[]>;
   updateSeason(id: string | Types.ObjectId, season: ISeasonUpdate): Promise<ISeasonResponse | null>;
   deleteSeason(id: string | Types.ObjectId): Promise<ISeasonResponse | null>;
 }

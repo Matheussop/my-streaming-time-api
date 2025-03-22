@@ -18,6 +18,7 @@ export interface ISeasonCreate {
   releaseDate: string;
   poster?: string;
   episodes?: IEpisode[];
+  episodeCount?: number;
 }
 
 export interface ISeasonUpdate {
@@ -28,6 +29,7 @@ export interface ISeasonUpdate {
   releaseDate?: string;
   poster?: string;
   episodes?: IEpisode[];
+  episodeCount?: number;
 }
 
 export interface ISeasonResponse extends ISeasonCreate {

@@ -6,23 +6,41 @@ import { ISeriesService } from "../interfaces/services";
 import { StreamingServiceError } from "../middleware/errorHandler";
 import { SeriesRepository } from "../repositories/seriesRepository";
 import axios from 'axios';
+import { TMDBService } from "./tmdbService";
+import { ISeasonSummary } from "../interfaces/series/series";
+import { SeasonRepository } from "../repositories/seasonRepository";
+import { ISeasonCreate, ISeasonResponse } from "../interfaces/series/season";
 
 export class SeriesService implements ISeriesService {
   constructor(
-    private seriesRepository: SeriesRepository) { }
+    private seriesRepository: SeriesRepository,
+    private seasonRepository: SeasonRepository,
+    private tmdbService: TMDBService
+  ) { }
 
   async getSeries(skip: number, limit: number){
     return this.seriesRepository.findAll(skip, limit);
   }
 
   async getSeriesById(id: string | Types.ObjectId) {
-    const serie = this.seriesRepository.findById(id)
+    const serie = await this.seriesRepository.findById(id)
     if (!serie) {
       logger.warn({
         message: 'Serie not found',
         serieId: id,
       });
       throw new StreamingServiceError(ErrorMessages.SERIE_NOT_FOUND, 404);
+    }
+
+    // If the serie has no totalSeasons, it means it was not updated from TMDB yet.
+    if (!serie.totalSeasons && serie.tmdbId) {
+      const tmdbData = await this.tmdbService.fetchDataFromTMDB(serie.tmdbId, "series");
+      serie.totalSeasons = tmdbData.number_of_seasons;
+      serie.totalEpisodes = tmdbData.number_of_episodes;
+      serie.videoUrl = this.getTrailerUrl(tmdbData.videos.results);
+      const seasonsSummary = await this.processSeasonsSummary(tmdbData.seasons, serie._id);
+      serie.seasonsSummary = seasonsSummary;
+      await this.seriesRepository.update(id, serie);
     }
     return serie;
   }
@@ -215,6 +233,7 @@ export class SeriesService implements ISeriesService {
       plot: data.plot,
       cast: data.cast,
       genre: data.genre,
+      tmdbId: data.tmdbId,
       totalEpisodes: data.totalEpisodes,
       totalSeasons: data.totalSeasons,
       rating: this.validateRating(data.rating),
@@ -222,4 +241,45 @@ export class SeriesService implements ISeriesService {
       url: this.validateURL(data?.url || ''),
     }
   }
+  
+  private getTrailerUrl(trailers: any[]): string {
+    return trailers.find((trailer) => trailer.type === 'Trailer')?.key;
+  }
+
+  private async processSeasonsSummary(seasons: any[], seriesId: Types.ObjectId): Promise<ISeasonSummary[]> {
+    const seasonsFormatted = this.formatSeasonsSummary(seasons, seriesId);
+    const seasonsSummary = await this.seasonRepository.create(seasonsFormatted);
+    return this.mapToSeasonSummary(seasonsSummary);
+  }
+
+  private mapToSeasonSummary(seasonsSummary: ISeasonResponse | ISeasonResponse[]):  | ISeasonSummary[] {
+    if (Array.isArray(seasonsSummary)) {
+      return seasonsSummary.map(season => this.createSeasonSummary(season));
+    }
+    return [this.createSeasonSummary(seasonsSummary)];
+  }
+
+  private createSeasonSummary(season: ISeasonResponse): ISeasonSummary {
+    return {
+      seasonId: season._id,
+      seasonNumber: season.seasonNumber,
+      title: season.title,
+      episodeCount: season.episodeCount || 0,
+      releaseDate: season.releaseDate
+    };
+  }
+
+  private formatSeasonsSummary(seasons: any[], seriesId: Types.ObjectId): ISeasonCreate[] {
+    return seasons.map((season) => ({
+      seriesId,
+      title: season.name,
+      plot: season.overview || 'Plot not available',
+      seasonNumber: season.season_number,
+      poster: `https://image.tmdb.org/t/p/original${season.poster_path}`,
+      episodes: [],
+      episodeCount: season.episode_count || 0,
+      releaseDate: season.air_date || 'Without release date'
+    }));
+  }
+
 }

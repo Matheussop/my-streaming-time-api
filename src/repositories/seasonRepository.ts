@@ -15,8 +15,8 @@ export class SeasonRepository implements ISeasonRepository {
     return Season.findById(id) as unknown as ISeasonResponse | null;
   } 
 
-  async create(data: ISeasonCreate): Promise<ISeasonResponse> {
-    return Season.create(data) as unknown as ISeasonResponse;
+  async create(data: ISeasonCreate | ISeasonCreate[]): Promise<ISeasonResponse | ISeasonResponse[]> {
+    return Season.create(data) as unknown as ISeasonResponse | ISeasonResponse[];
   }
   
   async update(id: string | Types.ObjectId, data: ISeasonUpdate): Promise<ISeasonResponse | null> {

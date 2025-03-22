@@ -17,7 +17,7 @@ export class SeasonService implements ISeasonService {
     return this.seasonRepository.findById(id);
   }
 
-  async createSeason(season: ISeasonCreate): Promise<ISeasonResponse> {
+  async createSeason(season: ISeasonCreate | ISeasonCreate[]): Promise<ISeasonResponse | ISeasonResponse[]> {
     return this.seasonRepository.create(season);
   }
 

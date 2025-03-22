@@ -4,6 +4,8 @@ import { SeriesService } from '../services/seriesService';
 import { MovieRepository } from '../repositories/movieRepository';
 import { MovieService } from '../services/movieService';
 import LastRequestTime from '../models/lastRequestTimeModel';
+import { SeasonRepository } from '../repositories/seasonRepository';
+import { TMDBService } from '../services/tmdbService';
 
 
 let lastRequestTime = 0;
@@ -13,7 +15,9 @@ let isFetching = false;
 const fetchData = async () => {
   try {
     const seriesRepository = new SeriesRepository();
-    const seriesService = new SeriesService(seriesRepository);
+    const seasonRepository = new SeasonRepository();
+    const tmdbService = new TMDBService();
+    const seriesService = new SeriesService(seriesRepository, seasonRepository, tmdbService);
     await seriesService.fetchAndSaveExternalSeries();
     const moviesRepository = new MovieRepository();
     const movieService = new MovieService({} as any, moviesRepository); // TODO: find a better way to use movieService without passing multiple repositories as parameters

@@ -5,12 +5,13 @@ import { Types } from "mongoose";
 
 export class TMDBService {
 
-  async fetchDataFromTMDB(tmdbId: number, type: 'movie' | 'series'): Promise<any> {
+  async fetchDataFromTMDB(tmdbId: number, streamingType: 'movie' | 'series'): Promise<any> {
     if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
       throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
     }
+    const type = streamingType === 'series' ? 'tv' : 'movie';
     // append_to_response its means that we want to get an additional attribute in the response.
-    const url = `https://api.themoviedb.org/3/${type}/${tmdbId}?append_to_response=videos&language=pt-BR`;
+    const url = `https://api.themoviedb.org/3/${type}/${tmdbId}?append_to_response=videos&language=en-US`;
     const options = {
       method: 'GET',
       headers: {

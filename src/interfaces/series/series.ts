@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { IContentCreate, IContentDocument, IContentModel, IContentResponse, IContentUpdate } from "../content";
 
-interface ISeasonSummary {
+export interface ISeasonSummary {
   seasonId: Types.ObjectId | string;
   seasonNumber: number;
   title: string;
