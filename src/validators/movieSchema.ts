@@ -49,7 +49,10 @@ export const movieCreateSchema = z.object({
   }).min(5, "URL must have at least 5 characters").optional(),
   durationTime: z.number({
     invalid_type_error: "Duration must be a number"
-  }).min(1, "Duration must be equal or greater than 1").optional()
+  }).min(1, "Duration must be equal or greater than 1").optional(),
+  videoUrl: z.string().url({
+    message: "Video URL must be a valid URL"
+  }).optional()
 });
 
 export type MovieCreatePayload = z.infer<typeof movieCreateSchema>;

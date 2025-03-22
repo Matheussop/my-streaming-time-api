@@ -28,7 +28,8 @@ const contentSchema = new Schema<IContentDocument, IContentModel>(
     },
     status: { type: String, default: 'Released' },
     poster: { type: String },
-    url: { type: String, required: true }
+    url: { type: String, required: true },
+    videoUrl: { type: String }
   },
   {
     timestamps: true,

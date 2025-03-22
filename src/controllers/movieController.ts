@@ -132,7 +132,7 @@ export class MovieController {
       path: req.path,
     });
 
-    const movie = await this.movieService.updateMovieFromTMDB(id, tmdbId);
+    const movie = await this.movieService.updateMovieFromTMDB(id, Number(tmdbId));
     res.status(200).json(movie);
   });
   

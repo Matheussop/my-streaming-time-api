@@ -20,12 +20,21 @@ export class MovieService implements IMovieService {
 
   async getMovieById(id: string | Types.ObjectId) {
     const movie = await this.movieRepository.findById(id);
+    
     if (!movie) {
       logger.warn({
         message: 'Movie not found',
         movieId: id,
       });
       throw new StreamingServiceError(ErrorMessages.MOVIE_NOT_FOUND, 404);
+    }
+
+    // If the movie has no duration time, it means it was not updated from TMDB yet.
+    if (!movie.durationTime && movie.tmdbId) {
+      const tmdbData = await this.tmdbService.fetchDataFromTMDB(movie.tmdbId, "movie");
+      movie.durationTime = tmdbData.runtime;
+      movie.videoUrl = this.getTrailerUrl(tmdbData.videos.results);
+      await this.movieRepository.update(id, movie);
     }
     return movie;
   }
@@ -106,7 +115,7 @@ export class MovieService implements IMovieService {
     return movies;
   }
 
-  async updateMovieFromTMDB(movieId: string | Types.ObjectId, tmdbId: string): Promise<void> {
+  async updateMovieFromTMDB(movieId: string | Types.ObjectId, tmdbId: number): Promise<void> {
     const tmdbData = await this.tmdbService.fetchDataFromTMDB(tmdbId, 'movie');
     await this.tmdbService.updateData(this.movieRepository, movieId, tmdbData);
   }
@@ -207,5 +216,9 @@ export class MovieService implements IMovieService {
     if (data.plot) processed.plot = data.plot;
 
     return processed;
+  }
+
+  private getTrailerUrl(trailers: any[]): string {
+    return trailers.find((trailer) => trailer.type === 'Trailer')?.key;
   }
 }
