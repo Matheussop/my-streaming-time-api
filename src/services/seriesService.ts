@@ -56,6 +56,17 @@ export class SeriesService implements ISeriesService {
     return series
   }
 
+  async getSeriesByGenre(genre: string, skip: number, limit: number) {
+    const series = await this.seriesRepository.findByGenre(genre, skip, limit);
+    if (!series || series.length <= 0) {
+      logger.warn({
+        message: 'Series not found',
+        genre: genre,
+      });
+    }
+    return series;
+  }
+
   async createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean) {
     const processedData: ISeriesCreate[] = (
       await Promise.all(

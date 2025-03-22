@@ -58,6 +58,21 @@ export class SeriesController {
     res.status(200).json(series);
   });
 
+  getSeriesByGenre = catchAsync(async (req: Request, res: Response) => {
+    const { genre, page = 1, limit = 10 } = req.body;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    logger.info({
+      message: 'Fetching series by genre',
+      genre,
+      method: req.method,
+      path: req.path,
+    });
+
+    const series = await this.seriesService.getSeriesByGenre(genre, skip, limit);
+    res.status(200).json(series);
+  });
+
   createManySeries = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating many series',

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { SeriesController } from '../controllers/seriesController';
 import { SeriesRepository } from '../repositories/seriesRepository';
 import { SeriesService } from '../services/seriesService';
-import { seriesByTitleParamSchema, seriesCreateSchema, updateSeriesSchema } from '../validators/seriesSchema';
+import { seriesByGenreParamSchema, seriesByTitleParamSchema, seriesCreateSchema, updateSeriesSchema } from '../validators/seriesSchema';
 import { validate } from '../middleware/validationMiddleware';
 import { paginationSchema } from '../validators/common';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
@@ -165,6 +165,30 @@ seriesRouter.post(
  *         description: Series not found
  */
 seriesRouter.get('/:id', validateObjectId('params'), seriesController.getSerieById);
+
+/**
+ * @swagger
+ * /series/{genre}:
+ *   get:
+ *     summary: Retrieve a serie by genre
+ *     tags: [Series]
+ *     parameters:
+ *       - in: path
+ *         name: genre
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A serie object
+ *       404:
+ *         description: Serie not found
+ */
+seriesRouter.post(
+  '/byGenre',
+  validate(seriesByGenreParamSchema),
+  seriesController.getSeriesByGenre,
+);
 
 /**
  * @swagger

@@ -100,7 +100,13 @@ export const seriesByTitleParamSchema = paginationSchema.extend({
 
 export type SeriesByTitleParamSchemaType = z.infer<typeof seriesByTitleParamSchema>;
 
+export const seriesByGenreParamSchema = paginationSchema.extend({
+  genre: z.string({
+    required_error: "Genre is required",
+    invalid_type_error: "Genre must be text"
+  }).min(2, "Genre must have at least 2 characters")
+}).partial();
 
-
+export type SeriesByGenreParamSchemaType = z.infer<typeof seriesByGenreParamSchema>;
 
 
