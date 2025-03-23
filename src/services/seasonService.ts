@@ -18,7 +18,7 @@ export class SeasonService implements ISeasonService {
     return this.seasonRepository.findById(id);
   }
 
-  async getEpisodesBySeasonNumber(seriesId: string | Types.ObjectId, seasonNumber: number): Promise<IEpisode[] | null> {
+  async getEpisodesBySeasonNumber(seriesId: string | Types.ObjectId, seasonNumber: number): Promise<ISeasonResponse | null> {
     const season = await this.seasonRepository.findEpisodesBySeasonNumber(seriesId, seasonNumber);
     if (!season || !season.episodes || !season.episodeCount || !season.tmdbId) {
       return null;
@@ -30,11 +30,11 @@ export class SeasonService implements ISeasonService {
       if (!episodes) {
         return null;
       }
-      this.seasonRepository.update(season._id, { episodes });
-      return episodes;
+      const updatedSeason = await this.seasonRepository.update(season._id, { episodes });
+      return updatedSeason;
     }
 
-    return season.episodes;
+    return season;
   }
 
   async createSeason(season: ISeasonCreate | ISeasonCreate[]): Promise<ISeasonResponse | ISeasonResponse[]> {
