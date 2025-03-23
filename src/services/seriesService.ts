@@ -38,7 +38,7 @@ export class SeriesService implements ISeriesService {
       serie.totalSeasons = tmdbData.number_of_seasons;
       serie.totalEpisodes = tmdbData.number_of_episodes;
       serie.videoUrl = this.getTrailerUrl(tmdbData.videos.results);
-      const seasonsSummary = await this.processSeasonsSummary(tmdbData.seasons, serie._id);
+      const seasonsSummary = await this.processSeasonsSummary(tmdbData.seasons, serie._id, serie.tmdbId);
       serie.seasonsSummary = seasonsSummary;
       await this.seriesRepository.update(id, serie);
     }
@@ -257,8 +257,8 @@ export class SeriesService implements ISeriesService {
     return trailers.find((trailer) => trailer.type === 'Trailer')?.key;
   }
 
-  private async processSeasonsSummary(seasons: any[], seriesId: Types.ObjectId): Promise<ISeasonSummary[]> {
-    const seasonsFormatted = this.formatSeasonsSummary(seasons, seriesId);
+  private async processSeasonsSummary(seasons: any[], seriesId: Types.ObjectId, tmdbId: number): Promise<ISeasonSummary[]> {
+    const seasonsFormatted = this.formatSeasonsSummary(seasons, seriesId, tmdbId);
     const seasonsSummary = await this.seasonRepository.create(seasonsFormatted);
     return this.mapToSeasonSummary(seasonsSummary);
   }
@@ -280,10 +280,11 @@ export class SeriesService implements ISeriesService {
     };
   }
 
-  private formatSeasonsSummary(seasons: any[], seriesId: Types.ObjectId): ISeasonCreate[] {
+  private formatSeasonsSummary(seasons: any[], seriesId: Types.ObjectId, tmdbId: number): ISeasonCreate[] {
     return seasons.map((season) => ({
       seriesId,
       title: season.name,
+      tmdbId,
       plot: season.overview || 'Plot not available',
       seasonNumber: season.season_number,
       poster: `https://image.tmdb.org/t/p/original${season.poster_path}`,

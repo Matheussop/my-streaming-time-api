@@ -57,6 +57,25 @@ export class SeasonController {
     res.status(200).json(season);
   });
 
+  getEpisodesBySeasonNumber = catchAsync(async (req: Request, res: Response) => {
+    const seriesId = req.validatedIds.seriesId;
+    const seasonNumber = req.params.seasonNumber;
+    logger.info({
+      message: 'Fetching episodes by season number',
+      seriesId,
+      seasonNumber,
+      method: req.method,
+      path: req.path,
+    });
+
+    const episodes = await this.seasonService.getEpisodesBySeasonNumber(seriesId, Number(seasonNumber));
+    if (!episodes) {
+      return res.status(404).json({ message: 'Episodes not found' });
+    }
+    res.status(200).json(episodes);
+  });
+
+
   createSeason = catchAsync(async (req: Request, res: Response) => {
     logger.info({
       message: 'Creating season',

@@ -1,5 +1,4 @@
 import { TMDBService } from './tmdbService';
-import { StreamingTypeRepository } from './../repositories/streamingTypeRepository';
 import logger from '../config/logger';
 import { ErrorMessages } from '../constants/errorMessages';
 import { IMovieService } from '../interfaces/services';

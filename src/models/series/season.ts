@@ -43,6 +43,10 @@ const seasonSchema = new Schema<ISeasonDocument>(
       ref: 'Series',
       required: [true, ErrorMessages.SERIE_ID_REQUIRED],
     },
+    tmdbId: {
+      type: Number,
+      required: [true, ErrorMessages.TMDB_ID_REQUIRED],
+    },
     seasonNumber: {
       type: Number,
       required: [true, ErrorMessages.SEASON_NUMBER_REQUIRED],
@@ -83,6 +87,10 @@ seasonSchema.index({ seriesId: 1, seasonNumber: 1 }, { unique: true });
 
 seasonSchema.static('findBySeriesId', function(seriesId: string, skip: number, limit: number): Promise<ISeasonResponse[] | null> {
   return this.find({ seriesId }).skip(skip).limit(limit);
+});
+
+seasonSchema.static('findEpisodesBySeasonNumber', function(seriesId: string, seasonNumber: number): Promise<ISeasonResponse | null> {
+  return this.findOne({ seriesId, seasonNumber }).sort({ episodeNumber: 1 });
 });
 
 // Hook to update the season summary in the series when a season is saved

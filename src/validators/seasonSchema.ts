@@ -46,6 +46,12 @@ export const seasonsBySeriesParamSchema = paginationSchema.extend({
 
 export type SeasonsBySeriesParamSchemaType = z.infer<typeof seasonsBySeriesParamSchema>;
 
+export const episodesBySeasonNumberParamSchema = z.object({
+  seasonNumber: z.string().transform(Number).pipe(z.number().min(0, { message: 'Number of season must be greater or equal to 0' })),
+});
+
+export type EpisodesBySeasonNumberParamSchemaType = z.infer<typeof episodesBySeasonNumberParamSchema>;
+
 
 
 

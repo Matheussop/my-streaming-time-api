@@ -13,6 +13,7 @@ export interface IEpisode {
 export interface ISeasonCreate {
   seriesId: Types.ObjectId;
   seasonNumber: number;
+  tmdbId: number;
   title: string;
   plot: string;
   releaseDate: string;
@@ -24,6 +25,7 @@ export interface ISeasonCreate {
 export interface ISeasonUpdate {
   seriesId?: Types.ObjectId;
   seasonNumber?: number;
+  tmdbId?: number;
   title?: string;
   plot?: string;
   releaseDate?: string;
@@ -42,4 +44,5 @@ export type ISeasonDocument = Document & ISeasonResponse;
 
 export interface ISeasonModel extends Model<ISeasonDocument> {
   findBySeriesId(seriesId: string | Types.ObjectId, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
+  findEpisodesBySeasonNumber(seriesId: string | Types.ObjectId, seasonNumber: number): Promise<ISeasonResponse | null>;
 }

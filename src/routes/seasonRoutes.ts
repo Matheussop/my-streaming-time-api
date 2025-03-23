@@ -4,15 +4,17 @@ import { SeasonService } from '../services/seasonService';
 import { SeasonRepository } from '../repositories/seasonRepository';
 import { validate } from '../middleware/validationMiddleware';
 import { 
+  episodesBySeasonNumberParamSchema,
   seasonCreateSchema, 
   seasonUpdateSchema, 
 } from '../validators/seasonSchema';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { paginationSchema } from '../validators/common';
-
+import { TMDBService } from '../services/tmdbService';
 const seasonRouter = Router();
 const seasonRepository = new SeasonRepository();
-const seasonService = new SeasonService(seasonRepository);
+const tmdbService = new TMDBService();
+const seasonService = new SeasonService(seasonRepository, tmdbService);
 const seasonController = new SeasonController(seasonService);
 
 /**
@@ -158,6 +160,34 @@ seasonRouter.get('/series/:seriesId',
   validate(paginationSchema),
   validateObjectId('params', 'seriesId'),
   seasonController.getSeasonsBySeriesId
+);
+
+// Get episodes by season number 
+/**
+ * @swagger
+ * /seasons/episodes/{seriesId}/{seasonNumber}:
+ *   get:
+ *     summary: Get episodes by season number
+ *     tags: [Seasons]
+ *     parameters:
+ *       - in: path
+ *         name: seriesId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: seasonNumber
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: A list of episodes by season number
+ */
+seasonRouter.get('/episodes/:seriesId/:seasonNumber', 
+  validateObjectId('params', 'seriesId'),
+  validate(episodesBySeasonNumberParamSchema, 'params'),
+  seasonController.getEpisodesBySeasonNumber
 );
 
 /**

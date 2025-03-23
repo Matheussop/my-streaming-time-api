@@ -4,7 +4,7 @@ import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from './streamingTypes';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 import { IMovieResponse } from './movie';
-import { ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './series/season';
+import { IEpisode, ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './series/season';
 import { Types } from 'mongoose';
 export interface IUserService {
   registerUser(user: IUserCreate): Promise<IUserResponse>;
@@ -60,6 +60,7 @@ export interface ISeasonService {
   getSeasons(skip: number, limit: number): Promise<ISeasonResponse[] | null>;
   getSeasonsBySeriesId(seriesId: string | Types.ObjectId, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
   getSeasonById(id: string | Types.ObjectId): Promise<ISeasonResponse | null>;
+  getEpisodesBySeasonNumber(seriesId: string | Types.ObjectId, seasonNumber: number): Promise<IEpisode[] | null>;
   createSeason(season: ISeasonCreate | ISeasonCreate[]): Promise<ISeasonResponse | ISeasonResponse[]>;
   updateSeason(id: string | Types.ObjectId, season: ISeasonUpdate): Promise<ISeasonResponse | null>;
   deleteSeason(id: string | Types.ObjectId): Promise<ISeasonResponse | null>;

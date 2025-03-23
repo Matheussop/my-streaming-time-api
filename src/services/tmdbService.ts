@@ -50,4 +50,27 @@ export class TMDBService {
       throw new StreamingServiceError('Error updating data', 500);
     }
   }
+
+  async fetchEpisodes(seriesId: number, seasonNumber: number): Promise<any> {
+    const url = `https://api.themoviedb.org/3/tv/${seriesId}/season/${seasonNumber}?language=en-US`;
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`
+      }
+    }
+    try {
+      const response = await axios.get(url, options);
+      return response.data;
+    } catch (error: any) {
+      logger.error({
+        message: 'Error fetching episodes',
+        seriesId,
+        seasonNumber,
+        error: error.message,
+      });
+      throw new StreamingServiceError('Error fetching episodes', 500);
+    }
+  }
 }
