@@ -18,7 +18,7 @@ export interface SeriesProgress {
     completionPercentage: number;
     watchedAt: Date;
   };
-  episodesWatched: EpisodeWatched[];
+  episodesWatched: Map<string, EpisodeWatched>;
   nextToWatch?: {
     seasonNumber: number;
     episodeNumber: number;

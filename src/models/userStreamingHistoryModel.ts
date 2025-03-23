@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IUserStreamingHistoryCreate, IUserStreamingHistoryDocument, IUserStreamingHistoryModel, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
+import { EpisodeWatched, IUserStreamingHistoryCreate, IUserStreamingHistoryDocument, IUserStreamingHistoryModel, IUserStreamingHistoryResponse, SeriesProgress, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import User from './userModel';
 import { ErrorMessages } from '../constants/errorMessages';
 import console from 'console';
@@ -36,14 +36,18 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument, IUs
           of: {
             totalEpisodes: { type: Number, default: 0 },
             watchedEpisodes: { type: Number, default: 0 },
-            episodesWatched: [{ // Lista de episódios assistidos
-              episodeId: String,
-              seasonNumber: Number,
-              episodeNumber: Number,
-              watchedAt: Date,
-              watchedDurationInMinutes: Number,
-              completionPercentage: Number
-            }],
+            episodesWatched: { // Lista de episódios assistidos
+              type: Map,
+              of: {
+                episodeId: String,
+                seasonNumber: Number,
+                episodeNumber: Number,
+                watchedAt: Date,
+                watchedDurationInMinutes: Number,
+                completionPercentage: Number
+              },
+              default: {}
+            },
             lastWatched: {
               seasonNumber: Number,
               episodeNumber: Number,
@@ -250,13 +254,7 @@ userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
 userStreamingHistorySchema.static('updateEpisodeProgress', async function(
   userId: string,
   seriesId: string,
-  episodeData: {
-    episodeId: string,
-    seasonNumber: number,
-    episodeNumber: number,
-    watchedDurationInMinutes: number,
-    completionPercentage: number
-  }
+  episodeData: EpisodeWatched
 ): Promise<IUserStreamingHistoryResponse | null> {
   // Verificar se a série já existe no histórico do usuário
   const userHistory = await this.findOne({
@@ -273,6 +271,28 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     if (!seriesData) {
       throw new Error('Series not found');
     }
+    const episodesWatchedMap: Map<string, EpisodeWatched> = new Map();
+    episodesWatchedMap.set(episodeData.episodeId, {
+      episodeId: episodeData.episodeId,
+      seasonNumber: episodeData.seasonNumber,
+      episodeNumber: episodeData.episodeNumber,
+      watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
+      completionPercentage: episodeData.completionPercentage,
+      watchedAt: episodeData.watchedAt || new Date()
+    });
+
+    const seriesProgress: Map<string, SeriesProgress> = new Map();
+    seriesProgress.set(seriesId, {
+      totalEpisodes: seriesData.totalEpisodes || 0,
+      watchedEpisodes: 1,
+      episodesWatched: episodesWatchedMap,
+      lastWatched: {
+        ...episodeData,
+        watchedAt: new Date()
+      },
+      completed: seriesData.totalEpisodes === 1
+    });
+
 
     return this.addWatchHistoryEntry(userId, {
       contentId: seriesId,
@@ -280,21 +300,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       title: seriesData.title,
       watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
       completionPercentage: 0, // Será calculado depois
-      seriesProgress: new Map([
-        [seriesId, {
-          totalEpisodes: seriesData.totalEpisodes || 0,
-          watchedEpisodes: 1,
-          episodesWatched: [{
-            ...episodeData,
-            watchedAt: new Date()
-          }],
-          lastWatched: {
-            ...episodeData,
-            watchedAt: new Date()
-          },
-          completed: false
-        }]
-      ])
+      seriesProgress
     });
   } else {
     // Série já existe, atualizar progresso
@@ -312,7 +318,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     };
     
     // Verificar se este episódio já foi assistido
-    const episodeIndex = seriesProgress.episodesWatched?.findIndex(
+    const episodeIndex = Array.from(seriesProgress.episodesWatched.values()).findIndex(
       ep => ep.episodeId === episodeData.episodeId
     ) ?? -1;
     
@@ -379,7 +385,7 @@ userStreamingHistorySchema.static('getWatchedEpisodesForSeries', async function(
   }
   
   const seriesProgress = result.watchHistory[0].seriesProgress?.get(seriesId);
-  return seriesProgress?.episodesWatched || [];
+  return Array.from(seriesProgress?.episodesWatched?.values() || []);
 });
 
 // Método para calcular o próximo episódio a assistir
