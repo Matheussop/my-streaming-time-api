@@ -1,13 +1,33 @@
 import { z } from 'zod';
 import { objectIdSchema } from './common';
 
+const episodeWatchedSchema = z.object({
+  episodeId: objectIdSchema,
+  seasonNumber: z.number(),
+  episodeNumber: z.number(),
+  watchedAt: z.date().optional(),
+  watchedDurationInMinutes: z.number().min(0, { message: 'Watched duration has to be at least 0 minutes' }),
+  completionPercentage: z.number().min(0, { message: 'Completion percentage has to be at least 0%' }).max(100, { message: 'Completion percentage has to be at most 100%' }).optional(),
+});
+
+const seriesProgressSchema = z.object({
+  totalEpisodes: z.number(),
+  watchedEpisodes: z.number(),
+  lastWatched: episodeWatchedSchema.optional(),
+  episodesWatched: z.array(episodeWatchedSchema),
+  nextToWatch: z.object({
+    seasonNumber: z.number(),
+    episodeNumber: z.number(),
+    episodeId: objectIdSchema,
+  }).optional(),
+  completed: z.boolean(),
+});
+
 const watchHistoryEntrySchema = z.object({
   contentId: objectIdSchema,
   contentType: z.enum(['movie', 'series']),
   title: z.string().min(1, { message: 'Title has to be at least 1 character long' }),
-  episodeId: objectIdSchema.optional(),
-  seasonNumber: z.number().optional(),
-  episodeNumber: z.number().optional(),
+  seriesProgress: seriesProgressSchema.optional(),
   watchedAt: z.date().optional(),
   watchedDurationInMinutes: z.number().min(0, { message: 'Watched duration has to be at least 0 minutes' }),
   completionPercentage: z.number().min(0, { message: 'Completion percentage has to be at least 0%' }).max(100, { message: 'Completion percentage has to be at most 100%' }).optional(),
@@ -45,3 +65,9 @@ export type UserStreamingHistoryRemoveEntryPayload = z.infer<typeof userStreamin
 export const userStreamingHistoryGetByUserIdAndStreamingIdSchema = userContentIdentifierSchema;
 
 export type UserStreamingHistoryGetByUserIdAndStreamingIdPayload = z.infer<typeof userStreamingHistoryGetByUserIdAndStreamingIdSchema>;
+
+export const userStreamingHistoryAddEpisodeSchema = z.object({
+  userId: objectIdSchema,
+  contentId: objectIdSchema,
+  episodeData: episodeWatchedSchema,
+});

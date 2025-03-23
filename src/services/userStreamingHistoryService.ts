@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import logger from '../config/logger';
 import { IUserStreamingHistoryService } from '../interfaces/services';
-import { IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
+import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { MovieRepository } from '../repositories/movieRepository';
 import { SeriesRepository } from '../repositories/seriesRepository';
@@ -63,6 +63,28 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     if (!updatedHistory) {
       throw new StreamingServiceError('Failed to update history', 404);
     }
+    return updatedHistory;
+  }
+
+  async addEpisodeToHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null> {
+
+    const updatedHistory = await this.repository.updateEpisodeProgress(userId, contentId, episodeData);
+    if (!updatedHistory) {
+      logger.error({
+        message: 'Erro ao adicionar episódio ao histórico',
+        error: new Error('Failed to update history'),
+        userId,
+        contentId,
+        episodeData
+      });
+      throw new StreamingServiceError('Failed to update history', 404);
+    }
+    logger.info({
+      message: 'Episódio adicionado ao histórico',
+      userId,
+      contentId,
+      episodeId: episodeData.episodeId
+    });
     return updatedHistory;
   }
 

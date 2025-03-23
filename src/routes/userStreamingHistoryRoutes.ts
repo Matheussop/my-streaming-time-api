@@ -10,7 +10,8 @@ import { paginationSchema } from '../validators';
 import { 
   userStreamingHistoryAddEntrySchema, 
   userStreamingHistoryRemoveEntrySchema,
-  userStreamingHistoryGetByUserIdAndStreamingIdSchema, 
+  userStreamingHistoryGetByUserIdAndStreamingIdSchema,
+  userStreamingHistoryAddEpisodeSchema, 
 } from '../validators/userStreamingHistorySchema';
 
 const router: Router = Router();
@@ -154,6 +155,36 @@ router.get(
   '/',
   validate(userStreamingHistoryGetByUserIdAndStreamingIdSchema, 'query'),
   controller.getByUserIdAndStreamingId,
+);
+
+/**
+ * @swagger
+ * /streaming-history/add-episode:
+ *   post:
+ *     summary: Add episode to user's history
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - contentId
+ *               - episodeData
+ *     responses:
+ *       201:
+ *         description: Episode added to history successfully
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  '/add-episode',
+  validate(userStreamingHistoryAddEpisodeSchema),
+  controller.addEpisodeToHistory,
 );
 
 /**

@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { IUserStreamingHistoryRepository } from '../interfaces/repositories';
-import { IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
+import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import UserStreamingHistory from '../models/userStreamingHistoryModel';
 
 export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepository {
@@ -32,12 +32,12 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.hasWatched(userId, contentId);
   }
 
-  async getWatchProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<number> {
-    return UserStreamingHistory.getWatchProgress(userId, contentId);
-  }
-
   async update(id: string | Types.ObjectId, data: Partial<IUserStreamingHistoryResponse>): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
+  }
+
+  async updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null> {
+    return UserStreamingHistory.updateEpisodeProgress(userId, contentId, episodeData);
   }
 
   async delete(id: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {

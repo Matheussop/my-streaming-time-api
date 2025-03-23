@@ -1,7 +1,7 @@
 import { ISeriesCreate, ISeriesResponse, ISeriesUpdate } from './series/series';
 import { IGenreReference, IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate } from './streamingTypes';
 import { IUserResponse } from './user';
-import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
+import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 import { IMovieResponse } from './movie';
 import { IContentResponse } from './content';
@@ -35,11 +35,11 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
   addWatchHistoryEntry(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
   getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
   hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
-  getWatchProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<number>;
   removeWatchHistoryEntry(
     userId: string | Types.ObjectId,
     contentId: string | Types.ObjectId,
   ): Promise<IUserStreamingHistoryResponse | null>;
+  updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null>;  
 }
 
 export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate> {

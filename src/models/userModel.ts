@@ -28,7 +28,7 @@ interface IUserMethods {
 export interface IUserModel extends Model<IUserSchema, {}, IUserMethods> {
   findByEmail(email: string): Promise<IUserResponse | null>;
   findByLogin: (login: string) => Promise<IUserResponse | null>;
-  updateWatchStats: (userId: string | Types.ObjectId, contentType: 'movie' | 'episode', durationInMinutes: number) => Promise<void>;
+  updateWatchStats: (userId: string | Types.ObjectId, contentType: 'movie' | 'series', durationInMinutes: number) => Promise<void>;
 }
 
 export const isValidEmail = (email: string): boolean => {

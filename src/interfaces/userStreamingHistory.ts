@@ -1,12 +1,36 @@
 import { Document, Model, Types } from "mongoose";
 
+export interface EpisodeWatched {
+  episodeId: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  watchedAt: Date;
+  watchedDurationInMinutes: number;
+  completionPercentage: number;
+}
+export interface SeriesProgress {
+  totalEpisodes: number;
+  watchedEpisodes: number;
+  lastWatched?: {
+    seasonNumber: number;
+    episodeNumber: number;
+    episodeId: string;
+    completionPercentage: number;
+    watchedAt: Date;
+  };
+  episodesWatched: EpisodeWatched[];
+  nextToWatch?: {
+    seasonNumber: number;
+    episodeNumber: number;
+    episodeId: string;
+  };
+  completed: boolean;
+}
 export interface WatchHistoryEntry {
   contentId: string | Types.ObjectId;           // Reference to content (movie/series)
   contentType: 'movie' | 'series';
   title: string;               // Denormalized for performance
-  episodeId?: string | Types.ObjectId;          // Only for series
-  seasonNumber?: number;       // Only for series
-  episodeNumber?: number;      // Only for series
+  seriesProgress?: Map<string, SeriesProgress>;
   watchedAt?: Date;             // When it was watched
   watchedDurationInMinutes: number;
   completionPercentage?: number; // 0-100%
@@ -39,5 +63,7 @@ export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistoryD
   removeWatchHistoryEntry(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null>;
   getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
   hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
-  getWatchProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<number>;
+  getWatchedEpisodesForSeries(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<EpisodeWatched[]>;
+  calculateNextEpisode(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<number>;
+  updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeDate: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null>;
 }

@@ -2,7 +2,7 @@ import { Schema } from 'mongoose';
 import Content from '../contentModel';
 import { ISeriesDocument, ISeriesModel } from '../../interfaces/series/series';
 
-const seriesSchema = new Schema({
+const seriesSchema = new Schema<ISeriesDocument>({
   totalSeasons: {
     type: Number,
     default: 0,
@@ -23,6 +23,6 @@ const seriesSchema = new Schema({
   }]
 });
 
-const Series = Content.discriminator<ISeriesDocument, ISeriesModel>('series', seriesSchema);
+const Series = Content.discriminator<ISeriesDocument>('series', seriesSchema);
 
 export default Series;

@@ -1,5 +1,5 @@
 import { IUserResponse, IUserUpdate, IUserCreate } from './user';
-import { IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
+import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from './streamingTypes';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
@@ -20,6 +20,7 @@ export interface IUserStreamingHistoryService {
   addStreamingToHistory(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
   removeStreamingFromHistory(userId: string | Types.ObjectId, streamingId: string): Promise<IUserStreamingHistoryResponse | null>;
   getTotalWatchTime(userId: string | Types.ObjectId): Promise<number>;
+  addEpisodeToHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null>;
 }
 
 export interface IStreamingTypeService {

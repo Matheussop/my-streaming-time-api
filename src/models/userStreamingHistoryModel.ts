@@ -3,8 +3,9 @@ import { IUserStreamingHistoryCreate, IUserStreamingHistoryDocument, IUserStream
 import User from './userModel';
 import { ErrorMessages } from '../constants/errorMessages';
 import console from 'console';
+import Series from './series/seriesModel';
 
-const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument>(
+const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument, IUserStreamingHistoryModel>(
   { 
     userId: {
       type: String,
@@ -30,9 +31,35 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument>(
           required: [true, ErrorMessages.HISTORY_TITLE_REQUIRED],
           trim: true,
         },
-        episodeId: String,
-        seasonNumber: Number,
-        episodeNumber: Number,
+        seriesProgress: {
+          type: Map,
+          of: {
+            totalEpisodes: { type: Number, default: 0 },
+            watchedEpisodes: { type: Number, default: 0 },
+            episodesWatched: [{ // Lista de episódios assistidos
+              episodeId: String,
+              seasonNumber: Number,
+              episodeNumber: Number,
+              watchedAt: Date,
+              watchedDurationInMinutes: Number,
+              completionPercentage: Number
+            }],
+            lastWatched: {
+              seasonNumber: Number,
+              episodeNumber: Number,
+              episodeId: String,
+              completionPercentage: Number,
+              watchedAt: Date
+            },
+            nextToWatch: {
+              seasonNumber: Number,
+              episodeNumber: Number,
+              episodeId: String
+            },
+            completed: { type: Boolean, default: false }
+          },
+          default: {}
+        },
         watchedAt: {
           type: Date,
           default: Date.now,
@@ -80,9 +107,9 @@ userStreamingHistorySchema.post('save', async function() {
       
       if (newEntries.length > 0) {
         for (const entry of newEntries) {
-          const contentTypeMapping: Record<string, 'movie' | 'episode'> = {
+          const contentTypeMapping: Record<string, 'movie' | 'series'> = {
             'Movie': 'movie',
-            'Episode': 'episode'
+            'Series': 'series'
           };
           
           const mappedContentType = contentTypeMapping[entry.contentType] || 'movie';
@@ -188,30 +215,6 @@ userStreamingHistorySchema.static('hasWatched', async function(
   return !!result;
 });
 
-// Método estático para obter o progresso de visualização de um conteúdo
-userStreamingHistorySchema.static('getWatchProgress', async function(
-  userId: string,
-  contentId: string,
-  contentType: string
-): Promise<{ completionPercentage: number, stoppedAt: number } | null> {
-  const result = await this.findOne(
-    {
-      userId,
-      'watchHistory.contentId': contentId,
-      'watchHistory.contentType': contentType
-    },
-    { 'watchHistory.$': 1 }
-  );
-  
-  if (!result || !result.watchHistory || result.watchHistory.length === 0) {
-    return null;
-  }
-  
-  const { completionPercentage, stoppedAt } = result.watchHistory[0];
-  return { completionPercentage, stoppedAt };
-});
-
-
 //TODO remove the logic to retrieve durationToSubtract from the model and move it to the service
 userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
   userId: string,
@@ -241,6 +244,153 @@ userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
   );
 
   return result;
+});
+
+// Método para adicionar ou atualizar o progresso de um episódio
+userStreamingHistorySchema.static('updateEpisodeProgress', async function(
+  userId: string,
+  seriesId: string,
+  episodeData: {
+    episodeId: string,
+    seasonNumber: number,
+    episodeNumber: number,
+    watchedDurationInMinutes: number,
+    completionPercentage: number
+  }
+): Promise<IUserStreamingHistoryResponse | null> {
+  // Verificar se a série já existe no histórico do usuário
+  const userHistory = await this.findOne({
+    userId,
+    'watchHistory.contentId': seriesId,
+    'watchHistory.contentType': 'series'
+  });
+  
+  if (!userHistory) {
+    // Se não existir, criar uma nova entrada para a série
+    // Primeiro precisamos obter os dados básicos da série
+    const seriesData = await Series.findById(seriesId);
+    
+    if (!seriesData) {
+      throw new Error('Series not found');
+    }
+
+    return this.addWatchHistoryEntry(userId, {
+      contentId: seriesId,
+      contentType: 'series',
+      title: seriesData.title,
+      watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
+      completionPercentage: 0, // Será calculado depois
+      seriesProgress: new Map([
+        [seriesId, {
+          totalEpisodes: seriesData.totalEpisodes || 0,
+          watchedEpisodes: 1,
+          episodesWatched: [{
+            ...episodeData,
+            watchedAt: new Date()
+          }],
+          lastWatched: {
+            ...episodeData,
+            watchedAt: new Date()
+          },
+          completed: false
+        }]
+      ])
+    });
+  } else {
+    // Série já existe, atualizar progresso
+    const seriesEntryIndex = userHistory.watchHistory.findIndex(
+      entry => entry.contentId === seriesId && entry.contentType === 'series'
+    );
+    
+    if (seriesEntryIndex === -1) return userHistory;
+    
+    const seriesProgress = userHistory.watchHistory[seriesEntryIndex].seriesProgress?.get(seriesId) || {
+      totalEpisodes: 0,
+      watchedEpisodes: 0,
+      episodesWatched: [],
+      completed: false
+    };
+    
+    // Verificar se este episódio já foi assistido
+    const episodeIndex = seriesProgress.episodesWatched?.findIndex(
+      ep => ep.episodeId === episodeData.episodeId
+    ) ?? -1;
+    
+    const now = new Date();
+    
+    // Preparar dados para atualização
+    const episodeToUpdate = {
+      ...episodeData,
+      watchedAt: now
+    };
+    
+    // Construir o caminho para atualização
+    const seriesEntryPath = `watchHistory.${seriesEntryIndex}.seriesProgress.${seriesId}`;
+    
+    const updateObj: any = {};
+    
+    // Atualizar último episódio assistido
+    updateObj[`${seriesEntryPath}.lastWatched`] = episodeToUpdate;
+    
+    // Adicionar ou atualizar episódio na lista de assistidos
+    if (episodeIndex === -1) {
+      // Episódio não assistido anteriormente
+      updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress.watchedEpisodes || 0) + 1;
+      updateObj[`${seriesEntryPath}.episodesWatched`] = [
+        ...(seriesProgress.episodesWatched || []),
+        episodeToUpdate
+      ];
+    } else {
+      // Episódio já assistido, atualizar
+      updateObj[`${seriesEntryPath}.episodesWatched.${episodeIndex}`] = episodeToUpdate;
+    }
+    
+    // Calcular e atualizar progresso geral da série
+    // TODO depende de como vamos definir "completionPercentage" para a série
+    const updatedHistory = await this.findOneAndUpdate(
+      { userId },
+      { $set: updateObj },
+      { new: true }
+    );
+
+    if (!updatedHistory) {
+      throw new Error('Failed to update episode progress');
+    }
+    return updatedHistory;
+  }
+});
+
+// Método para obter todos os episódios assistidos de uma série
+userStreamingHistorySchema.static('getWatchedEpisodesForSeries', async function(
+  userId: string,
+  seriesId: string
+): Promise<any[]> {
+  const result = await this.findOne(
+    {
+      userId,
+      'watchHistory.contentId': seriesId,
+      'watchHistory.contentType': 'series'
+    },
+    { 'watchHistory.$': 1 }
+  );
+  
+  if (!result || !result.watchHistory || result.watchHistory.length === 0) {
+    return [];
+  }
+  
+  const seriesProgress = result.watchHistory[0].seriesProgress?.get(seriesId);
+  return seriesProgress?.episodesWatched || [];
+});
+
+// Método para calcular o próximo episódio a assistir
+userStreamingHistorySchema.static('calculateNextEpisode', async function(
+  userId: string,
+  seriesId: string
+): Promise<any> {
+  // TODO Implement this method
+  // Este método dependeria do seu serviço de séries para obter
+  // a lista completa de episódios e determinar o próximo
+  // na sequência após o último assistido
 });
 
 userStreamingHistorySchema.index({ userId: 1 });

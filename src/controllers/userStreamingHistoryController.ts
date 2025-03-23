@@ -36,6 +36,7 @@ export class UserStreamingHistoryController {
       message: 'Adding streaming to history',
       userId,
       contentId,
+      watchedDurationInMinutes,
       method: req.method,
       path: req.path,
     });
@@ -98,4 +99,20 @@ export class UserStreamingHistoryController {
     const viewed = await this.service.getByUserIdAndStreamingId(userId, contentId);
     res.status(200).json({ viewed });
   });
+
+  addEpisodeToHistory = catchAsync(async (req: Request, res: Response) => {
+    const { userId, contentId, episodeData } = req.body;
+
+    logger.info({
+      message: 'Adding episode to history',
+      userId,
+      contentId,
+      episodeData,
+      method: req.method,
+      path: req.path,
+    });
+
+    const history = await this.service.addEpisodeToHistory(userId, contentId, episodeData);
+    res.status(201).json({ message: 'Episode added to history successfully', history });
+  });   
 }
