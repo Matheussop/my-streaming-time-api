@@ -108,11 +108,12 @@ export class SeriesController {
       path: req.path,
     });
     
-    const seriesFromDatabase = await this.seriesService.getSeriesByTitle(normalizedTitle, 0, 100);
+    const seriesFromDatabase = await this.seriesService.getSeriesByTitle(normalizedTitle, skip, limit);
+    const totalCount = seriesFromDatabase?.length || 0;
     
-    if (seriesFromDatabase && seriesFromDatabase.length >= 5) {
+    if (seriesFromDatabase && seriesFromDatabase.length > 0) {
       logger.info({
-        message: 'Series already exist in database with this parameter',
+        message: 'Series found in database',
         path: req.path,
         method: req.method,
         seriesCount: seriesFromDatabase.length,
@@ -121,8 +122,9 @@ export class SeriesController {
       return res.status(200).json({
         page,
         limit,
-        total: seriesFromDatabase.length,
+        total: totalCount,
         series: seriesFromDatabase,
+        hasMore: skip + seriesFromDatabase.length < totalCount
       });
     }
 
@@ -133,22 +135,26 @@ export class SeriesController {
         method: req.method,
         path: req.path,
       });
-      
-      const externalSeries = await this.fetchExternalSeries(normalizedTitle, page);
+    
+      const tmdbPage = Math.max(1, Math.floor(skip / limit) + 1);
+      const externalSeries = await this.fetchExternalSeries(normalizedTitle, tmdbPage);
       
       if (!externalSeries || externalSeries.length === 0) {
         return res.status(200).json({
           page,
           limit,
-          total: seriesFromDatabase?.length || 0,
+          total: totalCount,
           series: seriesFromDatabase || [],
+          hasMore: false
         });
       }
       
-      // Filtrar séries que já existem no banco
-      const existingTitles = seriesFromDatabase?.map(series => series.title) || [];
+      const existingTmdbIds = await this.seriesService.getSeriesByTMDBId(externalSeries.map((serie: any) => serie.tmdbId));
+      
+      const existingIds = existingTmdbIds?.map((serie: any) => serie.tmdbId) || [];
+      
       const newSeries = externalSeries.filter(externalSerie => 
-        !existingTitles.includes(externalSerie.title)
+        !existingIds.includes(externalSerie.tmdbId)
       );
       
       if (newSeries.length > 0) {
@@ -158,47 +164,42 @@ export class SeriesController {
           method: req.method,
           path: req.path,
         });
-        
-        const savedSeries = await this.seriesService.createManySeries(
+      
+        await this.seriesService.createManySeries(
           newSeries, 
           this.skipCheckTitles
         );
         
-        const allSeries = [...(seriesFromDatabase || []), ...(Array.isArray(savedSeries) ? savedSeries : [savedSeries])];
-        const paginatedSeries = allSeries.slice(skip, skip + limit);
+        const updatedSeriesFromDatabase = await this.seriesService.getSeriesByTitle(normalizedTitle, skip, limit);
+        const updatedTotalCount = updatedSeriesFromDatabase?.length || 0;
         
         return res.status(200).json({
           page,
           limit,
-          total: allSeries.length,
-          series: paginatedSeries,
+          total: updatedTotalCount,
+          series: updatedSeriesFromDatabase || [],
+          hasMore: skip + (updatedSeriesFromDatabase?.length || 0) < updatedTotalCount
         });
       } else {
         return res.status(200).json({
           page,
           limit,
-          total: seriesFromDatabase?.length || 0,
+          total: totalCount,
           series: seriesFromDatabase || [],
+          hasMore: false
         });
       }
     } catch (error) {
-      logger.error({
-        message: 'Error fetching series from external API',
-        error: error instanceof Error ? error.message : String(error),
-        method: req.method,
-        path: req.path,
-      });
-      
+
       if (seriesFromDatabase && seriesFromDatabase.length > 0) {
         return res.status(200).json({
           page,
           limit,
           total: seriesFromDatabase.length,
           series: seriesFromDatabase,
+          hasMore: false
         });
       }
-      
-      throw new StreamingServiceError('Error fetching series from external API', 500);
     }
   });
 

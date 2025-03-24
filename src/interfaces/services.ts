@@ -56,6 +56,7 @@ export interface ISeriesService{
   getSeriesByTitle(title: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
   getSeriesByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
   createManySeries(seriesArray: ISeriesCreate[], skipCheckTitle: boolean): Promise<ISeriesResponse | ISeriesResponse[]>;
+  getSeriesByTMDBId(tmdbId: number[]): Promise<ISeriesResponse[] | null>;
 } 
 
 export interface ISeasonService {

@@ -52,6 +52,7 @@ export interface IStreamingTypeRepository extends IBaseRepository<IStreamingType
 export interface ISeriesRepository extends IBaseRepository<ISeriesResponse, ISeriesCreate, ISeriesUpdate>{
   findByTitle(title: string, skip?: number, limit?: number): Promise<ISeriesResponse[] | null>;
   findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null>;
+  findByTMDBId(tmdbId: number[]): Promise<ISeriesResponse[] | null>;
 }
 
 export interface ISeasonRepository extends IBaseRepository<ISeasonResponse, ISeasonCreate, ISeasonUpdate>{

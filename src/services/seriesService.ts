@@ -45,6 +45,11 @@ export class SeriesService implements ISeriesService {
     return serie;
   }
 
+  async getSeriesByTMDBId(tmdbId: number[]) {
+    const series = await this.seriesRepository.findByTMDBId(tmdbId);
+    return series;
+  }
+
   async getSeriesByTitle(title: string, skip: number, limit: number) {
     const series = await this.seriesRepository.findByTitle(title, skip, limit);
     if (!series || series.length <= 0) {

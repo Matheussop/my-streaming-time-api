@@ -107,7 +107,18 @@ contentSchema.pre('insertMany', async function(next, docs) {
 });
 
 contentSchema.static('findByTitle', function (title: string, skip: number, limit: number): Promise<IContentResponse[] | null> {
-  return this.find({ title: new RegExp(title, 'i') })
+    
+  // Creating a query that searches for all terms individually
+  // This is more effective for finding partial matches
+  const searchTerms = title.split(' ');
+
+  const query = {
+    $and: searchTerms.map((term: string) => ({
+      title: { $regex: term, $options: 'i' }
+    }))
+  };
+  
+  return this.find(query)
     .skip(skip)
     .limit(limit);
 });

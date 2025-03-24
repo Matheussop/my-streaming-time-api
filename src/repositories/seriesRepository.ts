@@ -32,4 +32,8 @@ export class SeriesRepository implements ISeriesRepository{
   async findByGenre(genre: string, skip: number, limit: number): Promise<ISeriesResponse[] | null> {
     return (Series as unknown as IContentModel).findByGenre(genre, skip, limit) as unknown as ISeriesResponse[] | null;
   }
+
+  async findByTMDBId(tmdbId: number[]): Promise<ISeriesResponse[] | null> {
+    return Series.find({ tmdbId: { $in: tmdbId } }) as unknown as ISeriesResponse[] | null;
+  }
 }
