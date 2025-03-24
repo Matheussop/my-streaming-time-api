@@ -96,6 +96,7 @@ export const ErrorMessages = {
   
   // Content errors
   CONTENT_TYPE_REQUIRED: 'Content type is required',
+  CONTENT_TITLE_ALREADY_EXISTS: "Já existe um conteúdo com este título",
 
   // Authentication & Authorization errors
   INVALID_CREDENTIALS: 'Invalid email or password',
