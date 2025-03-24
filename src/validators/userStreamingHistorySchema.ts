@@ -5,7 +5,7 @@ const episodeWatchedSchema = z.object({
   episodeId: objectIdSchema,
   seasonNumber: z.number(),
   episodeNumber: z.number(),
-  watchedAt: z.date().optional(),
+  watchedAt: z.string().datetime().optional(),
   watchedDurationInMinutes: z.number().min(0, { message: 'Watched duration has to be at least 0 minutes' }),
   completionPercentage: z.number().min(0, { message: 'Completion percentage has to be at least 0%' }).max(100, { message: 'Completion percentage has to be at most 100%' }).optional(),
 });

@@ -23,6 +23,32 @@ const controller = new UserStreamingHistoryController(userStreamingHistoryServic
 
 /**
  * @swagger
+ * /streaming-history/get-episodes-watched:
+ *   get:
+ *     summary: Get episodes watched by user
+ *     tags: [Streaming History]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Episodes watched by user
+ *       404:
+ *         description: User history not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-episodes-watched', 
+  validateObjectId('query', 'userId'),
+  validateObjectId('query', 'contentId'),
+  controller.getEpisodesWatched);
+
+/**
+ * @swagger
  * tags:
  *   name: Streaming History
  *   description: User streaming history management

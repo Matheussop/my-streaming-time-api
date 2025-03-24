@@ -20,7 +20,7 @@ export interface IUserStreamingHistoryService {
   addStreamingToHistory(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
   removeStreamingFromHistory(userId: string | Types.ObjectId, streamingId: string): Promise<IUserStreamingHistoryResponse | null>;
   getTotalWatchTime(userId: string | Types.ObjectId): Promise<number>;
-  addEpisodeToHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null>;
+  getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null>;
 }
 
 export interface IStreamingTypeService {
