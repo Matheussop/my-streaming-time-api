@@ -36,7 +36,7 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }
 
-  async updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null> {
+  async updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<WatchHistoryEntry | null> {
     return UserStreamingHistory.updateEpisodeProgress(userId, contentId, episodeData);
   }
 

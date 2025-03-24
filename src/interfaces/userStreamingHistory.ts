@@ -65,5 +65,5 @@ export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistoryD
   hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
   getWatchedEpisodesForSeries(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<EpisodeWatched[]>;
   calculateNextEpisode(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<number>;
-  updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeDate: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null>;
+  updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeDate: EpisodeWatched): Promise<WatchHistoryEntry | null>;
 }

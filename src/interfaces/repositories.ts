@@ -39,7 +39,7 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
     userId: string | Types.ObjectId,
     contentId: string | Types.ObjectId,
   ): Promise<IUserStreamingHistoryResponse | null>;
-  updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null>;  
+  updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<WatchHistoryEntry | null>;  
 }
 
 export interface IStreamingTypeRepository extends IBaseRepository<IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate> {

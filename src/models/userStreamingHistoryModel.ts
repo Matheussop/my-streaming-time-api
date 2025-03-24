@@ -255,7 +255,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
   userId: string,
   seriesId: string,
   episodeData: EpisodeWatched
-): Promise<IUserStreamingHistoryResponse | null> {
+): Promise<WatchHistoryEntry | null> {
   // Verificar se a série já existe no histórico do usuário
   const userHistory = await this.findOne({
     userId,
@@ -293,8 +293,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       completed: seriesData.totalEpisodes === 1
     });
 
-
-    return this.addWatchHistoryEntry(userId, {
+    const watchHistoryEntry = await this.addWatchHistoryEntry(userId, {
       contentId: seriesId,
       contentType: 'series',
       title: seriesData.title,
@@ -302,13 +301,16 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       completionPercentage: 0, // Será calculado depois
       seriesProgress
     });
+
+    return watchHistoryEntry?.watchHistory[0] || null;
+    
   } else {
     // Série já existe, atualizar progresso
     const seriesEntryIndex = userHistory.watchHistory.findIndex(
       entry => entry.contentId === seriesId && entry.contentType === 'series'
     );
     
-    if (seriesEntryIndex === -1) return userHistory;
+    if (seriesEntryIndex === -1) return null;
     
     const seriesProgress = userHistory.watchHistory[seriesEntryIndex].seriesProgress?.get(seriesId) || {
       totalEpisodes: 0,
@@ -316,14 +318,12 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       episodesWatched: [],
       completed: false
     };
-    
     // Verificar se este episódio já foi assistido
-    const episodeIndex = Array.from(seriesProgress.episodesWatched.values()).findIndex(
-      ep => ep.episodeId === episodeData.episodeId
-    ) ?? -1;
-    
+    const episodeExists = Array.isArray(seriesProgress.episodesWatched) 
+      ? seriesProgress.episodesWatched.some((ep: EpisodeWatched) => ep.episodeId === episodeData.episodeId)
+      : seriesProgress.episodesWatched.has(episodeData.episodeId);
+
     const now = new Date();
-    
     // Preparar dados para atualização
     const episodeToUpdate = {
       ...episodeData,
@@ -339,17 +339,12 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     updateObj[`${seriesEntryPath}.lastWatched`] = episodeToUpdate;
     
     // Adicionar ou atualizar episódio na lista de assistidos
-    if (episodeIndex === -1) {
-      // Episódio não assistido anteriormente
-      updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress.watchedEpisodes || 0) + 1;
-      updateObj[`${seriesEntryPath}.episodesWatched`] = [
-        ...(seriesProgress.episodesWatched || []),
-        episodeToUpdate
-      ];
-    } else {
-      // Episódio já assistido, atualizar
-      updateObj[`${seriesEntryPath}.episodesWatched.${episodeIndex}`] = episodeToUpdate;
-    }
+    if (!episodeExists) {
+    // Episódio não assistido anteriormente - incrementar contador
+    updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress.watchedEpisodes || 0) + 1;
+    } 
+
+    updateObj[`${seriesEntryPath}.episodesWatched.${episodeData.episodeId}`] = episodeToUpdate;
     
     // Calcular e atualizar progresso geral da série
     // TODO depende de como vamos definir "completionPercentage" para a série
@@ -362,7 +357,9 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     if (!updatedHistory) {
       throw new Error('Failed to update episode progress');
     }
-    return updatedHistory;
+    
+    const watchHistoryUpdated = updatedHistory.watchHistory[seriesEntryIndex];
+    return watchHistoryUpdated;
   }
 });
 

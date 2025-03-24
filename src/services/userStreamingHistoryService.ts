@@ -66,7 +66,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return updatedHistory;
   }
 
-  async addEpisodeToHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<IUserStreamingHistoryResponse | null> {
+  async addEpisodeToHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<WatchHistoryEntry | null> {
 
     const updatedHistory = await this.repository.updateEpisodeProgress(userId, contentId, episodeData);
     if (!updatedHistory) {
@@ -86,6 +86,12 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       episodeId: episodeData.episodeId
     });
     return updatedHistory;
+  }
+
+  async getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null> {
+    const history = await this.getUserHistory(userId);
+    const seriesProgress = history.watchHistory.find((entry) => entry.contentId === contentId)?.seriesProgress?.get(contentId.toString());
+    return seriesProgress?.episodesWatched || null;
   }
 
   async getTotalWatchTime(userId: string | Types.ObjectId): Promise<number> {
