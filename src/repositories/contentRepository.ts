@@ -14,21 +14,53 @@ export class ContentRepository implements IContentRepository {
   }
 
   async create(data: any): Promise<IContentResponse> {
-    const existingContent = await Content.findOne({ title: data.title });
+    const existingContent = await Content.findOne({ 
+      title: data.title,
+      contentType: data.contentType
+    });
+    
     if (existingContent) {
-      throw new StreamingServiceError(ErrorMessages.CONTENT_TITLE_ALREADY_EXISTS, 400);
+      throw new StreamingServiceError(
+        `${ErrorMessages.CONTENT_TITLE_ALREADY_EXISTS} for the type ${data.contentType}`, 
+        400
+      );
     }
     const content = new Content(data);
     return content.save();
   }
 
   async createManyMovies(data: IContentResponse[]){
-    const titles = data.map(item => item.title);
-    const existingContent = await Content.find({ title: { $in: titles } });
-    if (existingContent.length > 0) {
-      const duplicateTitles = existingContent.map(item => item.title);
-      throw new StreamingServiceError(`Títulos duplicados encontrados: ${duplicateTitles.join(', ')}`, 400);
+    const contentByType: {[key: string]: string[]} = {};
+    
+    data.forEach(item => {
+      const type = item.contentType || 'movies';
+      if (!contentByType[type]) {
+        contentByType[type] = [];
+      }
+      contentByType[type].push(item.title);
+    });
+    
+    const duplicatesByType: {[key: string]: string[]} = {};
+    
+    for (const [type, titles] of Object.entries(contentByType)) {
+      const existingContent = await Content.find({ 
+        title: { $in: titles },
+        contentType: type
+      });
+      
+      if (existingContent.length > 0) {
+        duplicatesByType[type] = existingContent.map(item => item.title);
+      }
     }
+    
+    if (Object.keys(duplicatesByType).length > 0) {
+      const errorMsg = Object.entries(duplicatesByType)
+        .map(([type, titles]) => `Tipo ${type}: ${titles.join(', ')}`)
+        .join('; ');
+        
+      throw new StreamingServiceError(`Duplicate titles found: ${errorMsg}`, 400);
+    }
+    
     return Content.insertMany(data);
   }
 

@@ -7,7 +7,13 @@ import { IContentResponse, IContentDocument, IContentModel } from '../interfaces
 const contentSchema = new Schema<IContentDocument, IContentModel>(
   {
     title: { type: String, required: [true, ErrorMessages.MOVIE_TITLE_REQUIRED] },
-    releaseDate: { type: String, required: [true, ErrorMessages.MOVIE_RELEASE_DATE_REQUIRED] },
+    releaseDate: { type: String, validate: {
+      validator: function (value: string) {
+        if (!value) return true; // Allow empty strings
+        return /^\d{4}-\d{2}-\d{2}$/.test(value); // Check if it's in YYYY-MM-DD format
+      },
+      message: 'Release date must be in YYYY-MM-DD format'
+    }  },
     plot: { type: String, default: '' },
     cast: [{ type: String }],
     rating: { type: Number },
@@ -28,7 +34,7 @@ const contentSchema = new Schema<IContentDocument, IContentModel>(
     },
     status: { type: String, default: 'Released' },
     poster: { type: String },
-    url: { type: String, required: true },
+    url: { type: String},
     videoUrl: { type: String }
   },
   {
@@ -114,7 +120,7 @@ contentSchema.static('findByGenre', function (genreName: string, skip: number, l
 contentSchema.index({ title: 'text', plot: 'text' });
 contentSchema.index({ 'genre._id': 1 });
 contentSchema.index({ tmdbId: 1 });
-contentSchema.index({ title: 1 }, { unique: true });
+contentSchema.index({ title: 1, contentType: 1 }, { unique: true });
 
 const Content = mongoose.model<IContentDocument, IContentModel>('Content', contentSchema);
 

@@ -8,7 +8,7 @@ interface IGenreReference {
 
 export interface IContentCreate {
   title: string;
-  releaseDate: string;
+  releaseDate?: string;
   plot?: string;
   cast?: string[];
   rating?: number;

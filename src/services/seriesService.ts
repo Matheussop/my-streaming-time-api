@@ -240,7 +240,7 @@ export class SeriesService implements ISeriesService {
   private async processCreateData(data: ISeriesCreate): Promise<ISeriesCreate> {
     return {
       title: data.title.trim(),
-      releaseDate: this.validateReleaseDate(data.releaseDate),
+      releaseDate: data.releaseDate ? this.validateReleaseDate(data.releaseDate) : undefined,
       plot: data.plot,
       cast: data.cast,
       genre: data.genre,
