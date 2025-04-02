@@ -6,10 +6,12 @@ import { UserCreateSchema, UserLoginSchema, UserUpdateSchema } from '../validato
 import { validate } from '../middleware/validationMiddleware';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { paginationSchema } from '../validators';
+import { AuthService } from '../services/authService';
 
 const userRoutes: Router = Router();
 const userRepository = new UserRepository();
-const userService = new UserService(userRepository);
+const authService = new AuthService();
+const userService = new UserService(userRepository, authService);
 const userController = new UserController(userService);
 
 /**

@@ -28,8 +28,8 @@ export class UserController {
       path: req.path,
     });
 
-    const user = await this.userService.loginUser(req.body.email, req.body.password);
-    res.status(200).json({ message: 'Login successful', user });
+    const loginResponse = await this.userService.loginUser(req.body.email, req.body.password);
+    res.status(200).json({ message: 'Login successful', ...loginResponse });
   });
 
   getUserById = catchAsync(async (req: Request, res: Response) => {

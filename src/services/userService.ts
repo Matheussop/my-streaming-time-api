@@ -1,12 +1,12 @@
 import { Types } from 'mongoose';
 import { IUserService } from '../interfaces/services';
-import { IUserCreate, IUserResponse } from '../interfaces/user';
+import { IUserCreate, IUserLoginResponse, IUserResponse } from '../interfaces/user';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { UserRepository } from '../repositories/userRepository';
 import bcrypt from 'bcrypt';
-
+import { AuthService } from './authService';
 export class UserService implements IUserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userRepository: UserRepository, private authService: AuthService) {}
 
   async getAllUsers(skip: number, limit: number) {
     return this.userRepository.findAll(skip, limit);
@@ -23,7 +23,7 @@ export class UserService implements IUserService {
   async registerUser(userData: IUserCreate): Promise<IUserResponse> {
     await this.checkDuplicateEmail(userData.email);
 
-    const hashedPassword = await bcrypt.hash(userData.password, 10); // TODO: Implement bcrypt
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
 
     const newUser = await this.userRepository.create({
       ...userData,
@@ -32,7 +32,7 @@ export class UserService implements IUserService {
     return newUser;
   }
 
-  async loginUser(email: string, password: string) {
+  async loginUser(email: string, password: string): Promise<IUserLoginResponse> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new StreamingServiceError('Invalid credentials', 401);
@@ -43,7 +43,14 @@ export class UserService implements IUserService {
       throw new StreamingServiceError('Invalid credentials', 401);
     }
 
-    return user;
+    const token = this.authService.generateToken(user._id as Types.ObjectId);
+    const refreshToken = this.authService.generateRefreshToken(user._id as Types.ObjectId);
+
+    return {
+      user,
+      token,
+      refreshToken
+    };
   }
 
   async updateUser(id: string | Types.ObjectId, updateData: any) {

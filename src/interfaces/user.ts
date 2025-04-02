@@ -48,3 +48,10 @@ export interface IUserResponse extends Omit<IUserCreate, 'password'> {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface IUserLoginResponse  {
+  user: IUserResponse;
+  token: string;
+  refreshToken: string;
+}
+

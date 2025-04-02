@@ -1,4 +1,4 @@
-import { IUserResponse, IUserUpdate, IUserCreate } from './user';
+import { IUserResponse, IUserUpdate, IUserCreate, IUserLoginResponse } from './user';
 import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from './streamingTypes';
@@ -8,7 +8,7 @@ import { IEpisode, ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './serie
 import { Types } from 'mongoose';
 export interface IUserService {
   registerUser(user: IUserCreate): Promise<IUserResponse>;
-  loginUser(email: string, password: string): Promise<IUserResponse>;
+  loginUser(email: string, password: string): Promise<IUserLoginResponse>;
   getUserById(id: string | Types.ObjectId): Promise<IUserResponse | null>;
   updateUser(id: string | Types.ObjectId, data: Partial<IUserUpdate>): Promise<IUserUpdate | null>;
   deleteUser(id: string | Types.ObjectId): Promise<IUserResponse | null>;

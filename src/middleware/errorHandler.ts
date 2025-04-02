@@ -100,6 +100,7 @@ export const errorHandler = (err: Error | StreamingServiceError, req: Request, r
 
   if (err instanceof z.ZodError) {
     const formattedErrors = formatZodError(err);
+    statusCode = 400;
     return res.status(statusCode).json({
       success: false,
       errors: formattedErrors,
