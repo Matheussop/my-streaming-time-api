@@ -13,6 +13,7 @@ export interface IUserService {
   updateUser(id: string | Types.ObjectId, data: Partial<IUserUpdate>): Promise<IUserUpdate | null>;
   deleteUser(id: string | Types.ObjectId): Promise<IUserResponse | null>;
   getAllUsers(skip: number, limit: number): Promise<IUserResponse[]>;
+  validateUser(token: string): Promise<IUserResponse>;
 }
 
 export interface IUserStreamingHistoryService {

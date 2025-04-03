@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { catchAsync } from '../util/catchAsync';
 import logger from '../config/logger';
-import { StreamingServiceError } from '../middleware/errorHandler';
 import { UserService } from '../services/userService';
 
 export class UserController {
@@ -30,6 +29,20 @@ export class UserController {
 
     const loginResponse = await this.userService.loginUser(req.body.email, req.body.password);
     res.status(200).json({ message: 'Login successful', ...loginResponse });
+  });
+
+  validateUser = catchAsync(async (req: Request, res: Response) => {
+
+    logger.info({
+      message: 'Validating user',
+      token: req.user?.userId,
+      method: req.method,
+      path: req.path,
+    });
+
+    const userId = req.user?.userId as string;
+    const user = await this.userService.validateUser(userId);
+    res.status(200).json({user});
   });
 
   getUserById = catchAsync(async (req: Request, res: Response) => {

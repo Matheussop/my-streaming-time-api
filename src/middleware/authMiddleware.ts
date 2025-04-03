@@ -8,7 +8,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        userId: Types.ObjectId;
+        userId: Types.ObjectId | string;
       };
     }
   }
@@ -45,7 +45,7 @@ export class AuthMiddleware {
       
       const token = this.extractTokenFromHeader(authHeader);
       const { userId } = this.authService.verifyToken(token);
-      req.user = { userId };
+      req.user = { userId: userId as Types.ObjectId | string };
       next();
     } catch (error) {
       next(error);

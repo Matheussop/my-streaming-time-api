@@ -7,12 +7,14 @@ import { validate } from '../middleware/validationMiddleware';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { paginationSchema } from '../validators';
 import { AuthService } from '../services/authService';
+import { AuthMiddleware } from '../middleware/authMiddleware';
 
 const userRoutes: Router = Router();
 const userRepository = new UserRepository();
 const authService = new AuthService();
 const userService = new UserService(userRepository, authService);
 const userController = new UserController(userService);
+const authMiddleware = new AuthMiddleware();
 
 /**
  * @swagger
@@ -80,6 +82,22 @@ userRoutes.post(
   validate(UserLoginSchema),
   userController.loginUser,
 );
+
+
+/**
+ * @swagger
+ * /users/validate:
+ *   post:
+ *     summary: Validate a user
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: User validated successfully
+ *       401:
+ *         description: Invalid credentials
+ */
+userRoutes.get('/validate', authMiddleware.authenticate, userController.validateUser);
+
 
 /**
  * @swagger

@@ -53,13 +53,21 @@ export class UserService implements IUserService {
     };
   }
 
+  async validateUser(userId: string | Types.ObjectId) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new StreamingServiceError('User not found', 404);
+    }
+    return user;
+  }
+
   async updateUser(id: string | Types.ObjectId, updateData: any) {
     if (updateData.email) {
       await this.checkDuplicateEmail(updateData.email, id);
     }
 
     if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10); // TODO: Implement bcrypt
+      updateData.password = await bcrypt.hash(updateData.password, 10);
     }
 
     const updatedUser = await this.userRepository.update(id, updateData);
@@ -71,7 +79,7 @@ export class UserService implements IUserService {
   }
 
   async changePassword(id: string | Types.ObjectId, newPassword: string) {
-    const hashedPassword = await bcrypt.hash(newPassword, 10); // TODO: Implement bcrypt
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     return this.userRepository.update(id, { password: hashedPassword });
   }
 
