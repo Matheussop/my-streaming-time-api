@@ -10,8 +10,8 @@ export class AuthService implements IAuthService {
   private readonly REFRESH_TOKEN_EXPIRATION: string;
 
   constructor() {
-    this.JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-    this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
+    this.JWT_SECRET = process.env.JWT_SECRET || 'random-secret-key';
+    this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'random-refresh-secret-key';
     this.TOKEN_EXPIRATION = '1h';
     this.REFRESH_TOKEN_EXPIRATION = '7d';
   }

@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import setupSwagger from './swagger';
 import { errorHandler } from './middleware/errorHandler';
+import { AuthMiddleware } from './middleware/authMiddleware';
 
 import userStreamingHistoryRoutes from './routes/userStreamingHistoryRoutes';
 import streamingTypeRoutes from './routes/streamingTypeRoutes';
@@ -12,40 +13,52 @@ import userRoutes from './routes/userRoutes';
 import seriesRoutes from './routes/seriesRoutes';
 import genreRoutes from './routes/genreRoute';
 import commonMediaRoutes from './routes/commonMediaRoutes';
-import throttlingMiddleware, { setLastRequestTime, getLastRequestTime } from './middleware/throttlingMiddleware';
 import seasonRoutes from './routes/seasonRoutes';
+import throttlingMiddleware from './middleware/throttlingMiddleware';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const authMiddleware = new AuthMiddleware();
 
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log('Connected to MongoDB');
 
-     // Load lastRequestTime from the database
-     const lastRequestTime = await getLastRequestTime();
-     throttlingMiddleware.setLastRequestTime(lastRequestTime);
+    // Load lastRequestTime from the database
+    const lastRequestTime = await throttlingMiddleware.getLastRequestTime();
+    throttlingMiddleware.setLastRequestTime(lastRequestTime);
 
+    // Global middlewares
     app.use(cors());
     app.use(express.json());
+    app.use(throttlingMiddleware);
+
+    // Global error middleware
+    app.use(errorHandler);
 
     setupSwagger(app);
 
-    app.use(throttlingMiddleware);
+    // Public routes
+    const publicRoutes = express.Router();
+    publicRoutes.use('/user', userRoutes); 
     
-    // Routes
-    app.use('/commonMedia', commonMediaRoutes)
-    app.use('/movies', movieRoutes);
-    app.use('/series', seriesRoutes);
-    app.use('/seasons', seasonRoutes);
-    app.use('/genre', genreRoutes);
-    app.use('/streamingTypes', streamingTypeRoutes);
-    app.use('/user', userRoutes);
-    app.use('/user-streaming-history', userStreamingHistoryRoutes);
-
-    app.use(errorHandler);
+    // Private routes
+    const privateRoutes = express.Router();
+    privateRoutes.use(authMiddleware.authenticate); // Authentication middleware for all private routes
+    privateRoutes.use('/commonMedia', commonMediaRoutes);
+    privateRoutes.use('/movies', movieRoutes);
+    privateRoutes.use('/series', seriesRoutes);
+    privateRoutes.use('/seasons', seasonRoutes);
+    privateRoutes.use('/genre', genreRoutes);
+    privateRoutes.use('/streamingTypes', streamingTypeRoutes);
+    privateRoutes.use('/user-streaming-history', userStreamingHistoryRoutes);
+    
+    // Applying routes
+    app.use('', publicRoutes);
+    app.use('', privateRoutes);
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
