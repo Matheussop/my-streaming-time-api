@@ -16,6 +16,9 @@ Esta seção descreve como a arquitetura do sistema atende aos principais requis
 ## Segurança
 - **Validação com Zod**: Previne injeção de dados maliciosos
 - **Middleware de autenticação**: Controla acesso a recursos protegidos
+  - Validação robusta de tokens Bearer com extração segura
+  - Verificação explícita do formato do token de autorização
+  - Tratamento de erros específicos para diferentes falhas de autenticação
 - **Hashing de senhas**: Implementado com bcrypt
 - **Sanitização de entradas**: Aplicada em todos os endpoints
 - **Throttling**: Protege contra ataques de força bruta e DoS
@@ -256,6 +259,28 @@ Implementamos um sistema de logging centralizado usando Winston, com diferentes 
   - Impacto potencial no desempenho se o logging for excessivo
   - Necessidade de gerenciar rotação e retenção de logs
   - Risco de exposição de informações sensíveis nos logs
+
+## ADR 013: Aprimoramento da Segurança na Autenticação
+
+### Contexto
+A segurança da API é crucial, e o middleware de autenticação é a primeira linha de defesa contra acessos não autorizados. Identificamos fragilidades na implementação original da extração e validação de tokens.
+
+### Decisão
+Implementamos melhorias no middleware de autenticação:
+1. Criação de um método dedicado `extractTokenFromHeader` para isolar a lógica de extração do token
+2. Verificação explícita do formato "Bearer <token>" para validar o header de autorização
+3. Mensagens de erro mais específicas para diferentes tipos de falhas
+4. Validação mais robusta para evitar tokens malformados
+
+### Consequências
+- **Positivas**:
+  - Aumento da segurança através de validação mais rigorosa
+  - Melhor experiência para desenvolvedores com mensagens de erro mais claras
+  - Código mais manutenível e testável com a separação de responsabilidades
+  - Proteção contra tentativas de bypass de autenticação usando formatos inválidos
+- **Negativas**:
+  - Potencial rejeição de tokens em formatos alternativos (mitigado pela padronização)
+  - Ligeira complexidade adicional no código
 
 # Diagrams
 ## Diagram Project Architecture 

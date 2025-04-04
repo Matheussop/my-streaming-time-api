@@ -58,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detailed model schemas for all entities
   - Enhanced descriptions of existing features
   - Added Series management section
+- Authentication: Improved token extraction and validation
+  - Added dedicated method for extracting tokens from Authorization headers
+  - Enhanced validation for Bearer token format
+  - Improved error messages for authentication failures
+  - Better handling of malformed authorization headers
 
 ### Changed
 - User Streaming History: Enhanced data model and operations
@@ -88,6 +93,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved database query performance with optimized index creation
 - Season: 
   - Add new routes for season-related endpoints
+- Authentication Middleware: Refactored for improved security and robustness
+  - Changed token extraction logic to be more secure
+  - Improved error handling with more specific error messages
+  - Added validation for Bearer token format
+  - Enhanced type safety in user object
 
 - Error Messages: Standardized error messages across models and interfaces
   - Centralized error message constants
@@ -103,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error Messages: Improved error messages for genre-related operations
 - Database Queries: Optimized queries for better performance
 - Mongoose Imports: Removed unused imports from Movie and Content Models
+- Authentication: Fixed potential security issues with token extraction
 
 ## [1.2.0]
 ### Added
