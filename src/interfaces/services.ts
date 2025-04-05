@@ -7,13 +7,10 @@ import { IMovieResponse } from './movie';
 import { IEpisode, ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './series/season';
 import { Types } from 'mongoose';
 export interface IUserService {
-  registerUser(user: IUserCreate): Promise<IUserResponse>;
-  loginUser(email: string, password: string): Promise<IUserLoginResponse>;
   getUserById(id: string | Types.ObjectId): Promise<IUserResponse | null>;
   updateUser(id: string | Types.ObjectId, data: Partial<IUserUpdate>): Promise<IUserUpdate | null>;
   deleteUser(id: string | Types.ObjectId): Promise<IUserResponse | null>;
   getAllUsers(skip: number, limit: number): Promise<IUserResponse[]>;
-  validateUser(token: string): Promise<IUserResponse>;
 }
 
 export interface IUserStreamingHistoryService {

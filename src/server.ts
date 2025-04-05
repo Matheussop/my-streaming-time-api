@@ -15,12 +15,17 @@ import genreRoutes from './routes/genreRoute';
 import commonMediaRoutes from './routes/commonMediaRoutes';
 import seasonRoutes from './routes/seasonRoutes';
 import throttlingMiddleware from './middleware/throttlingMiddleware';
+import authRoutes from './routes/authRoutes';
+import { UserRepository } from './repositories/userRepository';
+import { AuthService } from './services/authService';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const authMiddleware = new AuthMiddleware();
+const userRepository = new UserRepository();
+const authService = new AuthService(userRepository);
+const authMiddleware = new AuthMiddleware(authService);
 
 const startServer = async () => {
   try {
@@ -43,11 +48,11 @@ const startServer = async () => {
 
     // Public routes
     const publicRoutes = express.Router();
-    publicRoutes.use('/user', userRoutes); 
-    
+    publicRoutes.use('/auth', authRoutes);
     // Private routes
     const privateRoutes = express.Router();
     privateRoutes.use(authMiddleware.authenticate); // Authentication middleware for all private routes
+    privateRoutes.use('/user', userRoutes); 
     privateRoutes.use('/commonMedia', commonMediaRoutes);
     privateRoutes.use('/movies', movieRoutes);
     privateRoutes.use('/series', seriesRoutes);

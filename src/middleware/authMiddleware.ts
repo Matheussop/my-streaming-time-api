@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
 import { StreamingServiceError } from './errorHandler';
-
 import { Types } from 'mongoose';
 
 declare global {
@@ -15,11 +14,9 @@ declare global {
 } 
 
 export class AuthMiddleware {
-  private authService: AuthService;
   private readonly BEARER_PREFIX = 'Bearer ';
 
-  constructor() {
-    this.authService = new AuthService();
+  constructor(private authService: AuthService) {
   }
 
   private extractTokenFromHeader(authHeader: string): string {

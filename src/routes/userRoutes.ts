@@ -2,19 +2,16 @@ import { UserService } from './../services/userService';
 import { Router } from 'express';
 import { UserController } from '../controllers/userController';
 import { UserRepository } from '../repositories/userRepository';
-import { UserCreateSchema, UserLoginSchema, UserUpdateSchema } from '../validators/userSchema';
+import { UserUpdateSchema } from '../validators/userSchema';
 import { validate } from '../middleware/validationMiddleware';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { paginationSchema } from '../validators';
-import { AuthService } from '../services/authService';
-import { AuthMiddleware } from '../middleware/authMiddleware';
+
 
 const userRoutes: Router = Router();
 const userRepository = new UserRepository();
-const authService = new AuthService();
-const userService = new UserService(userRepository, authService);
+const userService = new UserService(userRepository);
 const userController = new UserController(userService);
-const authMiddleware = new AuthMiddleware();
 
 /**
  * @swagger
@@ -22,82 +19,6 @@ const authMiddleware = new AuthMiddleware();
  *   name: Users
  *   description: User management and login
  */
-
-/**
- * @swagger
- * /users/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created successfully
- *       400:
- *         description: Invalid input
- */
-userRoutes.post(
-  '/register',
-  validate(UserCreateSchema),
-  userController.registerUser,
-);
-
-/**
- * @swagger
- * /users/login:
- *   post:
- *     summary: Login a user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: User logged in successfully
- *       401:
- *         description: Invalid credentials
- */
-userRoutes.post(
-  '/login',
-  validate(UserLoginSchema),
-  userController.loginUser,
-);
-
-
-/**
- * @swagger
- * /users/validate:
- *   post:
- *     summary: Validate a user
- *     tags: [Users]
- *     responses:
- *       200:
- *         description: User validated successfully
- *       401:
- *         description: Invalid credentials
- */
-userRoutes.get('/validate', authMiddleware.authenticate, userController.validateUser);
-
 
 /**
  * @swagger
