@@ -10,7 +10,7 @@ const authRoutes: Router = Router();
 const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
 const authController = new AuthController(authService);
-const authMiddleware = new AuthMiddleware(authService);
+const authMiddleware = new AuthMiddleware();
 
 /**
  * @swagger

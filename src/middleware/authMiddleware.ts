@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/authService';
 import { StreamingServiceError } from './errorHandler';
 import { Types } from 'mongoose';
+import { TokenService } from '../services/TokenService';
 
 declare global {
   namespace Express {
@@ -15,8 +15,10 @@ declare global {
 
 export class AuthMiddleware {
   private readonly BEARER_PREFIX = 'Bearer ';
+  private tokenService: TokenService;
 
-  constructor(private authService: AuthService) {
+  constructor() {
+    this.tokenService = TokenService.getInstance();
   }
 
   private extractTokenFromHeader(authHeader: string): string {
@@ -41,7 +43,7 @@ export class AuthMiddleware {
       }
       
       const token = this.extractTokenFromHeader(authHeader);
-      const { userId } = this.authService.verifyToken(token);
+      const { userId } = this.tokenService.verifyToken(token);
       req.user = { userId: userId as Types.ObjectId | string };
       next();
     } catch (error) {
@@ -56,9 +58,9 @@ export class AuthMiddleware {
         throw new StreamingServiceError('No refresh token provided', 401);
       }
 
-      const { userId } = this.authService.verifyRefreshToken(refreshToken);
-      const newToken = this.authService.generateToken(userId);
-      const newRefreshToken = this.authService.generateRefreshToken(userId);
+      const { userId } = this.tokenService.verifyRefreshToken(refreshToken);
+      const newToken = this.tokenService.generateToken(userId);
+      const newRefreshToken = this.tokenService.generateRefreshToken(userId);
 
       res.json({
         token: newToken,

@@ -16,16 +16,12 @@ import commonMediaRoutes from './routes/commonMediaRoutes';
 import seasonRoutes from './routes/seasonRoutes';
 import throttlingMiddleware from './middleware/throttlingMiddleware';
 import authRoutes from './routes/authRoutes';
-import { UserRepository } from './repositories/userRepository';
-import { AuthService } from './services/authService';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const userRepository = new UserRepository();
-const authService = new AuthService(userRepository);
-const authMiddleware = new AuthMiddleware(authService);
+const authMiddleware = new AuthMiddleware();
 
 const startServer = async () => {
   try {
