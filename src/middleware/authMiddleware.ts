@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { StreamingServiceError } from './errorHandler';
 import { Types } from 'mongoose';
-import { TokenService } from '../services/TokenService';
+import { TokenService } from '../services/tokenService';
 
 declare global {
   namespace Express {

@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import logger from '../config/logger';
 import { z } from 'zod';
 import { formatZodError } from '../util/errorFormatter';
-import { ErrorMessages } from '../constants/errorMessages';
 
 export class StreamingServiceError extends Error {
   public readonly statusCode: number;

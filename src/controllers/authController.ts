@@ -32,17 +32,16 @@ export class AuthController {
   });
 
   validateUser = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string;
 
     logger.info({
       message: 'Validating user',
-      token: req.user?.userId,
+      token: userId,
       method: req.method,
       path: req.path,
     });
 
-    const userId = req.user?.userId as string;
     const user = await this.authService.validateUser(userId);
     res.status(200).json({user});
   });
-
 }

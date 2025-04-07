@@ -79,6 +79,29 @@ authRoutes.post(
   authController.loginUser,
 );
 
+/**
+ * @swagger
+ * /auth/refresh-token:
+ *   post:
+ *     summary: Refresh a user's token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:  
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *       401:
+ *         description: Invalid refresh token or expired
+ */
+authRoutes.post('/refresh-token', authMiddleware.refreshToken);
+
 
 /**
  * @swagger

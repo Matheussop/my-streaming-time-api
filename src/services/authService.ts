@@ -3,7 +3,7 @@ import { IAuthService } from '../interfaces/auth';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { IUserCreate, IUserLoginResponse, IUserResponse } from '../interfaces/user';
 import { UserRepository } from '../repositories/userRepository';
-import { TokenService } from '../services/TokenService';
+import { TokenService } from '../services/tokenService';
 import bcrypt from 'bcrypt';
 
 export class AuthService implements IAuthService {
