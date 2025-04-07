@@ -1,11 +1,13 @@
-import { IUserResponse, IUserUpdate, IUserCreate, IUserLoginResponse } from './user';
+import { IUserResponse, IUserUpdate} from './user';
 import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from './userStreamingHistory';
 import { ISeriesCreate, ISeriesResponse } from './series/series';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from './streamingTypes';
 import { IGenreCreate, IGenreResponse, IGenreUpdate } from './genres';
 import { IMovieResponse } from './movie';
-import { IEpisode, ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './series/season';
+import { ISeasonCreate, ISeasonResponse, ISeasonUpdate } from './series/season';
 import { Types } from 'mongoose';
+import { ContentTypeDistribution, GenrePreferenceStats, SeriesProgressStats, UserWatchingStats, WatchingPatternStats, WatchTimeStats } from './statistics';
+
 export interface IUserService {
   getUserById(id: string | Types.ObjectId): Promise<IUserResponse | null>;
   updateUser(id: string | Types.ObjectId, data: Partial<IUserUpdate>): Promise<IUserUpdate | null>;
@@ -22,6 +24,15 @@ export interface IUserStreamingHistoryService {
   getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null>;
 }
 
+export interface IStatisticsService {
+  getWatchTimeStats(userData: IUserStreamingHistoryResponse): WatchTimeStats
+  getContentTypeDistribution(userData: IUserStreamingHistoryResponse): ContentTypeDistribution
+  getSeriesProgressStats(userData: IUserStreamingHistoryResponse): SeriesProgressStats
+  getGenrePreferences(userData: IUserStreamingHistoryResponse): Promise<GenrePreferenceStats>
+  getWatchingPatterns(userData: IUserStreamingHistoryResponse): WatchingPatternStats
+
+  getAllStats(userData: IUserStreamingHistoryResponse): Promise<UserWatchingStats>
+}
 export interface IStreamingTypeService {
   getAllStreamingTypes(skip: number, limit: number): Promise<IStreamingTypeResponse[]>;
   getStreamingTypeById(id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null>;

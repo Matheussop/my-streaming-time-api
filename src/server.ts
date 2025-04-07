@@ -16,6 +16,7 @@ import commonMediaRoutes from './routes/commonMediaRoutes';
 import seasonRoutes from './routes/seasonRoutes';
 import throttlingMiddleware from './middleware/throttlingMiddleware';
 import authRoutes from './routes/authRoutes';
+import statisticsRoutes from './routes/statisticsRoutes';
 
 dotenv.config();
 
@@ -56,7 +57,8 @@ const startServer = async () => {
     privateRoutes.use('/genre', genreRoutes);
     privateRoutes.use('/streamingTypes', streamingTypeRoutes);
     privateRoutes.use('/user-streaming-history', userStreamingHistoryRoutes);
-    
+    privateRoutes.use('/statistics', statisticsRoutes);
+
     // Applying routes
     app.use('', publicRoutes);
     app.use('', privateRoutes);
