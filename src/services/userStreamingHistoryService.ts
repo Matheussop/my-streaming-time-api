@@ -39,26 +39,37 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
         throw new StreamingServiceError('Streaming already in history', 400);
       }
     }
-
-    return this.repository.addWatchHistoryEntry(userId, streamingData);
+    const newHistory = await this.repository.addWatchHistoryEntry(userId, streamingData);
+    return newHistory;
   }
 
-  async removeStreamingFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
+  async removeEpisodeFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeId: string | Types.ObjectId): Promise<WatchHistoryEntry | null> {
     // TODO: Check if user exists
 
     const history = await this.getUserHistory(userId);
 
-    const streaming = history.watchHistory.find((entry) => entry.contentId === contentId);
-    if (!streaming) {
+    const episodeWatched = history.watchHistory.find((entry) => {
+      if(entry.contentId === contentId){
+        const seriesProgress = entry.seriesProgress?.get(contentId.toString());
+        if(seriesProgress){
+          const episode = seriesProgress.episodesWatched.get(episodeId.toString());
+          if(episode){
+            return episode;
+          }
+        }
+      }
+    });
+    if (!episodeWatched) {
       logger.warn({
-        message: 'Streaming not found in history',
+        message: 'Episode not found in history',
         contentId,
+        episodeId,
         userId,
       });
-      throw new StreamingServiceError('Streaming not found in history', 404);
+      throw new StreamingServiceError('Episode not found in history', 404);
     }
 
-    const updatedHistory = await this.repository.removeWatchHistoryEntry(userId, contentId);
+    const updatedHistory = await this.repository.removeEpisodeFromHistory(userId, contentId, episodeId);
     
     if (!updatedHistory) {
       throw new StreamingServiceError('Failed to update history', 404);

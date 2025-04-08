@@ -58,7 +58,9 @@ export const userContentIdentifierSchema = z.object({
   contentId: objectIdSchema,
 });
 
-export const userStreamingHistoryRemoveEntrySchema = userContentIdentifierSchema;
+export const userStreamingHistoryRemoveEntrySchema = userContentIdentifierSchema.extend({
+  episodeId: objectIdSchema,
+});
 
 export type UserStreamingHistoryRemoveEntryPayload = z.infer<typeof userStreamingHistoryRemoveEntrySchema>;
 

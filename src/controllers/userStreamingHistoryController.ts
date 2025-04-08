@@ -57,20 +57,21 @@ export class UserStreamingHistoryController {
     res.status(201).json({ message: 'Streaming entry added successfully', history });
   });
 
-  removeStreamingFromHistory = catchAsync(async (req: Request, res: Response) => {
-    const { userId, contentId } = req.query as { userId: string; contentId: string; };
+  removeEpisodeFromHistory = catchAsync(async (req: Request, res: Response) => {
+    const { userId, contentId, episodeId } = req.query as { userId: string; contentId: string; episodeId: string; };
 
     logger.info({
       message: 'Removing streaming from history',
       userId: userId,
       contentId: contentId,
+      episodeId: episodeId,
       method: req.method,
       path: req.path,
     });
 
-    const history = await this.service.removeStreamingFromHistory(userId, contentId);
+    const history = await this.service.removeEpisodeFromHistory(userId, contentId, episodeId);
 
-    res.status(200).json({ message: 'Streaming entry removed successfully', history });
+    res.status(200).json({ message: 'Episode removed successfully', history });
   });
 
   calculateTotalWatchTime = catchAsync(async (req: Request, res: Response) => {

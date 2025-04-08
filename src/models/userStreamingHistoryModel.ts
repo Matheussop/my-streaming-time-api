@@ -220,11 +220,11 @@ userStreamingHistorySchema.static('hasWatched', async function(
 });
 
 //TODO remove the logic to retrieve durationToSubtract from the model and move it to the service
-userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
+userStreamingHistorySchema.static('removeEpisodeFromHistory', async function(
   userId: string, 
   contentId: string,
   episodeId: string
-): Promise<IUserStreamingHistoryResponse | null> {
+): Promise<WatchHistoryEntry | null> {
   // Encontrar o histórico do usuário contendo a série
   const userHistory = await this.findOne({ userId, 'watchHistory.contentId': contentId });
 
@@ -276,8 +276,12 @@ userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
   if (!result) {
     return null;
   }
-
-  return result;
+  //return the WatchHistoryEntry of contentId modified
+  const watchHistoryEntry = result.watchHistory.find(entry => entry.contentId === contentId);
+  if (!watchHistoryEntry) {
+    return null;
+  }
+  return watchHistoryEntry;
 });
 
 // Método para adicionar ou atualizar o progresso de um episódio

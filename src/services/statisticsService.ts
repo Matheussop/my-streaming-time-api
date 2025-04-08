@@ -138,7 +138,7 @@ export class StatisticsService implements IStatisticsService {
         percentage: genrePercentages[genre] || 0
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5); // Top 5 gêneros
+      .slice(0, 10); // Top 10 gêneros
     
     return {
       genreCounts,

@@ -148,7 +148,7 @@ router.post(
 router.delete(
   '/remove-entry',
   validate(userStreamingHistoryRemoveEntrySchema, 'query'),
-  controller.removeStreamingFromHistory,
+  controller.removeEpisodeFromHistory,
 );
 
 

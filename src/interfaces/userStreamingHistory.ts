@@ -60,7 +60,7 @@ export type IUserStreamingHistoryDocument = IUserStreamingHistoryResponse & Docu
 export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistoryDocument> {
   findByUserId(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null>;
   addWatchHistoryEntry(userId: string | Types.ObjectId, entry: Omit<WatchHistoryEntry, 'watchedAt'> & { watchedAt?: Date }): Promise<IUserStreamingHistoryResponse>;
-  removeWatchHistoryEntry(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null>;
+  removeEpisodeFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeId: string | Types.ObjectId): Promise<WatchHistoryEntry | null>;
   getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
   hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
   getWatchedEpisodesForSeries(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<EpisodeWatched[]>;
