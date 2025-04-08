@@ -221,31 +221,61 @@ userStreamingHistorySchema.static('hasWatched', async function(
 
 //TODO remove the logic to retrieve durationToSubtract from the model and move it to the service
 userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
-  userId: string,
-  contentId: string
+  userId: string, 
+  contentId: string,
+  episodeId: string
 ): Promise<IUserStreamingHistoryResponse | null> {
-  const userHistory = await this.findOne(
-    { 
-      userId, 
-      'watchHistory.contentId': contentId 
-    },
-    { 'watchHistory.$': 1 }
-  );
+  // Encontrar o histórico do usuário contendo a série
+  const userHistory = await this.findOne({ userId, 'watchHistory.contentId': contentId });
 
-  if (!userHistory || !userHistory.watchHistory || userHistory.watchHistory.length === 0) {
+  if (!userHistory) {
     return null;
   }
-  const durationToSubtract = userHistory.watchHistory[0].watchedDurationInMinutes;
 
+  // Encontrar a entrada específica da série e o episódio dentro dela
+  const seriesEntry = userHistory.watchHistory.find(entry => entry.contentId === contentId);
+  if (!seriesEntry || !seriesEntry.seriesProgress) {
+    return null;
+  }
+
+  const seriesProgressMap = seriesEntry.seriesProgress as Map<string, SeriesProgress>; 
+  const progress = seriesProgressMap.get(contentId);
+  if (!progress || !progress.episodesWatched) {
+      return null;
+  }
+
+  const episodesWatchedMap = progress.episodesWatched as Map<string, EpisodeWatched>;
+  const episodeToRemove = episodesWatchedMap.get(episodeId);
+
+  if (!episodeToRemove) {
+    return null; 
+  }
+
+  const durationToSubtract = episodeToRemove.watchedDurationInMinutes || 0;
+
+  // Construir o caminho para o episódio e a contagem
+  const episodePath = `watchHistory.$[elem].seriesProgress.${contentId}.episodesWatched.${episodeId}`;
+  const watchedEpisodesPath = `watchHistory.$[elem].seriesProgress.${contentId}.watchedEpisodes`;
+
+  // Executar a atualização
   const result = await this.findOneAndUpdate(
     { userId },
-    { $pull: { watchHistory: { contentId } }, 
+    {
+      $unset: { [episodePath]: "" },
       $inc: {
-        totalWatchTimeInMinutes: -durationToSubtract
+        totalWatchTimeInMinutes: -durationToSubtract, 
+        [watchedEpisodesPath]: -1
       }
     },
-    { new: true }
+    {
+      new: true,
+      arrayFilters: [{ 'elem.contentId': contentId }] 
+    }
   );
+
+  if (!result) {
+    return null;
+  }
 
   return result;
 });
