@@ -1,7 +1,7 @@
 import { Document, Model, Types } from "mongoose";
 
 export interface IGenreReference {
-  _id: Types.ObjectId;
+  _id: Types.ObjectId | string;
   id: number;
   name: string;
   poster: string;

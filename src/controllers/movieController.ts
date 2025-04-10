@@ -111,7 +111,7 @@ export class MovieController {
 
     logger.info({
       message: 'Deleting movie',
-      movieId: req.params.id,
+      movieId: req.validatedIds.id,
       method: req.method,
       path: req.path,
     });
