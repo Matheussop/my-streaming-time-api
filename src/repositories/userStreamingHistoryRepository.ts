@@ -44,6 +44,13 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.findByIdAndDelete(id);
   }
 
+  async removeWatchHistoryEntry(
+    userId: string | Types.ObjectId,
+    contentId: string | Types.ObjectId,
+  ): Promise<IUserStreamingHistoryResponse | null> {
+    return UserStreamingHistory.removeWatchHistoryEntry(userId, contentId);
+  }
+
   async removeEpisodeFromHistory(
     userId: string | Types.ObjectId,
     contentId: string | Types.ObjectId,

@@ -43,6 +43,29 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return newHistory;
   }
 
+  async removeStreamingFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
+    // TODO: Check if user exists
+
+    const history = await this.getUserHistory(userId);
+
+    const streaming = history.watchHistory.find((entry) => entry.contentId === contentId);
+    if (!streaming) {
+      logger.warn({
+        message: 'Streaming not found in history',
+        contentId,
+        userId,
+      });
+      throw new StreamingServiceError('Streaming not found in history', 404);
+    }
+
+    const updatedHistory = await this.repository.removeWatchHistoryEntry(userId, contentId);
+    
+    if (!updatedHistory) {
+      throw new StreamingServiceError('Failed to update history', 404);
+    }
+    return updatedHistory;
+  }
+
   async removeEpisodeFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeId: string | Types.ObjectId): Promise<WatchHistoryEntry | null> {
     // TODO: Check if user exists
 

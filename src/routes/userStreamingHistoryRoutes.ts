@@ -11,7 +11,8 @@ import {
   userStreamingHistoryAddEntrySchema, 
   userStreamingHistoryRemoveEntrySchema,
   userStreamingHistoryGetByUserIdAndStreamingIdSchema,
-  userStreamingHistoryAddEpisodeSchema, 
+  userStreamingHistoryAddEpisodeSchema,
+  userStreamingHistoryRemoveEpisodeSchema, 
 } from '../validators/userStreamingHistorySchema';
 
 const router: Router = Router();
@@ -148,6 +149,38 @@ router.post(
 router.delete(
   '/remove-entry',
   validate(userStreamingHistoryRemoveEntrySchema, 'query'),
+  controller.removeStreamingFromHistory,
+);
+
+/**
+ * @swagger
+ * /streaming-history/remove-episode:
+ *   delete:
+ *     summary: Remove streaming episode from user's history
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - contentId
+ *               - episodeId
+ *     responses:
+ *       200:
+ *         description: Streaming episode removed successfully
+ *       404:
+ *         description: Streaming episode not found or Failed to update history
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+router.delete(
+  '/remove-episode',
+  validate(userStreamingHistoryRemoveEpisodeSchema, 'query'),
   controller.removeEpisodeFromHistory,
 );
 

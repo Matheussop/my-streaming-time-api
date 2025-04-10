@@ -220,6 +220,37 @@ userStreamingHistorySchema.static('hasWatched', async function(
 });
 
 //TODO remove the logic to retrieve durationToSubtract from the model and move it to the service
+userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
+  userId: string,
+  contentId: string
+): Promise<IUserStreamingHistoryResponse | null> {
+  const userHistory = await this.findOne(
+    { 
+      userId, 
+      'watchHistory.contentId': contentId 
+    },
+    { 'watchHistory.$': 1 }
+  );
+
+  if (!userHistory || !userHistory.watchHistory || userHistory.watchHistory.length === 0) {
+    return null;
+  }
+  const durationToSubtract = userHistory.watchHistory[0].watchedDurationInMinutes;
+
+  const result = await this.findOneAndUpdate(
+    { userId },
+    { $pull: { watchHistory: { contentId } }, 
+      $inc: {
+        totalWatchTimeInMinutes: -durationToSubtract
+      }
+    },
+    { new: true }
+  );
+
+  return result;
+});
+
+//TODO remove the logic to retrieve durationToSubtract from the model and move it to the service
 userStreamingHistorySchema.static('removeEpisodeFromHistory', async function(
   userId: string, 
   contentId: string,
