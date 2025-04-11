@@ -32,7 +32,7 @@ export class AuthController {
   });
 
   validateUser = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?.userId as string;
+    const userId = req.user!.userId;
 
     logger.info({
       message: 'Validating user',
