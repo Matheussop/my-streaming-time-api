@@ -87,6 +87,19 @@ describe('CommonMediaController', () => {
       const mediaByGenre = [mockMedia];
       const genre = 'Action';
       mockReq.body = { genre };
+      mockService.getContentByGenre.mockResolvedValue(mediaByGenre);
+
+      await controller.getCommonMediaByGenre(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getContentByGenre).toHaveBeenCalledWith(genre, 0, 10);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(mediaByGenre);
+    });
+
+    it('should return common media filtered by genre with pagination', async () => {
+      const mediaByGenre = [mockMedia];
+      const genre = 'Action';
+      mockReq.body = { genre };
       mockReq.query = { page: '1', limit: '10' };
       mockService.getContentByGenre.mockResolvedValue(mediaByGenre);
 
