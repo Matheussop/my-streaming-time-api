@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import Movie from '../models/movieModel';
 import { StreamingServiceError } from '../middleware/errorHandler';
-import { IMovieResponse } from '../interfaces/movie';
 
 export interface Movie_TMDB {
   genre_ids: number[];
@@ -137,7 +136,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
   };
 
   const response = await axios.get(url, options);
-
+  
   if (response.data.results.length === 0) {
     const existingMovies = await Movie.find(query)
       .skip(skip)
@@ -147,7 +146,7 @@ export const findOrAddMovie = async (req: Request, res: Response): Promise<void>
     res.status(200).json({
       page,
       limit,
-      total: totalCount,
+      total: existingMovies.length,
       movies: existingMovies,
       hasMore: false
     });

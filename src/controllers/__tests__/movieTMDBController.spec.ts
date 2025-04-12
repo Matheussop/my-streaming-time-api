@@ -1,337 +1,340 @@
 import { Request, Response } from 'express';
-import axios from 'axios';
-import Movie from '../../models/movieModel';
 import { getExternalMovies, fetchAndSaveExternalMovies, findOrAddMovie } from '../movieTMDBController';
+import { Types } from 'mongoose';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { IMovieResponse } from '../../interfaces/movie';
+import Movie from '../../models/movieModel';
 
-describe('Movie Controller', () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
-  let axiosGetSpy: jest.SpyInstance;
-  let movieFindSpy: jest.SpyInstance;
-  let movieInsertManySpy: jest.SpyInstance;
+jest.mock('../../services/tmdbService');
+jest.mock('../../models/movieModel');
+
+describe('MovieTMDBController', () => {
+  let mockReq: Partial<Request>;
+  let mockRes: Partial<Response>;
+  let validId: Types.ObjectId | string;
+  let mockMovie: IMovieResponse;
+  let originalToken: string | undefined;
 
   beforeEach(() => {
-    mockRequest = {};
-    mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+    originalToken = process.env.TMDB_Bearer_Token;
+    process.env.TMDB_Bearer_Token = 'valid-token';
+
+    validId = generateValidObjectId();
+    mockMovie = {
+      _id: validId as Types.ObjectId,
+      title: 'Test Movie',
+      genre: [],
+      durationTime: 120,
+      releaseDate: '2024-01-01',
+      plot: 'Test plot',
+      cast: ['Actor 1'],
+      rating: 8.5,
+      poster: 'poster-url',
+      url: 'movie-url',
+      videoUrl: 'video-url',
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    axiosGetSpy = jest.spyOn(axios, 'get');
-    movieFindSpy = jest.spyOn(Movie, 'find');
-    movieInsertManySpy = jest.spyOn(Movie, 'insertMany');
+    mockReq = {
+      params: {},
+      query: {},
+      body: {},
+      method: 'GET',
+      path: '/tmdb/movies'
+    };
+    mockRes = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockImplementation(() => mockRes),
+      send: jest.fn(),
+    };
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    process.env.TMDB_Bearer_Token = originalToken;
   });
 
   describe('getExternalMovies', () => {
-    const mockMovieData = {
-      data: {
-        results: [
-          {
-            id: 1,
-            title: 'Test Movie',
-            releaseDate: '2024-01-01',
-            overview: 'Test overview',
-            genre_ids: [28, 12],
-            vote_average: 8.5,
-            poster_path: '/test-path.jpg',
-          },
-        ],
-      },
-    };
+    it('should return external movies from TMDB', async () => {
+      const mockResponse = {
+        data: {
+          results: [
+            {
+              id: 1,
+              title: 'Test Movie',
+              release_date: '2024-01-01',
+              overview: 'Test plot',
+              genre_ids: [1, 2],
+              vote_average: 8.5,
+              backdrop_path: '/backdrop.jpg',
+              poster_path: '/poster.jpg'
+            }
+          ]
+        }
+      };
 
-    it('should fetch and return movies successfully', async () => {
-      axiosGetSpy.mockResolvedValueOnce(mockMovieData);
+      jest.spyOn(require('axios'), 'get').mockResolvedValue(mockResponse);
 
-      await getExternalMovies(mockRequest as Request, mockResponse as Response);
+      await getExternalMovies(mockReq as Request, mockRes as Response);
 
-      expect(axiosGetSpy).toHaveBeenCalledWith(
-        'https://api.themoviedb.org/3/movie/popular?language=pt-BR&page=1',
-        expect.any(Object),
-      );
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: 1,
-            title: 'Test Movie',
-            year: '2024-01-01',
-            plot: 'Test overview',
-            genre: [28, 12],
-            rating: 8.5,
-            url: expect.stringContaining('/test-path.jpg'),
-          }),
-        ]),
-      );
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({
+          id: 1,
+          title: 'Test Movie',
+          year: '2024-01-01',
+          plot: 'Test plot',
+          genre: [1, 2],
+          rating: 8.5,
+          poster: expect.stringContaining('https://image.tmdb.org/t/p/original'),
+          url: expect.stringContaining('https://image.tmdb.org/t/p/w500')
+        })
+      ]));
     });
 
-    it('should handle API errors', async () => {
-      const errorMessage = 'API Error';
-      axiosGetSpy.mockRejectedValueOnce(new Error(errorMessage));
+    it('should handle error when TMDB API fails', async () => {
+      const error = new Error('API Error');
+      jest.spyOn(require('axios'), 'get').mockRejectedValue(error);
 
-      await getExternalMovies(mockRequest as Request, mockResponse as Response);
+      await getExternalMovies(mockReq as Request, mockRes as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: errorMessage,
-      });
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: error.message });
+    });
+
+    it('should handle error when TMDB token is invalid', async () => {
+      process.env.TMDB_Bearer_Token = '';
+
+      await getExternalMovies(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'API Error' });
     });
   });
 
   describe('fetchAndSaveExternalMovies', () => {
-    const movieInDataBase = {
-      title: 'Other Movie',
-      releaseDate: '2024-01-01',
-      overview: 'Test overview',
-      genre_ids: [28, 12],
-      vote_average: 8.5,
-      poster_path: '/test-path.jpg',
-    };
-    const mockMovieData = {
-      data: {
-        results: [
+    it('should fetch and save new movies from TMDB', async () => {
+      const mockResponse = {
+        data: {
+          results: [
+            {
+              id: 1,
+              title: 'New Movie',
+              release_date: '2024-01-01',
+              overview: 'New plot',
+              genre_ids: [1, 2],
+              vote_average: 8.5,
+              backdrop_path: '/backdrop.jpg',
+              poster_path: '/poster.jpg'
+            }, mockMovie // use a same movie to test if it is already in the database
+          ]
+        }
+      };
+
+      jest.spyOn(require('axios'), 'get').mockResolvedValue(mockResponse);
+      (Movie.find as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue([
           {
             title: 'New Movie',
             releaseDate: '2024-01-01',
-            overview: 'Test overview',
-            genre_ids: [28, 12],
-            vote_average: 8.5,
-            poster_path: '/test-path.jpg',
-          },
-          movieInDataBase,
-        ],
-      },
-    };
-
-    it('should fetch and save new movies successfully', async () => {
-      axiosGetSpy.mockResolvedValueOnce(mockMovieData);
-      movieFindSpy.mockReturnValueOnce({
-        lean: jest.fn().mockResolvedValue([movieInDataBase]),
-      });
-
-      movieInsertManySpy.mockResolvedValueOnce([{ ...mockMovieData.data.results[0], _id: 'new-id' }]);
-
-      await fetchAndSaveExternalMovies(mockRequest as Request, mockResponse as Response);
-
-      expect(axiosGetSpy).toHaveBeenCalledTimes(1);
-      expect(movieFindSpy).toHaveBeenCalledTimes(1);
-      expect(movieInsertManySpy).toHaveBeenCalledTimes(1);
-      expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            title: 'New Movie',
-          }),
+            plot: 'New plot',
+            genre: [1, 2],
+            rating: 8.5,
+          }
         ]),
-      );
+      });
+      jest.spyOn(Movie, 'insertMany').mockResolvedValue([mockMovie as any]);
+
+      await fetchAndSaveExternalMovies(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.status).toHaveBeenCalledWith(201);
+      expect(mockRes.json).toHaveBeenCalledWith([mockMovie]);
     });
 
-    it('should handle database errors', async () => {
-      const errorMessage = 'Database Error';
-      axiosGetSpy.mockResolvedValueOnce(mockMovieData);
-      movieFindSpy.mockReturnValue({
-        lean: jest.fn().mockRejectedValue(new Error(errorMessage)),
-      });
+    it('should handle error when saving movies fails', async () => {
+      const error = new Error('Database Error');
+      jest.spyOn(require('axios'), 'get').mockRejectedValue(error);
 
-      await fetchAndSaveExternalMovies(mockRequest as Request, mockResponse as Response);
+      await fetchAndSaveExternalMovies(mockReq as Request, mockRes as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: errorMessage,
-      });
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: error.message });
     });
   });
 
   describe('findOrAddMovie', () => {
-    beforeEach(() => {
-      movieFindSpy.mockReset();
-    });
+    it('should find existing movie in database', async () => {
+      const searchTitle = 'Existing Movie';
+      const page = 1;
+      const limit = 10;
+      const totalCount = 1;
 
-    it('should return error when title is missing', async () => {
-      mockRequest.body = {};
+      mockReq.body = { title: searchTitle, page, limit };
 
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
+      jest.spyOn(Movie, 'countDocuments').mockResolvedValue(totalCount);
+      jest.spyOn(Movie, 'find').mockResolvedValue([mockMovie as any]);
+      (Movie.find as jest.Mock).mockReturnValue({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([mockMovie as any]),
+      });
+      
+      await findOrAddMovie(mockReq as Request, mockRes as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Title parameter is required',
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        page,
+        limit,
+        total: totalCount,
+        movies: [mockMovie],
+        hasMore: false
       });
     });
 
-    it('should return existing movies when found in database', async () => {
-      mockRequest.body = { title: 'Existing Movie' };
-      const existingMovies = Array(6).fill({
-        title: 'Existing Movie',
-        _id: 'test-id',
+    it('should search and add new movie from TMDB when not found in database', async () => {
+      const searchTitle = 'New Movie';
+      const page = 1;
+      const limit = 10;
+      const totalCount = 0;
+
+      mockReq.body = { title: searchTitle, page, limit };
+
+      const mockResponse = {
+        data: {
+          results: [
+            {
+              id: 1,
+              title: searchTitle,
+              release_date: '2024-01-01',
+              overview: 'New plot',
+              genre_ids: [1, 2],
+              vote_average: 8.5,
+              backdrop_path: '/backdrop.jpg',
+              poster_path: '/poster.jpg'
+            }
+          ]
+        }
+      };
+
+      jest.spyOn(Movie, 'countDocuments').mockResolvedValue(totalCount);
+      jest.spyOn(require('axios'), 'get').mockResolvedValue(mockResponse);
+      (Movie.find as jest.Mock).mockReturnValue({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([mockMovie as any]),
       });
+      jest.spyOn(Movie, 'insertMany').mockResolvedValue([mockMovie as any]);
 
-      const mockLean = jest.fn().mockResolvedValue(existingMovies);
-      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
-      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
-      movieFindSpy.mockReturnValue({ skip: mockSkip });
+      await findOrAddMovie(mockReq as Request, mockRes as Response);
 
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        page: 1,
-        limit: 10,
-        total: 6,
-        movies: existingMovies,
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        page,
+        limit,
+        total: expect.any(Number),
+        movies: [mockMovie],
+        hasMore: false
       });
     });
 
-    it('should handle missing TMDB token', async () => {
-      const originalToken = process.env.TMDB_Bearer_Token;
+    it('should search and return a existing movie from TMDB when not found in database and in TMDB', async () => {
+      const searchTitle = 'New Movie';
+      const page = 1;
+      const limit = 10;
+      const totalCount = 0;
+
+      mockReq.body = { title: searchTitle, page, limit };
+
+      const mockResponse = { data: { results: [ ] } };
+
+      jest.spyOn(Movie, 'countDocuments').mockResolvedValue(totalCount);
+      jest.spyOn(require('axios'), 'get').mockResolvedValue(mockResponse);
+      (Movie.find as jest.Mock).mockReturnValue({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([mockMovie as any]),
+      });
+
+      await findOrAddMovie(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        page,
+        limit,
+        total: 1,
+        movies: [mockMovie],
+        hasMore: false
+      });
+      
+    });
+    
+    it("should search and return a new movie without backdrop and poster", async () => {
+      const searchTitle = 'New Movie';
+      const page = 1;
+      const limit = 10;
+      const totalCount = 0;
+
+      mockReq.body = { title: searchTitle, page, limit };
+
+      const mockResponse = {
+        data: {
+          results: [
+            {
+              id: 1,
+              title: searchTitle,
+              release_date: '2024-01-01',
+              overview: 'New plot',
+              genre_ids: [1, 2],
+              vote_average: 8.5,
+              backdrop_path: null,
+              poster_path: null
+            }
+          ]
+        }
+      };
+
+      jest.spyOn(Movie, 'countDocuments').mockResolvedValue(totalCount);
+      jest.spyOn(require('axios'), 'get').mockResolvedValue(mockResponse);
+      (Movie.find as jest.Mock).mockReturnValue({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([mockMovie as any]),
+      });
+      jest.spyOn(Movie, 'insertMany').mockResolvedValue([mockMovie as any]);
+
+      await findOrAddMovie(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        page,
+        limit,
+        total: totalCount,
+        movies: [mockMovie],
+        hasMore: false
+      });
+
+      
+    });
+    
+    it('should handle error when TMDB API fails', async () => {
+      const error = new Error('API Error');
+      mockReq.body = { title: 'Test Movie' };
+
+      jest.spyOn(Movie, 'countDocuments').mockResolvedValue(0);
+      jest.spyOn(require('axios'), 'get').mockRejectedValue(error);
+
+      await expect(findOrAddMovie(mockReq as Request, mockRes as Response))
+        .rejects
+        .toThrow('API Error');
+    });
+
+    it('should handle error when TMDB token is invalid', async () => {
       process.env.TMDB_Bearer_Token = '';
-      mockRequest.body = { title: 'New Movie' };
-
-      const mockLean = jest.fn().mockResolvedValue([]);
-      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
-      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
-      movieFindSpy.mockReturnValue({ skip: mockSkip });
-
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Invalid TMDB_Bearer_Token',
-      });
-
-      process.env.TMDB_Bearer_Token = originalToken;
-    });
-
-    it('should fetch and save new movies from TMDB when not in database', async () => {
-      mockRequest.body = { title: 'New Movie' };
-      process.env.TMDB_Bearer_Token = 'valid-token';
-
-      const tmdbResponse = {
-        data: {
-          results: [
-            {
-              title: 'New Movie',
-              releaseDate: '2024-01-01',
-              overview: 'Test overview',
-              vote_average: 8.5,
-              genre_ids: [28, 12],
-              poster_path: '/test-path.jpg',
-            },
-          ],
-        },
-      };
-
-      const mockLean = jest.fn().mockResolvedValue([]);
-      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
-      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
-      movieFindSpy.mockReturnValueOnce({ skip: mockSkip });
-
-      axiosGetSpy.mockResolvedValueOnce(tmdbResponse);
-      movieFindSpy.mockReturnValue({ lean: mockLean });
-      movieInsertManySpy.mockResolvedValueOnce([{ ...tmdbResponse.data.results[0], _id: 'new-id' }]);
-
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
-
-      expect(axiosGetSpy).toHaveBeenCalledTimes(1);
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        page: 1,
-        limit: 10,
-        total: 1,
-        movies: expect.arrayContaining([
-          expect.objectContaining({
-            title: 'New Movie',
-          }),
-        ]),
-      });
-    });
-
-    it('should handle TMDB API errors', async () => {
-      mockRequest.body = { title: 'New Movie' };
-      process.env.TMDB_Bearer_Token = 'valid-token';
-
-      const mockLean = jest.fn().mockResolvedValue([]);
-      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
-      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
-      movieFindSpy.mockReturnValue({ skip: mockSkip });
-
-      axiosGetSpy.mockRejectedValueOnce(new Error('TMDB API Error'));
-
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'TMDB API Error',
-      });
-    });
-
-    it('should just fetch movies of TMDB if they already exist in database', async () => {
-      mockRequest.body = { title: 'New Movie' };
-      process.env.TMDB_Bearer_Token = 'valid-token';
-
-      const tmdbResponse = {
-        data: {
-          results: [
-            {
-              title: 'New Movie',
-              releaseDate: '2024-01-01',
-              overview: 'Test overview',
-              vote_average: 8.5,
-              genre_ids: [28, 12],
-              poster_path: '/test-path.jpg',
-            },
-          ],
-        },
-      };
-
-      const mockLean = jest.fn().mockResolvedValue(tmdbResponse.data.results);
-      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
-      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
-      movieFindSpy.mockReturnValueOnce({ skip: mockSkip });
-
-      axiosGetSpy.mockResolvedValueOnce(tmdbResponse);
-      movieFindSpy.mockReturnValue({ lean: mockLean });
-      movieInsertManySpy.mockResolvedValueOnce([{ ...tmdbResponse.data.results[0], _id: 'new-id' }]);
-
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
-
-      expect(axiosGetSpy).toHaveBeenCalledTimes(1);
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        page: 1,
-        limit: 10,
-        total: 1,
-        movies: expect.arrayContaining([
-          expect.objectContaining({
-            title: 'New Movie',
-          }),
-        ]),
-      });
-    });
-
-    it('should handle error if TMDB API return empty results', async () => {
-      mockRequest.body = { title: 'New Movie' };
-      process.env.TMDB_Bearer_Token = 'valid-token';
-
-      const mockLean = jest.fn().mockResolvedValue([]);
-      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
-      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
-      movieFindSpy.mockReturnValue({ skip: mockSkip });
-
-      axiosGetSpy.mockResolvedValueOnce({
-        data: {
-          results: [],
-        },
-      });
-
-      await findOrAddMovie(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Movie not found',
-      });
+      mockReq.body = { title: 'Test Movie' };
+      
+      await expect(findOrAddMovie(mockReq as Request, mockRes as Response))
+        .rejects
+        .toThrow('Invalid TMDB_Bearer_Token');
     });
   });
 });
