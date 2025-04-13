@@ -21,7 +21,7 @@ export interface IStreamingTypeUpdate {
 }
 
 export interface IStreamingTypeResponse extends IStreamingTypeCreate {
-  _id: string;
+  _id: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

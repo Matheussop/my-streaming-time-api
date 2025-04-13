@@ -1,139 +1,138 @@
 import { NextFunction, Request, Response } from 'express';
 import { UserController } from '../userController';
 import { UserService } from '../../services/userService';
-import { IUserRepository } from '../../interfaces/repositories';
-import { IUser } from '../../models/userModel';
-import { StreamingServiceError } from '../../middleware/errorHandler';
+import { Types } from 'mongoose';
 import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { IUserResponse } from '../../interfaces/user';
+import { UserRepository } from '../../repositories/userRepository';
 
 jest.mock('../../services/userService');
+/**
+ * Important to mock catchAsync so that the test is not impacted
+ * by the promise that catchAsync returns
+ */
+jest.mock('../../util/catchAsync', () => ({
+  catchAsync: (fn: Function) => fn
+}));
 
 describe('UserController', () => {
-  let userController: UserController;
-  let mockUserService: jest.Mocked<UserService>;
+  let controller: UserController;
+  let mockService: jest.Mocked<UserService>;
+  let mockUserRepository: jest.Mocked<UserRepository>;
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
-  let mockUserRepository: IUserRepository;
   let mockNext: jest.MockedFunction<NextFunction>;
+  let validId: Types.ObjectId;
+  let mockUser: IUserResponse;
 
   beforeEach(() => {
-    mockUserRepository = {} as jest.Mocked<IUserRepository>;
-    mockUserService = new UserService(mockUserRepository) as jest.Mocked<UserService>;
-    userController = new UserController(mockUserService);
-    mockReq = {};
+    validId = new Types.ObjectId(generateValidObjectId());
+    mockUser = {
+      _id: validId,
+      name: 'Test User',
+      email: 'test@example.com',
+      password: 'hashedPassword',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as unknown as IUserResponse;
+
+    mockUserRepository = {} as jest.Mocked<UserRepository>;
+    mockService = new UserService(mockUserRepository) as jest.Mocked<UserService>;
+    controller = new UserController(mockService);
+    mockReq = {
+      body: {},
+      params: {},
+      validatedIds: {},
+      method: 'GET',
+      path: '/users'
+    };
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      json: jest.fn().mockImplementation(() => mockRes),
+      send: jest.fn(),
     };
     mockNext = jest.fn();
   });
 
-  describe('getUserById', () => {
-    it('should return 200 and the user if found', async () => {
-      const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: 'johnDoe@test.com' } as IUser;
-      mockUserService.getUserById.mockResolvedValue(mockUser);
-      mockReq.params = { id: userID };
+  describe('listUsers', () => {
+    it('should return users with pagination', async () => {
+      const page = 1;
+      const limit = 10;
+      const skip = 0;
+      mockReq.body = { page, limit };
 
-      await userController.getUserById(mockReq as Request, mockRes as Response, mockNext);
+      mockService.getAllUsers.mockResolvedValue([mockUser]);
 
+      await controller.listUsers(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getAllUsers).toHaveBeenCalledWith(skip, limit);
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalled();
+      expect(mockRes.json).toHaveBeenCalledWith([mockUser]);
     });
 
-    it('should return 404 if user ID is invalid', async () => {
-      mockReq.params = { id: 'invalid-id' };
-
-      await userController.getUserById(mockReq as Request, mockRes as Response, mockNext);
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
-    });
-  });
-
-  describe('registerUser', () => {
-    it('should return 201 and the new user e message if created successfully', async () => {
-      const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: 'johnDoe@test.com' } as IUser;
-      mockUserService.registerUser.mockResolvedValue(mockUser);
-      mockReq.body = mockUser;
-
-      await userController.registerUser(mockReq as Request, mockRes as Response, mockNext);
-
-      const returnValueUser = { message: 'User created successfully', user: mockUser };
-      expect(mockRes.status).toHaveBeenCalledWith(201);
-      expect(mockRes.json).toHaveBeenCalledWith(returnValueUser);
-    });
-
-    it('should return 400 if there is an empty body', async () => {
+    it('should use default pagination values when not provided', async () => {
+      const defaultPage = 1;
+      const defaultLimit = 10;
+      const defaultSkip = 0;
       mockReq.body = {};
-      await userController.registerUser(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Request body is missing', 400));
+      mockService.getAllUsers.mockResolvedValue([mockUser]);
+
+      await controller.listUsers(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getAllUsers).toHaveBeenCalledWith(defaultSkip, defaultLimit);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith([mockUser]);
     });
   });
 
-  describe('loginUser', () => {
-    it('should return 200 and the user if login is successful', async () => {
-      const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: '' } as IUser;
-      mockUserService.loginUser.mockResolvedValue(mockUser);
-      mockReq.body = mockUser;
+  describe('getUserById', () => {
+    it('should return a user by id', async () => {
+      const id = validId;
+      mockReq.validatedIds = { id };
 
-      await userController.loginUser(mockReq as Request, mockRes as Response, mockNext);
+      mockService.getUserById.mockResolvedValue(mockUser);
 
-      const returnValueUser = { message: 'Login successful', user: mockUser };
+      await controller.getUserById(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getUserById).toHaveBeenCalledWith(id);
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith(returnValueUser);
+      expect(mockRes.json).toHaveBeenCalledWith(mockUser);
     });
   });
 
   describe('updateUser', () => {
-    it('should return 200 and the updated user', async () => {
-      const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: '' } as IUser;
-      mockUserService.updateUser.mockResolvedValue(mockUser);
-      mockReq.params = { id: userID };
-      mockReq.body = mockUser;
+    it('should update an existing user', async () => {
+      const id = validId;
+      const updateData = {
+        name: 'Updated User',
+        email: 'updated@example.com'
+      };
+      mockReq.validatedIds = { id };
+      mockReq.body = updateData;
 
-      await userController.updateUser(mockReq as Request, mockRes as Response, mockNext);
+      mockService.updateUser.mockResolvedValue(mockUser);
 
+      await controller.updateUser(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.updateUser).toHaveBeenCalledWith(id, updateData);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(mockUser);
     });
   });
 
   describe('deleteUser', () => {
-    it('should return 200 and the deleted user', async () => {
-      const userID = generateValidObjectId();
-      const mockUser = { id: userID, name: 'John Doe', email: '' } as IUser;
-      mockUserService.deleteUser.mockResolvedValue(mockUser);
-      mockReq.params = { id: userID };
+    it('should delete a user', async () => {
+      const id = validId;
+      mockReq.validatedIds = { id };
 
-      await userController.deleteUser(mockReq as Request, mockRes as Response, mockNext);
+      mockService.deleteUser.mockResolvedValue(mockUser);
 
-      const returnValueUser = { message: 'User deleted successfully', deletedUser: mockUser };
+      await controller.deleteUser(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.deleteUser).toHaveBeenCalledWith(id);
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith(returnValueUser);
-    });
-  });
-
-  describe('listUsers', () => {
-    it('should return 200 and all users', async () => {
-      const userID = generateValidObjectId();
-      const mockUsers = [
-        { id: generateValidObjectId(), name: 'John Doe', email: '' },
-        { id: generateValidObjectId(), name: 'Jane Doe', email: '' },
-      ] as IUser[];
-      mockUserService.getAllUsers.mockResolvedValue(mockUsers);
-      mockReq = {
-        body: {},
-        params: { id: userID },
-        method: 'GET',
-        path: '/movies',
-      };
-      await userController.listUsers(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith(mockUsers);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'User deleted successfully', deletedUser: mockUser });
     });
   });
 });

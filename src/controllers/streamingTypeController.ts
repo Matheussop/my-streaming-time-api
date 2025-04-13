@@ -74,7 +74,7 @@ export class StreamingTypeController {
     });
 
     const streamingType = await this.service.updateStreamingType(id, req.body);
-    res.json(streamingType);
+    res.status(200).json(streamingType);
   });
 
   addGenreToStreamingType = catchAsync(async (req: Request, res: Response) => {
@@ -89,7 +89,7 @@ export class StreamingTypeController {
     });
 
     const streamingType = await this.service.addGenreToStreamingType(id, supportedGenres);
-    res.json(streamingType);
+    res.status(200).json(streamingType);
   });
 
   deleteGenreFromStreamingTypeByName = catchAsync(async (req: Request, res: Response) => {
@@ -104,7 +104,7 @@ export class StreamingTypeController {
     });
 
     const streamingType = await this.service.deleteGenresFromStreamingTypeByName(id, genresName);
-    res.json(streamingType);
+    res.status(200).json(streamingType);
   });
 
   deleteStreamingType = catchAsync(async (req: Request, res: Response) => {

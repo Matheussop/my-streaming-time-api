@@ -8,8 +8,6 @@ import { SeriesRepository } from '../../repositories/seriesRepository';
 import { TMDBService } from '../../services/tmdbService';
 import { SeasonRepository } from '../../repositories/seasonRepository';
 import { Messages } from '../../constants/messages';
-import { skip } from 'node:test';
-import { title } from 'process';
 
 jest.mock('../../services/seriesService');
 
