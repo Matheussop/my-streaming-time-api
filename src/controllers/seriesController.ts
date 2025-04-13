@@ -5,7 +5,6 @@ import { catchAsync } from "../util/catchAsync";
 import { SeriesService } from '../services/seriesService';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
-import { ErrorMessages } from '../constants/errorMessages';
 import { Messages } from "../constants/messages";
 import { PaginationSchemaType } from "../validators";
 
@@ -88,16 +87,6 @@ export class SeriesController {
 
   findOrAddSerie = catchAsync(async (req: Request, res: Response) => {
     const { title, page = 1, limit = 10 } = req.body;
-    
-    if (!title || typeof title !== 'string' || title.trim() === '') {
-      logger.warn({
-        message: 'Invalid title parameter',
-        path: req.path,
-        method: req.method,
-      });
-      throw new StreamingServiceError(ErrorMessages.SERIES_TITLE_REQUIRED, 400);
-    }
-    
     const normalizedTitle = title.trim();
     const skip = (page - 1) * limit;
 
@@ -107,7 +96,7 @@ export class SeriesController {
       method: req.method,
       path: req.path,
     });
-    
+
     const seriesFromDatabase = await this.seriesService.getSeriesByTitle(normalizedTitle, skip, limit);
     const totalCount = seriesFromDatabase?.length || 0;
     
@@ -118,7 +107,7 @@ export class SeriesController {
         method: req.method,
         seriesCount: seriesFromDatabase.length,
       });
-      
+
       return res.status(200).json({
         page,
         limit,
@@ -135,7 +124,7 @@ export class SeriesController {
         method: req.method,
         path: req.path,
       });
-    
+
       const tmdbPage = Math.max(1, Math.floor(skip / limit) + 1);
       const externalSeries = await this.fetchExternalSeries(normalizedTitle, tmdbPage);
       
@@ -144,11 +133,11 @@ export class SeriesController {
           page,
           limit,
           total: totalCount,
-          series: seriesFromDatabase || [],
+          series: seriesFromDatabase,
           hasMore: false
         });
       }
-      
+
       const existingTmdbIds = await this.seriesService.getSeriesByTMDBId(externalSeries.map((serie: any) => serie.tmdbId));
       
       const existingIds = existingTmdbIds?.map((serie: any) => serie.tmdbId) || [];
@@ -156,7 +145,7 @@ export class SeriesController {
       const newSeries = externalSeries.filter(externalSerie => 
         !existingIds.includes(externalSerie.tmdbId)
       );
-      
+
       if (newSeries.length > 0) {
         logger.info({
           message: 'Saving new series to database',
@@ -191,15 +180,14 @@ export class SeriesController {
       }
     } catch (error) {
 
-      if (seriesFromDatabase && seriesFromDatabase.length > 0) {
-        return res.status(200).json({
-          page,
-          limit,
-          total: seriesFromDatabase.length,
-          series: seriesFromDatabase,
-          hasMore: false
-        });
-      }
+      return res.status(200).json({
+        page,
+        limit,
+        total: 0,
+        series: [],
+        hasMore: false
+      });
+      
     }
   });
 
