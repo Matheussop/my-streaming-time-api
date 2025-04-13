@@ -1,264 +1,311 @@
 import { NextFunction, Request, Response } from 'express';
 import { UserStreamingHistoryService } from '../../services/userStreamingHistoryService';
-import { StreamingServiceError } from '../../middleware/errorHandler';
 import { generateValidObjectId } from '../../util/test/generateValidObjectId';
 import { UserStreamingHistoryController } from '../userStreamingHistoryController';
-import { IMovieRepository, IUserStreamingHistoryRepository } from '../../interfaces/repositories';
-import { IUserStreamingHistory, StreamingHistoryEntry } from '../../models/userStreamingHistoryModel';
-import logger from '../../config/logger';
+import { Types } from 'mongoose';
+import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';
+import { UserStreamingHistoryRepository } from '../../repositories/userStreamingHistoryRepository';
+import { SeriesRepository } from '../../repositories/seriesRepository';
+import { MovieRepository } from '../../repositories/movieRepository';
 
 jest.mock('../../services/userStreamingHistoryService');
 
 describe('UserStreamingHistoryController', () => {
   let controller: UserStreamingHistoryController;
   let mockService: jest.Mocked<UserStreamingHistoryService>;
-  let mockUserStreamingHistoryRepository: jest.Mocked<IUserStreamingHistoryRepository>;
-  let mockMovieRepository: jest.Mocked<IMovieRepository>;
+  let mockUserStreamingHistoryRepository: jest.Mocked<UserStreamingHistoryRepository>;
+  let mockMovieRepository: jest.Mocked<MovieRepository>;
+  let mockSeriesRepository: jest.Mocked<SeriesRepository>;
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
   let mockNext: jest.MockedFunction<NextFunction>;
-  let mockHistory: IUserStreamingHistory;
-  let validUserId: string;
-
+  let mockHistory: IUserStreamingHistoryResponse;
+  let validId: Types.ObjectId;
+  let mockSeriesProgress: SeriesProgress;
+  let mockWatchHistoryEntry: WatchHistoryEntry[];
+  
   beforeAll(() => {
-    const streamingHistoryEntry: StreamingHistoryEntry[] = [
-      {
-        streamingId: generateValidObjectId(),
-        title: 'Test Movie 1',
-        durationInMinutes: 60,
+    validId = new Types.ObjectId(generateValidObjectId());
+    mockSeriesProgress = {
+      totalEpisodes: 10,
+      watchedEpisodes: 5,
+      lastWatched: {
+        seasonNumber: 1,
+        episodeNumber: 1,
+        episodeId: validId.toString(),
+        completionPercentage: 100,
+        watchedAt: new Date()
       },
-      {
-        streamingId: generateValidObjectId(),
-        title: 'Test Movie 2',
-        durationInMinutes: 30,
+      
+      episodesWatched: new Map([["1-1", {
+        episodeId: validId.toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 120,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]]),
+      nextToWatch: {
+        seasonNumber: 1,
+        episodeNumber: 1,
+        episodeId: validId.toString()
       },
-    ];
-    mockHistory = {
-      userId: validUserId,
-      watchHistory: streamingHistoryEntry,
-      totalWatchTimeInMinutes: 90,
-    } as IUserStreamingHistory;
-  });
+      completed: false
+    }
 
+    mockWatchHistoryEntry = [{
+      contentId: validId,
+      contentType: 'movie',
+      title: 'Test Movie',
+      watchedDurationInMinutes: 120,
+      completionPercentage: 100,
+    }];
+  });
   beforeEach(() => {
-    validUserId = generateValidObjectId();
-    mockUserStreamingHistoryRepository = {} as jest.Mocked<IUserStreamingHistoryRepository>;
-    mockMovieRepository = {} as jest.Mocked<IMovieRepository>;
+    mockHistory = {
+      _id: validId,
+      userId: validId,
+      watchHistory: mockWatchHistoryEntry,
+      totalWatchTimeInMinutes: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as IUserStreamingHistoryResponse;
+
+    mockUserStreamingHistoryRepository = {} as jest.Mocked<UserStreamingHistoryRepository>;
+    mockMovieRepository = {} as jest.Mocked<MovieRepository>;
+    mockSeriesRepository = {} as jest.Mocked<SeriesRepository>;
     mockService = new UserStreamingHistoryService(
       mockUserStreamingHistoryRepository,
       mockMovieRepository,
+      mockSeriesRepository
     ) as jest.Mocked<UserStreamingHistoryService>;
     controller = new UserStreamingHistoryController(mockService);
-    mockReq = {};
+    mockReq = {
+      body: {},
+      params: {},
+      validatedIds: {},
+      method: 'GET',
+      path: '/user-streaming-history'
+    };
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      json: jest.fn().mockImplementation(() => mockRes),
+      send: jest.fn(),
     };
     mockNext = jest.fn();
   });
 
   describe('getUserStreamingHistory', () => {
-    it('should successfully fetch user streaming history', async () => {
-      mockReq = {
-        params: { userId: validUserId },
-        method: 'GET',
-        path: '/history',
-      };
+    it('should return user streaming history', async () => {
+      const userId = validId;
+      mockReq.validatedIds = { userId };
+
       mockService.getUserHistory.mockResolvedValue(mockHistory);
 
       await controller.getUserStreamingHistory(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockService.getUserHistory).toHaveBeenCalledWith(validUserId);
+      expect(mockService.getUserHistory).toHaveBeenCalledWith(userId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({ history: mockHistory });
-      expect(logger.info).toHaveBeenCalled();
-    });
-
-    it('should throw error for invalid user ID format', async () => {
-      mockReq = {
-        params: { userId: 'invalid-id' },
-        method: 'GET',
-        path: '/history',
-      };
-
-      await controller.getUserStreamingHistory(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
     });
   });
 
   describe('addStreamingToHistory', () => {
-    it('should successfully add streaming to history', async () => {
-      const validPayload = {
-        userId: validUserId,
-        streamingId: generateValidObjectId(),
-        title: 'Test Movie 3',
-        durationInMinutes: 120,
+    it('should add streaming to history', async () => {
+      const userId = validId;
+      const historyData = {
+        contentId: validId,
+        title: 'Test Movie',
+        contentType: 'movie' as const,
+        watchedDurationInMinutes: 120,
+        completionPercentage: 100,
+        episodeId: validId,
+        seasonNumber: 1,
+        episodeNumber: 1,
+        rating: 5
       };
+      mockReq.body = {userId, ...historyData};
 
-      mockReq = {
-        body: validPayload,
-        method: 'POST',
-        path: '/history',
-      };
-      const { userId, ...validPayloadWithoutUserId } = validPayload;
-      const mockResult = {
-        ...mockHistory,
-        watchHistory: [...mockHistory.watchHistory, validPayloadWithoutUserId],
-        totalWatchTimeInMinutes: mockHistory.totalWatchTimeInMinutes + validPayload.durationInMinutes,
-      } as IUserStreamingHistory;
-      mockService.addStreamingToHistory.mockResolvedValue(mockResult);
+      const watchHistoryEntry = historyData;
+
+      mockService.addStreamingToHistory.mockResolvedValue(mockHistory);
 
       await controller.addStreamingToHistory(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(validPayload.userId, {
-        streamingId: validPayload.streamingId,
-        title: validPayload.title,
-        durationInMinutes: validPayload.durationInMinutes,
-      });
+      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(
+        userId,
+        watchHistoryEntry
+      );
       expect(mockRes.status).toHaveBeenCalledWith(201);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        message: 'Streaming entry added successfully',
-        history: mockResult,
+      expect(mockRes.json).toHaveBeenCalledWith({ 
+        message: 'Streaming entry added successfully', 
+        history: mockHistory 
       });
-    });
-
-    it('should create a new history if user does not have one', async () => {
-      const validPayload = {
-        userId: validUserId,
-        streamingId: generateValidObjectId(),
-        title: 'Test Movie 3',
-        durationInMinutes: 120,
-      };
-
-      mockReq = {
-        body: validPayload,
-        method: 'POST',
-        path: '/history',
-      };
-      const { userId, ...validPayloadWithoutUserId } = validPayload;
-      const mockResult = { userId, watchHistory: [validPayloadWithoutUserId] } as IUserStreamingHistory;
-      mockService.addStreamingToHistory.mockResolvedValue(mockResult);
-
-      await controller.addStreamingToHistory(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockService.addStreamingToHistory).toHaveBeenCalledWith(validPayload.userId, {
-        streamingId: validPayload.streamingId,
-        title: validPayload.title,
-        durationInMinutes: validPayload.durationInMinutes,
-      });
-      expect(mockRes.status).toHaveBeenCalledWith(201);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        message: 'Streaming entry added successfully',
-        history: mockResult,
-      });
-    });
-
-    it('should throw error for missing request body', async () => {
-      mockReq = {
-        body: {},
-        method: 'POST',
-        path: '/history',
-      };
-
-      await controller.addStreamingToHistory(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Request body is missing', 400));
     });
   });
 
   describe('removeStreamingFromHistory', () => {
-    it('should successfully remove streaming from history', async () => {
-      const validPayload = {
-        userId: validUserId,
-        streamingId: mockHistory.watchHistory[0].streamingId,
-      };
-      mockReq = {
-        body: validPayload,
-        method: 'DELETE',
-        path: '/history',
-      };
+    it('should remove streaming from history', async () => {
+      const userId = validId;
+      const contentId = validId;
+      mockReq.query = { userId: userId.toString(), contentId: contentId.toString() };
 
-      const mockResult = {
-        ...mockHistory,
-        watchHistory: mockHistory.watchHistory.filter((entry) => entry.streamingId !== validPayload.streamingId),
-        totalWatchTimeInMinutes: mockHistory.totalWatchTimeInMinutes - mockHistory.watchHistory[0].durationInMinutes,
-      } as IUserStreamingHistory;
-      mockService.removeStreamingFromHistory.mockResolvedValue(mockResult);
+      mockService.removeStreamingFromHistory.mockResolvedValue(mockHistory);
 
       await controller.removeStreamingFromHistory(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockService.removeStreamingFromHistory).toHaveBeenCalledWith(
-        validPayload.userId,
-        validPayload.streamingId,
-      );
+      expect(mockService.removeStreamingFromHistory).toHaveBeenCalledWith(userId.toString(), contentId.toString());
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        message: 'Streaming entry removed successfully',
-        history: mockResult,
+      expect(mockRes.json).toHaveBeenCalledWith({ 
+        message: 'Streaming entry removed successfully', 
+        history: mockHistory 
       });
     });
+  });
 
-    it('should throw error for invalid user id', async () => {
-      mockReq = {
-        body: {
-          userId: 'invalid-id',
-          streamingId: 'invalid-id',
-        },
-        method: 'DELETE',
-        path: '/history',
+  describe('removeEpisodeFromHistory', () => {
+    it('should remove episode from history', async () => {
+      const userId = validId;
+      const contentId = validId;
+      const episodeId = validId;
+      mockReq.query = { 
+        userId: userId.toString(), 
+        contentId: contentId.toString(),
+        episodeId: episodeId.toString()
       };
 
-      await controller.removeStreamingFromHistory(mockReq as Request, mockRes as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
-    });
-
-    it('should throw error for invalid streaming id', async () => {
-      mockReq = {
-        body: {
-          userId: validUserId,
-          streamingId: 'invalid-id',
-        },
-        method: 'DELETE',
-        path: '/history',
+      const watchHistoryEntry: WatchHistoryEntry = {
+        contentId: contentId,
+        contentType: 'series',
+        title: 'Test Series',
+        watchedDurationInMinutes: 45,
+        completionPercentage: 100,
+        rating: 5,
+        watchedAt: new Date(),
+        seriesProgress: new Map()
       };
 
-      await controller.removeStreamingFromHistory(mockReq as Request, mockRes as Response, mockNext);
+      mockService.removeEpisodeFromHistory.mockResolvedValue(watchHistoryEntry);
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid streaming ID format', 400));
+      await controller.removeEpisodeFromHistory(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.removeEpisodeFromHistory).toHaveBeenCalledWith(
+        userId.toString(), 
+        contentId.toString(),
+        episodeId.toString()
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({ 
+        message: 'Episode removed successfully', 
+        history: watchHistoryEntry 
+      });
     });
   });
 
   describe('calculateTotalWatchTime', () => {
-    it('should successfully calculate total watch time', async () => {
-      mockReq = {
-        params: { userId: validUserId },
-        method: 'GET',
-        path: '/history/total-time',
-      };
-      const mockTotalTime = 90;
-      mockService.getTotalWatchTime.mockResolvedValue(mockTotalTime);
+    it('should calculate total watch time', async () => {
+      const userId = validId;
+      mockReq.validatedIds = { userId };
+
+      const totalTime = 180;
+      mockService.getTotalWatchTime.mockResolvedValue(totalTime);
 
       await controller.calculateTotalWatchTime(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockService.getTotalWatchTime).toHaveBeenCalledWith(validUserId);
+      expect(mockService.getTotalWatchTime).toHaveBeenCalledWith(userId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        totalWatchTimeInMinutes: mockTotalTime,
+      expect(mockRes.json).toHaveBeenCalledWith({ totalWatchTimeInMinutes: totalTime });
+    });
+  });
+
+  describe('getByUserIdAndStreamingId', () => {
+    it('should get history by user id and streaming id', async () => {
+      const userId = validId;
+      const contentId = validId;
+      mockReq.query = { userId: userId.toString(), contentId: contentId.toString() };
+
+      const viewed = true;
+      mockService.getByUserIdAndStreamingId.mockResolvedValue(viewed);
+
+      await controller.getByUserIdAndStreamingId(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getByUserIdAndStreamingId).toHaveBeenCalledWith(
+        userId.toString(), 
+        contentId.toString()
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({ viewed });
+    });
+  });
+
+  describe('addEpisodeToHistory', () => {
+    it('should add episode to history', async () => {
+      const userId = validId;
+      const contentId = validId;
+      const episodeData: EpisodeWatched = {
+        episodeId: validId.toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 45,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+      mockReq.body = { userId, contentId, episodeData };
+
+      const watchHistoryEntry: WatchHistoryEntry = {
+        contentId: contentId,
+        contentType: 'series',
+        title: 'Test Series',
+        watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
+        completionPercentage: episodeData.completionPercentage,
+        rating: 5,
+        watchedAt: new Date(),
+        seriesProgress: new Map()
+      };
+
+      mockService.addEpisodeToHistory.mockResolvedValue(watchHistoryEntry);
+
+      await controller.addEpisodeToHistory(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.addEpisodeToHistory).toHaveBeenCalledWith(
+        userId,
+        contentId,
+        episodeData
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(201);
+      expect(mockRes.json).toHaveBeenCalledWith({ 
+        message: 'Episode added to history successfully', 
+        history: watchHistoryEntry 
       });
     });
+  });
 
-    it('should throw error for invalid user ID', async () => {
-      mockReq = {
-        params: { userId: 'invalid-id' },
-        method: 'GET',
-        path: '/history/total-time',
-      };
+  describe('getEpisodesWatched', () => {
+    it('should get episodes watched', async () => {
+      const userId = validId;
+      const contentId = validId;
+      mockReq.query = { userId: userId.toString(), contentId: contentId.toString() };
 
-      await controller.calculateTotalWatchTime(mockReq as Request, mockRes as Response, mockNext);
+      const episodesWatched = new Map<string, EpisodeWatched>();
+      episodesWatched.set('1-1', {
+        episodeId: validId.toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 45,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      });
 
-      expect(mockNext).toHaveBeenCalledWith(new StreamingServiceError('Invalid user ID format', 400));
+      mockService.getEpisodesWatched.mockResolvedValue(episodesWatched);
+
+      await controller.getEpisodesWatched(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getEpisodesWatched).toHaveBeenCalledWith(
+        userId.toString(), 
+        contentId.toString()
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(episodesWatched);
     });
   });
 });
