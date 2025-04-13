@@ -3,10 +3,9 @@ import logger from "../config/logger";
 import { StatisticsService } from "../services/statisticsService";
 import { catchAsync } from "../util/catchAsync";
 import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
-import { ContentService } from '../services/commonService';
 
 export class StatisticsController {
-  constructor(private service: StatisticsService, private userStreamingHistoryService: UserStreamingHistoryService, private contentService: ContentService) {}
+  constructor(private service: StatisticsService, private userStreamingHistoryService: UserStreamingHistoryService) {}
 
   getWatchTimeStats = catchAsync(async (req: Request, res: Response) => {
     const id = req.validatedIds.id;

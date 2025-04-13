@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { StatisticsController } from '../controllers/statistics';
+import { StatisticsController } from '../controllers/statisticsController';
 import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
 import StatisticsService from '../services/statisticsService';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
@@ -17,7 +17,7 @@ const userStreamingHistoryService = new UserStreamingHistoryService(userStreamin
 const contentRepository = new ContentRepository();
 const contentService = new ContentService(contentRepository);
 const statisticsService = new StatisticsService(contentService);
-const statisticsController = new StatisticsController(statisticsService, userStreamingHistoryService, contentService);
+const statisticsController = new StatisticsController(statisticsService, userStreamingHistoryService);
 
 /**
  * @swagger
