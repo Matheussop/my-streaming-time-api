@@ -54,9 +54,9 @@ export class AuthService implements IAuthService {
     return newUser;
   }
 
-  private async checkDuplicateEmail(email: string, userId?: string | Types.ObjectId) {
+  private async checkDuplicateEmail(email: string) {
     const existingUser = await this.userRepository.findByEmail(email);
-    if (existingUser && (!userId || existingUser._id.toString() !== userId.toString())) {
+    if (existingUser) {
       throw new StreamingServiceError('Email already in use', 400);
     }
   }

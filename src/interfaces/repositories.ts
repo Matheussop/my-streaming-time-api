@@ -28,6 +28,8 @@ export interface IMovieRepository extends IBaseRepository<IMovieResponse> {
 
 export interface IUserRepository extends IBaseRepository<IUserResponse> {
   findByEmail(email: string): Promise<IUserResponse | null>;
+  checkPassword(userId: string | Types.ObjectId, password: string): Promise<boolean>;
+  findByEmailWithPassword(email: string): Promise<IUserResponse | null>;
 }
 
 export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserStreamingHistoryResponse> {
