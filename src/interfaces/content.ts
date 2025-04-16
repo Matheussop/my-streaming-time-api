@@ -1,6 +1,6 @@
 import { Document, Model, Types } from "mongoose";
 
-interface IGenreReference {
+export interface IGenreReference {
   _id: Types.ObjectId | string;
   id: number;
   name: string;

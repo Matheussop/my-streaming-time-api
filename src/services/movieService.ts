@@ -158,7 +158,7 @@ export class MovieService implements IMovieService {
       return;
     }
   }
-
+  
   private async checkDuplicateTitle(title: string) {
     const movies = await this.movieRepository.findByTitle(title, 0, 1);
     if (movies && movies.length > 0) {
@@ -187,13 +187,8 @@ export class MovieService implements IMovieService {
     return releaseDate.toISOString().split('T')[0];
   }
 
-  private validateURL(url: string): string {
-    try {
-      // TODO For now the URL is accepted as is, but at some point it will need to be validated.
-      return url;
-    } catch {
-      throw new StreamingServiceError(ErrorMessages.MOVIE_URL_INVALID, 400);
-    }
+  private validateURL(url: string, value: boolean = true): string {
+    return url
   }
 
   private processCastList(cast: any[]): string[] {
@@ -218,6 +213,7 @@ export class MovieService implements IMovieService {
   }
 
   private getTrailerUrl(trailers: any[]): string {
-    return trailers.find((trailer) => trailer.type === 'Trailer')?.key;
+    const trailer = trailers.find((trailer) => trailer.type === 'Trailer')
+    return trailer ? trailer.key : '';
   }
 }
