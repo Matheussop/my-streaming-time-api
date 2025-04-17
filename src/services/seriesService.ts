@@ -79,7 +79,7 @@ export class SeriesService implements ISeriesService {
           const obj = await this.processCreateData(serieObj)
           if (!skipCheckTitle){
             const isDuplicate = await this.checkDuplicateTitle(obj.title);
-            if (!skipCheckTitle && isDuplicate) {
+            if (isDuplicate) {
               return null
             }
           }
@@ -114,7 +114,6 @@ export class SeriesService implements ISeriesService {
     if (updateData.title && updateData.title !== existingSerie.title) {
       await this.checkDuplicateTitle(updateData.title, true);
     }
-
     const processedUpdate = await this.processUpdateData(updateData);
 
     return this.seriesRepository.update(id, processedUpdate);
@@ -206,13 +205,8 @@ export class SeriesService implements ISeriesService {
     return releaseDate.toISOString().split('T')[0];
   }
 
-  private validateURL(url: string): string {
-    try {
-      // TODO For now the URL is accepted as is, but at some point it will need to be validated.
-      return url;
-    } catch {
-      throw new StreamingServiceError(ErrorMessages.SERIES_URL_INVALID, 400);
-    }
+  private validateURL(url: string, value: boolean = true): string {
+    return url
   }
 
   private processCastList(cast: any[]): string[] {
@@ -224,10 +218,9 @@ export class SeriesService implements ISeriesService {
 
   private async processUpdateData(data: any) {
     const processed: any = {};
-
     if (data.title) processed.title = data.title.trim();
     if (data.rating) processed.rating = this.validateRating(data.rating);
-    if (data.releaseDate) processed.releaseDate = this.validateReleaseDate(data.releaseDate);
+    if (data.hasOwnProperty('releaseDate')) processed.releaseDate = this.validateReleaseDate(data.releaseDate);
     if (data.genre) processed.genre = data.genre;
     if (data.url) processed.url = this.validateURL(data.url);
     if (data.cast) processed.cast = this.processCastList(data.cast);
@@ -245,7 +238,7 @@ export class SeriesService implements ISeriesService {
   private async processCreateData(data: ISeriesCreate): Promise<ISeriesCreate> {
     return {
       title: data.title.trim(),
-      releaseDate: data.releaseDate ? this.validateReleaseDate(data.releaseDate) : undefined,
+      releaseDate: data.releaseDate ? this.validateReleaseDate(data.releaseDate) : 'Without release date',
       plot: data.plot,
       cast: data.cast,
       genre: data.genre,
@@ -253,13 +246,13 @@ export class SeriesService implements ISeriesService {
       totalEpisodes: data.totalEpisodes,
       totalSeasons: data.totalSeasons,
       rating: this.validateRating(data.rating),
-      poster: this.validateURL(data?.poster || ''),
-      url: this.validateURL(data?.url || ''),
+      poster: this.validateURL(data.poster || ''),
+      url: this.validateURL(data.url || ''),
     }
   }
   
   private getTrailerUrl(trailers: any[]): string {
-    return trailers.find((trailer) => trailer.type === 'Trailer')?.key;
+    return trailers.find((trailer) => trailer.type === 'Trailer')?.key || '';
   }
 
   private async processSeasonsSummary(seasons: any[], seriesId: Types.ObjectId, tmdbId: number): Promise<ISeasonSummary[]> {
