@@ -1,7 +1,7 @@
 import { Model, Types } from "mongoose";
 
 export interface IEpisode {
-  _id: string;
+  _id: string | Types.ObjectId;
   episodeNumber: number;
   title: string;
   plot: string;
@@ -11,7 +11,7 @@ export interface IEpisode {
 }
 
 export interface ISeasonCreate {
-  seriesId: Types.ObjectId;
+  seriesId: Types.ObjectId | string;
   seasonNumber: number;
   tmdbId: number;
   title: string;
@@ -23,7 +23,7 @@ export interface ISeasonCreate {
 }
 
 export interface ISeasonUpdate {
-  seriesId?: Types.ObjectId;
+  seriesId?: Types.ObjectId | string;
   seasonNumber?: number;
   tmdbId?: number;
   title?: string;
@@ -35,7 +35,7 @@ export interface ISeasonUpdate {
 }
 
 export interface ISeasonResponse extends ISeasonCreate {
-  _id: string;
+  _id: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
