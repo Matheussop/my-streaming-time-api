@@ -1,206 +1,381 @@
-import { UserStreamingHistoryService } from '../userStreamingHistoryService';
+import { Types } from 'mongoose';
 import { StreamingServiceError } from '../../middleware/errorHandler';
-import { IUserStreamingHistory, StreamingHistoryEntry } from '../../models/userStreamingHistoryModel';
+import { MovieRepository } from '../../repositories/movieRepository';
+import { SeriesRepository } from '../../repositories/seriesRepository';
+import { UserStreamingHistoryRepository } from '../../repositories/userStreamingHistoryRepository';
+import { UserStreamingHistoryService } from '../userStreamingHistoryService';
+import { IMovieResponse } from '../../interfaces/movie';
+import { ISeriesResponse } from '../../interfaces/series/series';
+import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';
+import { describe } from 'node:test';
+import { IGenreReference } from '../../interfaces/streamingTypes';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+
+jest.mock('../../repositories/movieRepository');
+jest.mock('../../repositories/seriesRepository');
+jest.mock('../../repositories/userStreamingHistoryRepository');
 
 describe('UserStreamingHistoryService', () => {
-  let service: UserStreamingHistoryService;
-  let mockRepository: any;
-  let mockMovieRepository: any;
+  let userStreamingHistoryService: UserStreamingHistoryService;
+  let mockUserStreamingHistoryRepository: jest.Mocked<UserStreamingHistoryRepository>;
+  let mockMovieRepository: jest.Mocked<MovieRepository>;
+  let mockSeriesRepository: jest.Mocked<SeriesRepository>;
 
-  const mockUserId = 'user123';
-  const mockStreamingEntry: StreamingHistoryEntry = {
-    streamingId: 'streaming123',
-    title: 'Test Movie',
-    durationInMinutes: 120,
+  const mockUserId = generateValidObjectId();
+  const mockContentId = generateValidObjectId();
+  const mockEpisodeId = generateValidObjectId();
+
+  const mockGenre: IGenreReference = {
+    _id: new Types.ObjectId(),
+    name: 'Action',
+    id: 1,
+    poster: 'poster.jpg'
   };
 
-  const mockHistory: Partial<IUserStreamingHistory> = {
+  const mockMovie: IMovieResponse = {
+    _id: mockContentId,
+    title: 'Test Movie',
+    contentType: 'movie',
+    durationTime: 120,
+    releaseDate: '2024-03-20T00:00:00.000Z',
+    plot: 'Test plot',
+    cast: ['Actor 1', 'Actor 2'],
+    genre: [mockGenre],
+    rating: 8.5,
+    poster: 'poster.jpg',
+    url: 'movie.mp4'
+  } as unknown as IMovieResponse;
+
+  const mockSeries: ISeriesResponse = {
+    _id: mockContentId,
+    title: 'Test Series',
+    contentType: 'series',
+    seasons: [],
+    releaseDate: '2024-03-20T00:00:00.000Z',
+    plot: 'Test plot',
+    cast: ['Actor 1', 'Actor 2'],
+    genre: [mockGenre],
+    rating: 8.5,
+    poster: 'poster.jpg',
+    url: 'series.mp4'
+  } as unknown as ISeriesResponse;
+
+  const mockWatchHistoryEntry: WatchHistoryEntry = {
+    contentId: mockContentId.toString(),
+    title: 'Test Movie',
+    contentType: 'movie',
+    watchedDurationInMinutes: 120,
+    watchedAt: new Date('2024-03-20T00:00:00.000Z'),
+    seriesProgress: new Map()
+  };
+
+  const mockEpisodeWatched: EpisodeWatched = {
+    episodeId: mockEpisodeId.toString(),
+    seasonNumber: 1,
+    episodeNumber: 1,
+    watchedDurationInMinutes: 45,
+    watchedAt: new Date('2024-03-20T00:00:00.000Z'),
+    completionPercentage: 100
+  };
+
+  const mockSeriesProgress: SeriesProgress = {
+    totalEpisodes: 10,
+    watchedEpisodes: 1,
+    completed: false,
+    episodesWatched: new Map([[mockEpisodeId.toString(), mockEpisodeWatched]])
+  };
+
+  const mockUserHistory: IUserStreamingHistoryResponse = {
+    _id: new Types.ObjectId(),
     userId: mockUserId,
-    totalWatchTimeInMinutes: 240,
-    watchHistory: [
-      {
-        streamingId: 'other123',
-        title: 'Other Movie',
-        durationInMinutes: 240,
-      },
-    ],
+    totalWatchTimeInMinutes: 120,
+    watchHistory: [mockWatchHistoryEntry],
+    createdAt: new Date('2024-03-20T00:00:00.000Z'),
+    updatedAt: new Date('2024-03-20T00:00:00.000Z')
   };
 
   beforeEach(() => {
-    mockRepository = {
-      create: jest.fn(),
-      findByUserId: jest.fn(),
-      addToHistory: jest.fn(),
-      removeFromHistory: jest.fn(),
-    };
+    mockUserStreamingHistoryRepository = new UserStreamingHistoryRepository() as jest.Mocked<UserStreamingHistoryRepository>;
+    mockMovieRepository = new MovieRepository() as jest.Mocked<MovieRepository>;
+    mockSeriesRepository = new SeriesRepository() as jest.Mocked<SeriesRepository>;
 
-    mockMovieRepository = {
-      findById: jest.fn(),
-    };
-
-    service = new UserStreamingHistoryService(mockRepository, mockMovieRepository);
+    userStreamingHistoryService = new UserStreamingHistoryService(
+      mockUserStreamingHistoryRepository,
+      mockMovieRepository,
+      mockSeriesRepository
+    );
   });
 
   describe('getUserHistory', () => {
-    it('should return user history when found', async () => {
-      mockRepository.findByUserId.mockResolvedValue(mockHistory);
+    it('should return user history if found', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
 
-      const result = await service.getUserHistory(mockUserId);
+      const result = await userStreamingHistoryService.getUserHistory(mockUserId);
 
-      expect(result).toBe(mockHistory);
-      expect(mockRepository.findByUserId).toHaveBeenCalledWith(mockUserId);
+      expect(mockUserStreamingHistoryRepository.findByUserId).toHaveBeenCalledWith(mockUserId);
+      expect(result).toEqual(mockUserHistory);
     });
 
-    it('should throw error when user history not found', async () => {
-      mockRepository.findByUserId.mockResolvedValue(null);
+    it('should throw an error if history is not found', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(null);
 
-      await expect(service.getUserHistory(mockUserId)).rejects.toThrow(
-        new StreamingServiceError('User history not found', 404),
-      );
+      await expect(userStreamingHistoryService.getUserHistory(mockUserId))
+        .rejects.toThrow(new StreamingServiceError('User history not found', 404));
     });
   });
 
   describe('addStreamingToHistory', () => {
     it('should add streaming to history successfully', async () => {
-      mockMovieRepository.findById.mockResolvedValue({
-        _id: mockStreamingEntry.streamingId,
-        title: mockStreamingEntry.title,
-      });
-      mockRepository.findByUserId.mockResolvedValue(mockHistory);
-      const mockHistoryWithNewEntry = {
-        ...mockHistory,
-        watchHistory: [...(mockHistory.watchHistory || []), mockStreamingEntry] as StreamingHistoryEntry[],
-      };
-      mockRepository.addToHistory.mockResolvedValue(mockHistoryWithNewEntry);
+      mockSeriesRepository.findById.mockResolvedValue(mockSeries);
+      const mockWatchHistoryEntryWithSeries = {
+        ...mockWatchHistoryEntry,
+        contentType: 'series',
+        title: 'Test Series',
+        contentId: generateValidObjectId(),
+      } as unknown as WatchHistoryEntry;
 
-      const result = await service.addStreamingToHistory(mockUserId, mockStreamingEntry);
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
 
-      expect(result.watchHistory).toContain(mockStreamingEntry);
-      expect(mockMovieRepository.findById).toHaveBeenCalledWith(mockStreamingEntry.streamingId);
-      expect(mockRepository.addToHistory).toHaveBeenCalledWith(mockUserId, mockStreamingEntry);
+      const mockUserHistoryWithNewSeries = {...mockUserHistory, 
+        watchHistory: [
+          ...mockUserHistory.watchHistory,
+          mockWatchHistoryEntryWithSeries
+        ]
+      }
+      mockUserStreamingHistoryRepository.addWatchHistoryEntry.mockResolvedValue(mockUserHistoryWithNewSeries);
+
+      const result = await userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntryWithSeries);
+
+      expect(mockUserStreamingHistoryRepository.addWatchHistoryEntry).toHaveBeenCalledWith(mockUserId, mockWatchHistoryEntryWithSeries);
+      expect(result).toEqual(mockUserHistoryWithNewSeries);
     });
 
-    it('should add streaming to empty history successfully', async () => {
-      mockMovieRepository.findById.mockResolvedValue({
-        _id: mockStreamingEntry.streamingId,
-        title: mockStreamingEntry.title,
-      });
-      const mockStreamingHistoryData = {
-        userId: mockUserId,
-        watchHistory: [mockStreamingEntry],
-      };
-      mockRepository.findByUserId.mockResolvedValue(null);
-      mockRepository.create.mockResolvedValue(mockStreamingHistoryData);
-
-      const result = await service.addStreamingToHistory(mockUserId, mockStreamingEntry);
-
-      expect(result.watchHistory).toContain(mockStreamingEntry);
-      expect(mockMovieRepository.findById).toHaveBeenCalledWith(mockStreamingEntry.streamingId);
-      expect(mockRepository.create).toHaveBeenCalledWith(mockStreamingHistoryData);
-    });
-
-    it('should throw error when streaming not found', async () => {
+    it('should throw an error if streaming is not found', async () => {
       mockMovieRepository.findById.mockResolvedValue(null);
+      mockSeriesRepository.findById.mockResolvedValue(null);
 
-      await expect(service.addStreamingToHistory(mockUserId, mockStreamingEntry)).rejects.toThrow(
-        new StreamingServiceError('Streaming not found', 404),
-      );
+      await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntry))
+        .rejects.toThrow(new StreamingServiceError('Streaming not found', 404));
     });
 
-    it('should throw error when invalid streaming title', async () => {
-      mockMovieRepository.findById.mockResolvedValue({
-        _id: mockStreamingEntry.streamingId,
-        title: 'Other Movie',
-      });
+    it('should throw an error if streaming title in history is different', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+      mockSeriesRepository.findById.mockResolvedValue(mockSeries);
 
-      await expect(service.addStreamingToHistory(mockUserId, mockStreamingEntry)).rejects.toThrow(
-        new StreamingServiceError('Invalid streaming title', 400),
-      );
+      const mockWatchHistoryEntryWithDifferentTitle = {
+        ...mockWatchHistoryEntry,
+        title: 'Different Title'
+      } as unknown as WatchHistoryEntry;
+
+      await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntryWithDifferentTitle))
+        .rejects.toThrow(new StreamingServiceError('Streaming title does not match', 400));
     });
 
-    it('should throw error when streaming already exists in history', async () => {
-      const existingEntry = { ...mockStreamingEntry };
-      mockMovieRepository.findById.mockResolvedValue({
-        _id: existingEntry.streamingId,
-        title: existingEntry.title,
-      });
-      mockRepository.findByUserId.mockResolvedValue({
-        ...mockHistory,
-        watchHistory: [existingEntry],
-      });
+    it('should throw an error if streaming title in history is different', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+      mockMovieRepository.findById.mockResolvedValue(mockMovie);
 
-      await expect(service.addStreamingToHistory(mockUserId, existingEntry)).rejects.toThrow(
-        new StreamingServiceError('Streaming already in history', 400),
-      );
+      const mockWatchHistoryEntryWithDifferentTitle = {
+        ...mockWatchHistoryEntry,
+        contentType: 'series'
+      } as unknown as WatchHistoryEntry;
+
+      await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntryWithDifferentTitle))
+        .rejects.toThrow(new StreamingServiceError('Content type does not match', 400));
     });
+
+    it('should throw an error if streaming is already in history', async () => {
+      mockMovieRepository.findById.mockResolvedValue(mockMovie);
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+
+      await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntry))
+        .rejects.toThrow(new StreamingServiceError('Streaming already in history', 400));
+    });
+    
   });
 
   describe('removeStreamingFromHistory', () => {
     it('should remove streaming from history successfully', async () => {
-      mockRepository.findByUserId.mockResolvedValue(mockHistory);
-      mockRepository.removeFromHistory.mockResolvedValue({
-        ...mockHistory,
-        watchHistory: [],
-      });
-      const mockStreamingId = mockHistory.watchHistory?.[0]?.streamingId || '';
-      const mockDurationInMinutes = mockHistory.watchHistory?.[0]?.durationInMinutes || 0;
-      const result = await service.removeStreamingFromHistory(mockUserId, mockStreamingId);
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+      mockUserStreamingHistoryRepository.removeWatchHistoryEntry.mockResolvedValue(mockUserHistory);
 
-      expect(result?.watchHistory).toHaveLength(0);
-      expect(mockRepository.removeFromHistory).toHaveBeenCalledWith(mockUserId, mockStreamingId, mockDurationInMinutes);
+      const result = await userStreamingHistoryService.removeStreamingFromHistory(mockUserId, mockContentId);
+
+      expect(mockUserStreamingHistoryRepository.removeWatchHistoryEntry).toHaveBeenCalledWith(mockUserId, mockContentId);
+      expect(result).toEqual(mockUserHistory);
     });
 
-    it('should throw error when streaming not found in history', async () => {
-      mockRepository.findByUserId.mockResolvedValue(mockHistory);
+    it('should throw an error if streaming is not found in history', async () => {
+      const historyWithoutStreaming = { ...mockUserHistory, watchHistory: [] };
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutStreaming);
 
-      await expect(service.removeStreamingFromHistory(mockUserId, 'nonexistent')).rejects.toThrow(
-        new StreamingServiceError('Streaming not found in history', 404),
-      );
+      await expect(userStreamingHistoryService.removeStreamingFromHistory(mockUserId, mockContentId))
+        .rejects.toThrow(new StreamingServiceError('Streaming not found in history', 404));
     });
 
-    it('should throw error when user history failed to update', async () => {
-      mockRepository.findByUserId.mockResolvedValue(mockHistory);
-      mockRepository.removeFromHistory.mockResolvedValue(null);
-      const mockStreamingId = mockHistory.watchHistory?.[0]?.streamingId || '';
-      await expect(service.removeStreamingFromHistory(mockUserId, mockStreamingId)).rejects.toThrow(
-        new StreamingServiceError('Failed to update history', 404),
-      );
+    it('should throw an error if removeWatchHistoryEntry fails', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+      mockUserStreamingHistoryRepository.removeWatchHistoryEntry.mockRejectedValue(new Error('Failed to remove streaming from history'));
+
+      await expect(userStreamingHistoryService.removeStreamingFromHistory(mockUserId, mockContentId))
+        .rejects.toThrow(new StreamingServiceError('Failed to remove streaming from history', 404));
+    });
+
+    it('should throw an error if removeWatchHistoryEntry returns null', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+      mockUserStreamingHistoryRepository.removeWatchHistoryEntry.mockResolvedValue(null);
+
+      await expect(userStreamingHistoryService.removeStreamingFromHistory(mockUserId, mockContentId))
+        .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+    });
+  });
+
+  describe('removeEpisodeFromHistory', () => {
+    it('should remove episode from history successfully', async () => {
+      const historyWithEpisode = {
+        ...mockUserHistory,
+        watchHistory: [{
+          ...mockWatchHistoryEntry,
+          seriesProgress: new Map([[mockContentId.toString(), mockSeriesProgress]])
+        }]
+      };
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithEpisode);
+      mockUserStreamingHistoryRepository.removeEpisodeFromHistory.mockResolvedValue(mockWatchHistoryEntry);
+
+      const result = await userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId);
+
+      expect(mockUserStreamingHistoryRepository.removeEpisodeFromHistory).toHaveBeenCalledWith(mockUserId, mockContentId, mockEpisodeId);
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+
+    it('should throw an error if episode is not found in history', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+
+      await expect(userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId))
+        .rejects.toThrow(new StreamingServiceError('Episode not found in history', 404));
+    });
+
+    it('should throw an error if seriesProgress is null', async () => {
+      const historyWithoutSeriesProgress = { ...mockUserHistory, watchHistory: [{ ...mockWatchHistoryEntry, seriesProgress: null }] } as unknown as IUserStreamingHistoryResponse;
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutSeriesProgress);
+
+      await expect(userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId))
+        .rejects.toThrow(new StreamingServiceError('Episode not found in history', 404));
+    });
+
+    it('should throw an error if removeEpisodeFromHistory returns null', async () => {
+      const historyWithEpisode = {
+        ...mockUserHistory,
+        watchHistory: [{
+          ...mockWatchHistoryEntry,
+          seriesProgress: new Map([[mockContentId.toString(), mockSeriesProgress]])
+        }]
+      };
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithEpisode);
+      
+      mockUserStreamingHistoryRepository.removeEpisodeFromHistory.mockResolvedValue(null);
+
+      await expect(userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId))
+        .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+    });
+  });
+
+  describe('addEpisodeToHistory', () => {
+    it('should add episode to history successfully', async () => {
+      mockUserStreamingHistoryRepository.updateEpisodeProgress.mockResolvedValue(mockWatchHistoryEntry);
+
+      const result = await userStreamingHistoryService.addEpisodeToHistory(mockUserId, mockContentId, mockEpisodeWatched);
+
+      expect(mockUserStreamingHistoryRepository.updateEpisodeProgress).toHaveBeenCalledWith(mockUserId, mockContentId, mockEpisodeWatched);
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+
+    it('should throw an error if update fails', async () => {
+      mockUserStreamingHistoryRepository.updateEpisodeProgress.mockResolvedValue(null);
+
+      await expect(userStreamingHistoryService.addEpisodeToHistory(mockUserId, mockContentId, mockEpisodeWatched))
+        .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+    });
+  });
+
+  describe('getEpisodesWatched', () => {
+    it('should return episodes watched for a series', async () => {
+      const historyWithEpisodes = {
+        ...mockUserHistory,
+        watchHistory: [{
+          ...mockWatchHistoryEntry,
+          seriesProgress: new Map([[mockContentId.toString(), mockSeriesProgress]])
+        }]
+      };
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithEpisodes);
+
+      const result = await userStreamingHistoryService.getEpisodesWatched(mockUserId, mockContentId);
+
+      expect(result).toEqual(mockSeriesProgress.episodesWatched);
+    });
+
+    it('should return null if no episodes are watched', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+
+      const result = await userStreamingHistoryService.getEpisodesWatched(mockUserId, mockContentId);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw an error if watchHistory is empty', async () => {
+      const historyWithoutWatchHistory = { ...mockUserHistory, watchHistory: [] } as unknown as IUserStreamingHistoryResponse;
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutWatchHistory);
+
+      const result = await userStreamingHistoryService.getEpisodesWatched(mockUserId, mockContentId);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw an error if seriesProgress is null', async () => {
+      const historyWithoutSeriesProgress = { ...mockUserHistory, watchHistory: [{ ...mockWatchHistoryEntry, seriesProgress: null }] } as unknown as IUserStreamingHistoryResponse;
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutSeriesProgress);
+
+      const result = await userStreamingHistoryService.getEpisodesWatched(mockUserId, mockContentId);
+
+      expect(result).toBeNull();
     });
   });
 
   describe('getTotalWatchTime', () => {
-    it('should return total watch time', async () => {
-      mockRepository.findByUserId.mockResolvedValue(mockHistory);
+    it('should return total watch time in minutes', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
 
-      const result = await service.getTotalWatchTime(mockUserId);
+      const result = await userStreamingHistoryService.getTotalWatchTime(mockUserId);
 
-      expect(result).toBe(mockHistory.totalWatchTimeInMinutes);
+      expect(result).toBe(mockUserHistory.totalWatchTimeInMinutes);
+    });
+
+    it('should throw an error if findByUserId returns totalWatchTimeInMinutes as null', async () => {
+      const historyWithTotalWatchTime = { ...mockUserHistory, totalWatchTimeInMinutes: null } as unknown as IUserStreamingHistoryResponse;
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithTotalWatchTime);
+
+      const result = await userStreamingHistoryService.getTotalWatchTime(mockUserId);
+
+      expect(result).toBe(0);
     });
   });
 
-  describe('validateStreamingData', () => {
-    it('should throw error for missing streamingId', async () => {
-      const invalidData = { ...mockStreamingEntry, streamingId: '' };
+  describe('getByUserIdAndStreamingId', () => {
+    it('should return true if streaming is in history', async () => {
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
+      const result = await userStreamingHistoryService.getByUserIdAndStreamingId(mockUserId, mockContentId);
 
-      await expect(service.addStreamingToHistory(mockUserId, invalidData)).rejects.toThrow(
-        new StreamingServiceError('Streaming ID is required', 400),
-      );
+      expect(result).toBe(true);
     });
 
-    it('should throw error for missing title', async () => {
-      const invalidData = { ...mockStreamingEntry, title: '' };
+    it('should return false if streaming is not in history', async () => {
+      const historyWithoutStreaming = { ...mockUserHistory, watchHistory: [] };
+      mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutStreaming);
 
-      await expect(service.addStreamingToHistory(mockUserId, invalidData)).rejects.toThrow(
-        new StreamingServiceError('Title is required', 400),
-      );
-    });
+      const result = await userStreamingHistoryService.getByUserIdAndStreamingId(mockUserId, mockContentId);
 
-    it('should throw error for invalid duration', async () => {
-      const invalidData = { ...mockStreamingEntry, durationInMinutes: -1 };
-
-      await expect(service.addStreamingToHistory(mockUserId, invalidData)).rejects.toThrow(
-        new StreamingServiceError('Invalid duration', 400),
-      );
+      expect(result).toBe(false);
     });
   });
 });
+

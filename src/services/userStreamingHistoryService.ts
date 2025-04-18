@@ -19,10 +19,6 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   async getUserHistory(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse> {
     const history = await this.repository.findByUserId(userId);
     if (!history) {
-      logger.warn({
-        message: 'User history not found',
-        userId,
-      });
       throw new StreamingServiceError('User history not found', 404);
     }
     return history;
@@ -34,7 +30,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     const history = await this.repository.findByUserId(userId);
 
     if (history) {
-      const streamingInHistory = history.watchHistory.find((entry) => entry.contentId === streamingData.contentId);
+      const streamingInHistory = history.watchHistory.find((entry) => entry.contentId.toString() === streamingData.contentId.toString());
       if (streamingInHistory) {
         throw new StreamingServiceError('Streaming already in history', 400);
       }
@@ -48,13 +44,8 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
     const history = await this.getUserHistory(userId);
 
-    const streaming = history.watchHistory.find((entry) => entry.contentId === contentId);
+    const streaming = history.watchHistory.find((entry) => entry.contentId.toString() === contentId.toString());
     if (!streaming) {
-      logger.warn({
-        message: 'Streaming not found in history',
-        contentId,
-        userId,
-      });
       throw new StreamingServiceError('Streaming not found in history', 404);
     }
 
@@ -72,7 +63,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     const history = await this.getUserHistory(userId);
 
     const episodeWatched = history.watchHistory.find((entry) => {
-      if(entry.contentId === contentId){
+      if(entry.contentId.toString() === contentId.toString()){
         const seriesProgress = entry.seriesProgress?.get(contentId.toString());
         if(seriesProgress){
           const episode = seriesProgress.episodesWatched.get(episodeId.toString());
@@ -83,12 +74,6 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       }
     });
     if (!episodeWatched) {
-      logger.warn({
-        message: 'Episode not found in history',
-        contentId,
-        episodeId,
-        userId,
-      });
       throw new StreamingServiceError('Episode not found in history', 404);
     }
 
@@ -124,7 +109,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
   async getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null> {
     const history = await this.getUserHistory(userId);
-    const seriesProgress = history.watchHistory.find((entry) => entry.contentId === contentId)?.seriesProgress?.get(contentId.toString());
+    const seriesProgress = history.watchHistory.find((entry) => entry.contentId.toString() === contentId.toString())?.seriesProgress?.get(contentId.toString());
     return seriesProgress?.episodesWatched || null;
   }
 
@@ -135,7 +120,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
   async getByUserIdAndStreamingId(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean> {
     const history = await this.getUserHistory(userId);
-    return history.watchHistory.some((entry) => entry.contentId === contentId);
+    return history.watchHistory.some((entry) => entry.contentId.toString() === contentId.toString());
   }
 
   private async checkIfStreamingExistsAndValid(streamingData: WatchHistoryEntry): Promise<void> {
@@ -148,10 +133,6 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
                       await this.seriesRepository.findById(contentId);
     
     if (!streaming) {
-      logger.warn({
-        message: 'Streaming not found',
-        contentId,
-      });
       throw new StreamingServiceError('Streaming not found', 404);
     }
     

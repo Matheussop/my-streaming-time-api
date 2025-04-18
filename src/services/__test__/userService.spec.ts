@@ -1,11 +1,24 @@
-import { IUserRepository } from '../../interfaces/repositories';
+import { Types } from 'mongoose';
+import { IUserResponse } from '../../interfaces/user';
 import { StreamingServiceError } from '../../middleware/errorHandler';
-import { IUser } from '../../models/userModel';
+import { UserRepository } from '../../repositories/userRepository';
 import { UserService } from '../userService';
+
+jest.mock('bcrypt', () => ({
+  hash: jest.fn().mockResolvedValue('hashed-password')
+}));
 
 describe('UserService', () => {
   let userService: UserService;
-  let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockUserRepository: jest.Mocked<UserRepository>;
+  const mockUser: Partial<IUserResponse> = {
+    _id: new Types.ObjectId(),
+    email: 'test@example.com',
+    username: 'testuser',
+    active: true,
+    createdAt: new Date('2024-03-20'),
+    updatedAt: new Date('2024-03-20')
+  };
 
   beforeEach(() => {
     mockUserRepository = {
@@ -15,172 +28,125 @@ describe('UserService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       findByEmail: jest.fn(),
-    };
+      checkPassword: jest.fn(),
+    } as unknown as jest.Mocked<UserRepository>;
 
     userService = new UserService(mockUserRepository);
   });
 
   describe('getAllUsers', () => {
     it('should return all users', async () => {
-      const mockUsers = [
-        { id: '1', name: 'John Doe', email: 'john@example.com' },
-        { id: '2', name: 'Jane Doe', email: 'jane@example.com' },
-      ];
-      mockUserRepository.findAll.mockResolvedValue(mockUsers as unknown as IUser[]);
+      const mockUsers = [mockUser];
+      mockUserRepository.findAll.mockResolvedValue(mockUsers as IUserResponse[]);
 
       const result = await userService.getAllUsers(0, 10);
 
-      expect(mockUserRepository.findAll).toHaveBeenCalled();
+      expect(mockUserRepository.findAll).toHaveBeenCalledWith(0, 10);
       expect(result).toEqual(mockUsers);
     });
   });
 
   describe('getUserById', () => {
     it('should return a user if found', async () => {
-      const mockUser = { id: '1', name: 'John Doe', email: 'john@example.com' };
-      mockUserRepository.findById.mockResolvedValue(mockUser as unknown as IUser);
+      mockUserRepository.findById.mockResolvedValue(mockUser as IUserResponse);
 
-      const result = await userService.getUserById('1');
+      const result = await userService.getUserById(mockUser._id as Types.ObjectId);
 
-      expect(mockUserRepository.findById).toHaveBeenCalledWith('1');
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser._id);
       expect(result).toEqual(mockUser);
     });
 
     it('should throw an error if user is not found', async () => {
       mockUserRepository.findById.mockResolvedValue(null);
 
-      await expect(userService.getUserById('1')).rejects.toThrow('User not found');
-    });
-  });
-
-  describe('registerUser', () => {
-    it('should register a user successfully', async () => {
-      const mockUser = {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'hashedpassword',
-        toJSON: jest.fn().mockReturnValue({ id: '1', name: 'John Doe', email: 'john@example.com' }),
-      };
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-      mockUserRepository.create.mockResolvedValue(mockUser as unknown as IUser);
-
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'password123',
-      };
-
-      const result = await userService.registerUser(userData);
-
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(userData.email);
-      expect(mockUserRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'John Doe', email: 'john@example.com' }),
-      );
-      expect(result).toEqual({ id: '1', name: 'John Doe', email: 'john@example.com' });
-    });
-
-    it('should throw an error if email is already in use', async () => {
-      mockUserRepository.findByEmail.mockResolvedValue({ id: '1', email: 'john@example.com' } as unknown as IUser);
-
-      const userData = { name: 'John Doe', email: 'john@example.com', password: 'password123' };
-
-      await expect(userService.registerUser(userData)).rejects.toThrow('Email already in use');
-    });
-
-    it('should throw an error if email is not valid', async () => {
-      const userData = { name: 'John Doe', email: 'john-example.com', password: 'password123' };
-
-      await expect(userService.registerUser(userData)).rejects.toThrow(
-        new StreamingServiceError('Invalid email format', 400),
-      );
-      expect(mockUserRepository.create).not.toHaveBeenCalled();
-    });
-
-    it('should throw an error if password is not valid', async () => {
-      const userData = { name: 'John Doe', email: 'john@example.com', password: '12345' };
-
-      await expect(userService.registerUser(userData)).rejects.toThrow(
-        new StreamingServiceError('Password must be at least 6 characters long', 400),
-      );
-
-      expect(mockUserRepository.create).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('loginUser', () => {
-    it('should log in a user successfully', async () => {
-      const mockUser = {
-        id: '1',
-        email: 'john@example.com',
-        password: 'hashedpassword',
-        toObject: jest.fn().mockReturnValue({ id: '1', email: 'john@example.com' }),
-      };
-      mockUserRepository.findByEmail.mockResolvedValue(mockUser as unknown as IUser);
-
-      const result = await userService.loginUser('john@example.com', 'password123');
-
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('john@example.com');
-      expect(result).toEqual({ id: '1', email: 'john@example.com' });
-    });
-
-    it('should throw an error if email is not found', async () => {
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-
-      await expect(userService.loginUser('john@example.com', 'password123')).rejects.toThrow(
-        new StreamingServiceError('Invalid credentials', 401),
-      );
+      await expect(userService.getUserById(mockUser._id as Types.ObjectId))
+        .rejects.toThrow(new StreamingServiceError('User not found', 404));
     });
   });
 
   describe('updateUser', () => {
     it('should update a user successfully', async () => {
-      const mockUser = {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        toObject: jest.fn().mockReturnValue({ id: '1', name: 'John Doe', email: 'updated@example.com' }),
-      };
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-      mockUserRepository.update.mockResolvedValue(mockUser as unknown as IUser);
-
       const updateData = { email: 'updated@example.com' };
+      const updatedUser = { ...mockUser, email: 'updated@example.com' };
+      
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      mockUserRepository.update.mockResolvedValue(updatedUser as IUserResponse);
 
-      const result = await userService.updateUser('1', updateData);
+      const result = await userService.updateUser(mockUser._id as Types.ObjectId, updateData);
 
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('updated@example.com');
-      expect(mockUserRepository.update).toHaveBeenCalledWith('1', updateData);
-      expect(result).toEqual({ id: '1', name: 'John Doe', email: 'updated@example.com' });
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(updateData.email);
+      expect(mockUserRepository.update).toHaveBeenCalledWith(mockUser._id, updateData);
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('should throw an error if email is already in use', async () => {
+      const updateData = { email: 'existing@example.com' };
+      const existingUser = { ...mockUser, _id: new Types.ObjectId() };
+      
+      mockUserRepository.findByEmail.mockResolvedValue(existingUser as IUserResponse);
+
+      await expect(userService.updateUser(mockUser._id as Types.ObjectId, updateData))
+        .rejects.toThrow(new StreamingServiceError('Email already in use', 400));
     });
 
     it('should throw an error if user is not found', async () => {
+      const updateData = { email: 'updated@example.com' };
+      
+      mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.update.mockResolvedValue(null);
 
-      await expect(userService.updateUser('1', { email: 'updated@example.com' })).rejects.toThrow(
-        new StreamingServiceError('User not found', 404),
+      await expect(userService.updateUser(mockUser._id as Types.ObjectId, updateData))
+        .rejects.toThrow(new StreamingServiceError('User not found', 404));
+    });
+
+    it('should hash password if provided in update data', async () => {
+      const updateData = { password: 'newpassword' };
+      const updatedUser = { ...mockUser };
+      
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      mockUserRepository.update.mockResolvedValue(updatedUser as IUserResponse);
+
+      await userService.updateUser(mockUser._id as Types.ObjectId, updateData);
+
+      expect(mockUserRepository.update).toHaveBeenCalledWith(
+        mockUser._id,
+        { password: 'hashed-password' }
       );
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should change user password successfully', async () => {
+      const newPassword = 'newpassword';
+      const updatedUser = { ...mockUser };
+      
+      mockUserRepository.update.mockResolvedValue(updatedUser as IUserResponse);
+
+      const result = await userService.changePassword(mockUser._id as Types.ObjectId, newPassword);
+
+      expect(mockUserRepository.update).toHaveBeenCalledWith(
+        mockUser._id,
+        { password: 'hashed-password' }
+      );
+      expect(result).toEqual(updatedUser);
     });
   });
 
   describe('deleteUser', () => {
     it('should delete a user successfully', async () => {
-      const mockUserData = {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-      } as unknown as IUser;
-      mockUserRepository.delete.mockResolvedValue(mockUserData);
+      mockUserRepository.delete.mockResolvedValue(mockUser as IUserResponse);
 
-      const result = await userService.deleteUser('1');
+      const result = await userService.deleteUser(mockUser._id as Types.ObjectId);
 
-      expect(mockUserRepository.delete).toHaveBeenCalledWith('1');
-      expect(result).toEqual(mockUserData);
+      expect(mockUserRepository.delete).toHaveBeenCalledWith(mockUser._id);
+      expect(result).toEqual(mockUser);
     });
 
     it('should throw an error if user is not found', async () => {
       mockUserRepository.delete.mockResolvedValue(null);
 
-      await expect(userService.deleteUser('1')).rejects.toThrow(new StreamingServiceError('User not found', 404));
+      await expect(userService.deleteUser(mockUser._id as Types.ObjectId))
+        .rejects.toThrow(new StreamingServiceError('User not found', 404));
     });
   });
 });
