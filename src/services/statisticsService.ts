@@ -56,13 +56,16 @@ export class StatisticsService implements IStatisticsService {
     const watchHistory = userData.watchHistory || [];
     const totalContent = watchHistory.length;
     
-    // Contagem por tipo
-    const byType = _.countBy(watchHistory, 'contentType');
+    // Contagem por tipo, usando 'unknown' como valor padrão
+    const byType = _.countBy(
+      watchHistory.map(item => item.contentType || 'unknown'),
+      _.identity
+    );
     
     // Porcentagem por tipo
     const percentageByType = _.mapValues(
       byType,
-      (count: number) => totalContent ? (count / totalContent) * 100 : 0
+      (count: number) => totalContent && (count / totalContent) * 100
     );
     
     return {
@@ -84,7 +87,7 @@ export class StatisticsService implements IStatisticsService {
       const contentId = item.contentId;
       
       const content = await this.contentService.getContentById(contentId);
-      const genres: string[] = content?.genre.map((genre) => genre.name) || ['Desconhecido'];
+      const genres: string[] = content?.genre.map((genre) => genre.name) || ['unknown'];
       contentGenres[contentId] = genres;
     }));
 
@@ -95,7 +98,7 @@ export class StatisticsService implements IStatisticsService {
     
     watchHistory.forEach((item: any) => {
       const contentId = item.contentId;
-      const genres = contentGenres[contentId] || ['Desconhecido'];
+      const genres = contentGenres[contentId];
       const watchTime = item.watchedDurationInMinutes || 0;
       const completion = item.completionPercentage || 0;
       
@@ -118,7 +121,7 @@ export class StatisticsService implements IStatisticsService {
     const totalGenreCounts = _.sum(Object.values(genreCounts));
     const genrePercentages = _.mapValues(
       genreCounts, 
-      count => totalGenreCounts ? (count / totalGenreCounts) * 100 : 0
+      count => totalGenreCounts && (count / totalGenreCounts) * 100 
     );
     
     // Calcular média de conclusão por gênero
@@ -126,7 +129,7 @@ export class StatisticsService implements IStatisticsService {
       completionByGenre,
       completionRates => {
         const sum = _.sum(completionRates);
-        return completionRates.length ? sum / completionRates.length : 0;
+        return completionRates.length && sum / completionRates.length;
       }
     );
     
@@ -135,7 +138,7 @@ export class StatisticsService implements IStatisticsService {
       .map(([genre, count]) => ({
         genre,
         count,
-        percentage: genrePercentages[genre] || 0
+        percentage: genrePercentages[genre]
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10); // Top 10 gêneros
@@ -158,22 +161,24 @@ export class StatisticsService implements IStatisticsService {
     const series: SeriesProgressItem[] = seriesItems.map(item => {
       const seriesId = item.contentId;
       const seriesProgress = item.seriesProgress?.get(seriesId as string) as SeriesProgress;
-      const watchedEpisodes = seriesProgress.watchedEpisodes || 0;
-      const totalEpisodes = seriesProgress.totalEpisodes || 0;
+      const watchedEpisodes = seriesProgress?.watchedEpisodes || 0;
+      const totalEpisodes = seriesProgress?.totalEpisodes || 0;
       const completionPercentage = totalEpisodes ? (watchedEpisodes / totalEpisodes) * 100 : 0;
       
       // Calcular tempo total assistido na série
       let totalWatchTimeInMinutes = 0;
-      const episodesWatched = seriesProgress.episodesWatched || {} as Map<string, EpisodeWatched>;
-      episodesWatched.forEach((episode: EpisodeWatched) => {
-        totalWatchTimeInMinutes += episode.watchedDurationInMinutes || 0;
-      });
+      const episodesWatched = seriesProgress?.episodesWatched;
+      if (episodesWatched) {
+        episodesWatched.forEach((episode: EpisodeWatched) => {
+          totalWatchTimeInMinutes += episode.watchedDurationInMinutes || 0;
+        });
+      }
       
       // Calcular duração média dos episódios
       const averageEpisodeLength = watchedEpisodes ? totalWatchTimeInMinutes / watchedEpisodes : 0;
       
       return {
-        title: item.title || 'Desconhecido',
+        title: item.title,
         totalEpisodes,
         watchedEpisodes,
         completionPercentage,
@@ -203,21 +208,34 @@ export class StatisticsService implements IStatisticsService {
    */
   getWatchingPatterns(userData: IUserStreamingHistoryResponse): WatchingPatternStats {
     const watchDates = this.extractWatchDates(userData);
-    
     // Obter contagem por dia da semana
     const daysOfWeek = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const watchCountByDay = _.countBy(watchDates, (date: Date) => daysOfWeek[date.getDay()]);
     
-    // Obter contagem por hora
+    // Ajustar para usar UTC ao invés do fuso horário local
+    const watchCountByDay = _.countBy(watchDates, (date: Date) => {
+      const utcDay = date.getUTCDay();
+      return daysOfWeek[utcDay];
+    });
+
+    // Obter contagem por hora usando UTC
     const watchCountByHour = _.countBy(watchDates, (date: Date) => date.getHours());
     
-    // Encontrar dia/hora mais ativos
-    const mostActiveDay = this.findMostFrequent(watchDates.map(date => daysOfWeek[date.getDay()]));
+    // Encontrar dia/hora mais ativos usando UTC
+    const mostActiveDay = this.findMostFrequent(watchDates.map(date => daysOfWeek[date.getUTCDay()]));
+
     const findMostFrequentHour = this.findMostFrequent(watchDates.map(date => date.getHours().toString()));
     const mostActiveHour = parseInt(findMostFrequentHour || '0');
     
-    // Encontrar data mais ativa
-    const dateCount = _.countBy(watchDates, (date: Date) => date.toDateString());
+    // Encontrar data mais ativa usando UTC
+    const dateCount = _.countBy(watchDates, (date: Date) => {
+      const utcDate = new Date(Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate()
+      ));
+      return utcDate.toISOString().split('T')[0];
+    });
+    
     const mostActiveDateStr = _.maxBy(Object.entries(dateCount), ([_, count]: [any, number]) => count)?.[0];
     const mostActiveDate = mostActiveDateStr ? new Date(mostActiveDateStr) : undefined;
     
@@ -264,26 +282,26 @@ export class StatisticsService implements IStatisticsService {
   private extractWatchDates(userData: any): Date[] {
     const watchDates: Date[] = [];
     const watchHistory = userData.watchHistory || [];
-    
     // Pegar datas de visualização do histórico
     watchHistory.forEach((item: WatchHistoryEntry) => {
-      if (item.watchedAt) {
-        watchDates.push(new Date(item.watchedAt));
-      }
-      
       // Verificar episódios para séries
       if (item.contentType === 'series' && item.seriesProgress) {
         const seriesId = item.contentId;
-        const episodesWatched = _.get(item, `seriesProgress.${seriesId}.episodesWatched`, {}) as Record<string, EpisodeWatched>;
-        for (const episodeId in episodesWatched) {
-          const episode = episodesWatched[episodeId];
-          if (episode.watchedAt && episode.watchedAt) {
-            watchDates.push(new Date(episode.watchedAt));
-          }
+        const seriesProgress = item.seriesProgress.get(seriesId.toString());
+        if (seriesProgress) {
+          const episodesWatched = seriesProgress.episodesWatched;
+          episodesWatched.forEach((episode: EpisodeWatched) => {
+            if (episode.watchedAt) {
+              watchDates.push(new Date(episode.watchedAt));
+            }
+          });
+        }
+      } else {
+        if (item.watchedAt) {
+          watchDates.push(new Date(item.watchedAt));
         }
       }
     });
-    
     return watchDates;
   }
   
@@ -294,7 +312,7 @@ export class StatisticsService implements IStatisticsService {
     if (!arr.length) return undefined;
     
     const frequency = _.countBy(arr);
-    return _.maxBy(Object.entries(frequency), ([_, count]: [any, number]) => count)?.[0] as T;
+    return _.maxBy(Object.entries(frequency), ([_, count]: [any, number]) => count)![0] as T;
   }
   
 }
