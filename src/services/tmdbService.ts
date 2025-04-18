@@ -52,6 +52,9 @@ export class TMDBService {
   }
 
   async fetchEpisodes(seriesId: number, seasonNumber: number): Promise<any> {
+    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
+      throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
+    }
     const url = `https://api.themoviedb.org/3/tv/${seriesId}/season/${seasonNumber}?language=en-US`;
     const options = {
       method: 'GET',

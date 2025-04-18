@@ -279,7 +279,6 @@ export class StreamingTypeService implements IStreamingTypeService {
     const errors: string[] = [];
     await Promise.all(genres.map(async (genre) => {
       const existing = (await this.repository.findByGenreName(genre.name, id)) as IStreamingTypeResponse | null;
-      console.log(existing);
       if (existing) {
         const supportedGenres = existing.supportedGenres;
         if (supportedGenres && supportedGenres.some(genre => genres.some(g => g.id === genre.id))) {
@@ -287,7 +286,6 @@ export class StreamingTypeService implements IStreamingTypeService {
         }
       }
     }));
-    console.log(errors);
     if (errors.length > 0) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_GENRE_NAME_EXISTS(errors.join(', ')), 400);
     }
