@@ -104,7 +104,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     this.validateTmdbToken();
     
     const allStreamingTypes = await this.repository.findAll(0, 100);
-    
+
     // Process each streaming type and update its covers
     const updatedStreamingTypes = await this.processStreamingTypes(allStreamingTypes);
     
@@ -125,8 +125,11 @@ export class StreamingTypeService implements IStreamingTypeService {
    */
   private async processStreamingTypes(streamingTypes: IStreamingTypeResponse[]): Promise<IStreamingTypeResponse[]> {
     return Promise.all(streamingTypes.map(async (streamingType) => {
-      const supportedGenres = streamingType.supportedGenres ?? [];
-      const updatedGenres = await this.updateGenreCovers(supportedGenres);
+      const supportedGenres = streamingType.supportedGenres;
+      if (!supportedGenres) {
+        return streamingType;
+      }
+      const updatedGenres = await this.updateGenreCovers(supportedGenres, streamingType.name);
       
       return {
         ...streamingType,
@@ -140,10 +143,10 @@ export class StreamingTypeService implements IStreamingTypeService {
    * @param genres List of genres to be updated
    * @returns List of genres with updated covers
    */
-  private async updateGenreCovers(genres: IGenreReference[]): Promise<IGenreReference[]> {
+  private async updateGenreCovers(genres: IGenreReference[], categoryName: string): Promise<IGenreReference[]> {
     return Promise.all(genres.map(async (genre) => {
       try {
-        const updatedGenre = await this.fetchCoverForGenre(genre);
+        const updatedGenre = await this.fetchCoverForGenre(genre, categoryName);
         return updatedGenre;
       } catch (error) {
         logger.error({
@@ -162,12 +165,12 @@ export class StreamingTypeService implements IStreamingTypeService {
    * @param genre Genre for which to search for a new cover
    * @returns Genre with the updated cover
    */
-  private async fetchCoverForGenre(genre: IGenreReference): Promise<IGenreReference> {
+  private async fetchCoverForGenre(genre: IGenreReference, categoryName: string): Promise<IGenreReference> {
     // Determine the correct category for the TMDB API
-    const categoryName = genre.name === 'movies' ? 'movie' : 'tv';
+    const category = categoryName === 'movies' ? 'movie' : 'tv';
     
     // Configure the request to the TMDB API
-    const url = `https://api.themoviedb.org/3/discover/${categoryName}`;
+    const url = `https://api.themoviedb.org/3/discover/${category}`;
     const options = {
       method: 'GET',
       headers: {
@@ -276,6 +279,7 @@ export class StreamingTypeService implements IStreamingTypeService {
     const errors: string[] = [];
     await Promise.all(genres.map(async (genre) => {
       const existing = (await this.repository.findByGenreName(genre.name, id)) as IStreamingTypeResponse | null;
+      console.log(existing);
       if (existing) {
         const supportedGenres = existing.supportedGenres;
         if (supportedGenres && supportedGenres.some(genre => genres.some(g => g.id === genre.id))) {
@@ -283,6 +287,7 @@ export class StreamingTypeService implements IStreamingTypeService {
         }
       }
     }));
+    console.log(errors);
     if (errors.length > 0) {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_GENRE_NAME_EXISTS(errors.join(', ')), 400);
     }

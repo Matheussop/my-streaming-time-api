@@ -1,41 +1,44 @@
+import { Types } from "mongoose";
 import { StreamingTypeService } from '../streamingTypeService';
-import { IStreamingTypeRepository } from '../../interfaces/repositories';
 import { IGenreRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
-import { IStreamingType } from '../../models/streamingTypesModel';
-import { ICategory, IStreamingTypeCreate, IStreamingTypeResponse, IGenreReference } from '../../interfaces/streamingTypes';
+import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from '../../interfaces/streamingTypes';
 import { ErrorMessages } from '../../constants/errorMessages';
-import { Types } from 'mongoose';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { StreamingTypeRepository } from '../../repositories/streamingTypeRepository';
+import { IGenreResponse } from "../../interfaces/genres";
+import axios from "axios";
+
+jest.mock('../../repositories/streamingTypeRepository');
 
 describe('StreamingTypeService', () => {
   let streamingTypeService: StreamingTypeService;
-  let mockRepository: jest.Mocked<IStreamingTypeRepository>;
+  let mockRepository: jest.Mocked<StreamingTypeRepository>;
   let mockGenreRepository: jest.Mocked<IGenreRepository>;
+  let originalToken: string | undefined;
 
-  const mockStreamingType: Partial<IStreamingType> = {
-    _id: 'type1',
-    name: 'Netflix',
-    categories: [
-      { id: 1, name: 'Movies' },
-      { id: 2, name: 'Series' },
-    ],
+  const mockGenreId = generateValidObjectId() as Types.ObjectId;
+  const mockGenreReference: IGenreReference = {
+    _id: generateValidObjectId() as Types.ObjectId,
+    name: 'Action',
+    id: 1,
+    poster: 'https://example.com/poster.jpg'
+  };
+
+  const mockStreamingType: IStreamingTypeResponse = {
+    _id: mockGenreId,
+    name: 'series',
+    description: 'Streaming service',
+    isActive: true,
+    supportedGenres: [mockGenreReference],
+    createdAt: new Date('2024-03-20'),
+    updatedAt: new Date('2024-03-20')
   };
 
   beforeEach(() => {
-    mockRepository = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      findByName: jest.fn(),
-      findByGenreName: jest.fn(),
-      getIdGenreByName: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      addCategory: jest.fn(),
-      removeCategory: jest.fn(),
-      addGenre: jest.fn(),
-    } as jest.Mocked<IStreamingTypeRepository>;
-
+    originalToken = process.env.TMDB_Bearer_Token;
+    process.env.TMDB_Bearer_Token = 'valid-token';
+    mockRepository = new StreamingTypeRepository() as jest.Mocked<StreamingTypeRepository>;
     mockGenreRepository = {
       findById: jest.fn(),
       findByName: jest.fn(),
@@ -48,303 +51,450 @@ describe('StreamingTypeService', () => {
     streamingTypeService = new StreamingTypeService(mockRepository, mockGenreRepository);
   });
 
+  afterEach(() => {
+    process.env.TMDB_Bearer_Token = originalToken;
+  });
+
   describe('getAllStreamingTypes', () => {
     it('should return all streaming types', async () => {
-      const mockTypes = [mockStreamingType];
-      mockRepository.findAll.mockResolvedValue(mockTypes as IStreamingTypeResponse[]);
+      mockRepository.findAll.mockResolvedValue([mockStreamingType]);
 
       const result = await streamingTypeService.getAllStreamingTypes();
 
-      expect(result).toEqual(mockTypes);
-      expect(mockRepository.findAll).toHaveBeenCalledWith(0, 10);
+      expect(result).toEqual([mockStreamingType]);
+      expect(mockRepository.findAll).toHaveBeenCalled();
     });
   });
 
   describe('getStreamingTypeById', () => {
-    it('should return streaming type when found', async () => {
-      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+    it('should return a streaming type by id', async () => {
+      mockRepository.findById.mockResolvedValue(mockStreamingType);
 
-      const result = await streamingTypeService.getStreamingTypeById('type1');
+      const result = await streamingTypeService.getStreamingTypeById(mockStreamingType._id.toString());
 
       expect(result).toEqual(mockStreamingType);
-      expect(mockRepository.findById).toHaveBeenCalledWith('type1');
+      expect(mockRepository.findById).toHaveBeenCalledWith(mockStreamingType._id);
     });
 
-    it('should throw error when streaming type not found', async () => {
+    it('should return null if streaming type not found', async () => {
       mockRepository.findById.mockResolvedValue(null);
 
-      await expect(streamingTypeService.getStreamingTypeById('invalid')).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
-      );
+      await expect(streamingTypeService.getStreamingTypeById(mockStreamingType._id.toString()))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
+
+      expect(mockRepository.findById).toHaveBeenCalledWith(mockStreamingType._id);
     });
   });
 
   describe('getStreamingTypeByName', () => {
     it('should return streaming type when found by name', async () => {
       mockRepository.findByName.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-
       const result = await streamingTypeService.getStreamingTypeByName('Netflix');
-
-      expect(result).toEqual(mockStreamingType);
+      expect(result).toEqual(mockStreamingType as IStreamingTypeResponse);
       expect(mockRepository.findByName).toHaveBeenCalledWith('Netflix');
     });
 
     it('should throw error when streaming type not found by name', async () => {
       mockRepository.findByName.mockResolvedValue(null);
-
-      await expect(streamingTypeService.getStreamingTypeByName('invalid')).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
-      );
+      await expect(streamingTypeService.getStreamingTypeByName('Invalid'))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
     });
   });
 
   describe('createStreamingType', () => {
-    it('should create streaming type with valid data', async () => {
-      const newType: IStreamingTypeCreate = {
-        name: 'Disney+',
-        categories: [{ id: 1, name: 'Movies' }],
+    it('should create a new streaming type', async () => {
+      const createData: IStreamingTypeCreate = {
+        name: 'Netflix',
+        description: 'Streaming service',
+        isActive: true,
+        supportedGenres: [mockGenreReference]
       };
-      mockRepository.findByName.mockResolvedValue(null);
-      mockRepository.create.mockResolvedValue({ ...newType, _id: 'new1' } as IStreamingType);
 
-      const result = await streamingTypeService.createStreamingType(newType);
+      mockRepository.create.mockResolvedValue(mockStreamingType);
 
-      expect(result).toBeDefined();
-      expect(mockRepository.create).toHaveBeenCalledWith(newType);
+      const result = await streamingTypeService.createStreamingType(createData);
+
+      expect(result).toEqual(mockStreamingType);
+      expect(mockRepository.create).toHaveBeenCalledWith(createData);
     });
 
     it('should throw error if name already exists', async () => {
       const newType: IStreamingTypeCreate = {
         name: 'Netflix',
-        categories: [{ id: 1, name: 'Movies' }],
+        supportedGenres: [mockGenreReference],
+        description: 'Streaming service',
+        isActive: true
       };
       mockRepository.findByName.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-      await expect(streamingTypeService.createStreamingType(newType)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400),
-      );
+      await expect(streamingTypeService.createStreamingType(newType))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400));
     });
 
     it('should throw error if name is missing', async () => {
-      const invalidType: IStreamingTypeCreate = {
-        categories: [{ id: 1, name: 'Movies' }],
-      } as IStreamingTypeCreate;
-      await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_REQUIRED, 400),
-      );
-    });
-
-    it('should throw error if categories are missing', async () => {
-      const invalidType: IStreamingTypeCreate = {
-        name: 'Netflix',
-      } as IStreamingTypeCreate;
-      await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_REQUIRED, 400),
-      );
-    });
-
-    it('should throw error if a category name is empty', async () => {
-      const invalidType: IStreamingTypeCreate = {
-        name: 'Netflix',
-        categories: [{ id: 1 }],
-      } as IStreamingTypeCreate;
-      await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_INVALID_DATA, 400),
-      );
-    });
-
-    it('should throw error if has two categories with the same id', async () => {
-      const invalidType: IStreamingTypeCreate = {
-        name: 'Netflix',
-        categories: [
-          { id: 1, name: 'Movies' },
-          { id: 1, name: 'Series' },
-        ],
-      };
-      await expect(streamingTypeService.createStreamingType(invalidType)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_DUPLICATE_CATEGORY, 400),
-      );
-    });
-  });
-
-  describe('addCategoryToStreamingType', () => {
-    it('should add new categories successfully', async () => {
-      const newCategories: ICategory[] = [{ id: 3, name: 'Documentaries' }];
-      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-      mockRepository.addCategory.mockResolvedValue({
-        ...mockStreamingType,
-        categories: [...(mockStreamingType.categories || []), ...newCategories],
-      } as IStreamingTypeResponse);
-
-      const result = await streamingTypeService.addCategoryToStreamingType('type1', newCategories);
-
-      expect(result).toBeDefined();
-      expect(mockRepository.addCategory).toHaveBeenCalledWith('type1', newCategories);
-    });
-
-    it('should throw error if streaming type not found', async () => {
-      const newCategories: ICategory[] = [{ id: 3, name: 'Documentaries' }];
-      mockRepository.findById.mockResolvedValue(null);
-      await expect(streamingTypeService.addCategoryToStreamingType('type1', newCategories)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
-      );
-    });
-
-    it('should throw error if categories already exist', async () => {
-      const existingCategories: ICategory[] = [{ id: 1, name: 'Movies' }];
-      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-      await expect(streamingTypeService.addCategoryToStreamingType('type1', existingCategories)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORY_ALREADY_EXISTS, 400),
-      );
+      const invalidType = {
+        supportedGenres: [mockGenreReference],
+        description: 'Streaming service',
+        isActive: true
+      } as unknown as IStreamingTypeCreate;
+      await expect(streamingTypeService.createStreamingType(invalidType))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_REQUIRED, 400));
     });
   });
 
   describe('updateStreamingType', () => {
-    it('should update streaming type with valid data', async () => {
-      const updatedType: Partial<IStreamingType> = {
-        _id: 'type2',
-        name: 'Netflix',
-        categories: [{ id: 1, name: 'Movies' }],
+    it('should update a streaming type', async () => {
+      const updateData: IStreamingTypeUpdate = {
+        name: 'Netflix Updated',
+        description: 'Updated description',
+        isActive: 'true'
       };
-      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-      mockRepository.update.mockResolvedValue({
+
+      const updatedStreamingType: IStreamingTypeResponse = {
         ...mockStreamingType,
-        ...updatedType,
-      } as IStreamingTypeResponse);
+        ...updateData,
+        isActive: true
+      };
 
-      const result = await streamingTypeService.updateStreamingType('type1', updatedType);
+      mockRepository.findById.mockResolvedValue(mockStreamingType);
+      mockRepository.update.mockResolvedValue(updatedStreamingType);
 
-      expect(result).toEqual({ ...mockStreamingType, ...updatedType });
-      expect(mockRepository.update).toHaveBeenCalledWith('type1', updatedType);
+      const result = await streamingTypeService.updateStreamingType(
+        mockStreamingType._id.toString(),
+        updateData
+      );
+
+      expect(result).toEqual(updatedStreamingType);
+      expect(mockRepository.update).toHaveBeenCalledWith(mockStreamingType._id, updateData);
     });
 
     it('should throw error if streaming type not found', async () => {
-      const updatedType: Partial<IStreamingType> = {
-        _id: 'type2',
-        name: 'Netflix',
+      const updateData: IStreamingTypeUpdate = {
+        name: 'Netflix Updated',
+        description: 'Updated description',
+        isActive: 'true'
       };
+
       mockRepository.findById.mockResolvedValue(null);
-      await expect(streamingTypeService.updateStreamingType('type1', updatedType)).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
-      );
-    });
-  });
 
-  describe('removeCategoryFromStreamingType', () => {
-    it('should remove categories successfully', async () => {
-      const categoriesToRemove: Partial<ICategory>[] = [{ id: 1 }];
-      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-      mockRepository.removeCategory.mockResolvedValue({
-        ...mockStreamingType,
-        categories: [mockStreamingType.categories?.[1]],
-      } as IStreamingTypeResponse);
+      await expect(streamingTypeService.updateStreamingType(
+        mockStreamingType._id.toString(),
+        updateData
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
 
-      const result = await streamingTypeService.removeCategoryFromStreamingType('type1', categoriesToRemove);
-
-      expect(result).toBeDefined();
-      expect(mockRepository.removeCategory).toHaveBeenCalledWith('type1', categoriesToRemove);
+      expect(mockRepository.update).toHaveBeenCalledWith(mockStreamingType._id, updateData);
     });
 
-    it('should throw error if categories not found in streaming type', async () => {
-      const invalidCategories: Partial<ICategory>[] = [{ id: 3 }];
+    it('should throw error if new name already exists', async () => {
+      const updateData = {
+        name: 'Existing Name',
+      };
       mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
-
-      await expect(streamingTypeService.removeCategoryFromStreamingType('type1', invalidCategories)).rejects.toThrow(
-        new StreamingServiceError(`${ErrorMessages.STREAMING_TYPE_CATEGORY_NOT_FOUND}: 3`, 404),
-      );
+      mockRepository.findByName.mockResolvedValue({ ...mockStreamingType, _id: generateValidObjectId() } as IStreamingTypeResponse);
+      await expect(streamingTypeService.updateStreamingType(
+        mockStreamingType._id as unknown as string,
+        updateData
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NAME_EXISTS, 400));
     });
   });
 
   describe('deleteStreamingType', () => {
-    it('should delete streaming type successfully', async () => {
-      const deletedType: Partial<IStreamingTypeResponse> = {
-        _id: 'type1',
-        name: 'Netflix',
-        categories: [{ id: 1, name: 'Movies' }],
-      };
-      mockRepository.delete.mockResolvedValue(deletedType as IStreamingTypeResponse);
-      const result = await streamingTypeService.deleteStreamingType('type1');
-      expect(result).toEqual(deletedType);
-      expect(mockRepository.delete).toHaveBeenCalledWith('type1');
+    it('should delete a streaming type', async () => {
+      mockRepository.findById.mockResolvedValue(mockStreamingType);
+      mockRepository.delete.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+
+      const result = await streamingTypeService.deleteStreamingType(mockStreamingType._id.toString());
+
+      expect(result).toEqual(mockStreamingType);
+      expect(mockRepository.delete).toHaveBeenCalledWith(mockStreamingType._id);
     });
 
     it('should throw error if streaming type not found', async () => {
       mockRepository.delete.mockResolvedValue(null);
-      await expect(streamingTypeService.deleteStreamingType('type1')).rejects.toThrow(
-        new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404),
-      );
+
+      await expect(streamingTypeService.deleteStreamingType(mockStreamingType._id.toString()))
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
+
+      expect(mockRepository.delete).toHaveBeenCalledWith(mockStreamingType._id);
     });
   });
 
   describe('addGenreToStreamingType', () => {
-    const mockGenres: IGenreReference[] = [
-      { _id: new Types.ObjectId(), id: 1, name: 'Action' },
-      { _id: new Types.ObjectId(), id: 2, name: 'Comedy' }
-    ];
+    it('should add a genre to streaming type', async () => {
+      const newGenre: IGenreReference = {
+        _id: generateValidObjectId() as Types.ObjectId,
+        name: 'Adventure',
+        id: 3,
+        poster: 'https://example.com/poster.jpg'
+      };
 
-    it('should add genres to streaming type when valid', async () => {
-      const streamingTypeId = 'validId';
-      const updatedStreamingType = { ...mockStreamingType, supportedGenres: mockGenres };
-      
-      mockRepository.addGenre.mockResolvedValue(updatedStreamingType as IStreamingTypeResponse);
-      mockGenreRepository.findById.mockResolvedValue({ _id: 'genreId', name: 'Action', id: 1 });
-      
-      const result = await streamingTypeService.addGenreToStreamingType(streamingTypeId, mockGenres);
-      
+      const mockGenreResponseWithSameGenre = {
+        ...mockGenreReference,
+        id: 3,
+        name: 'Adventure'
+      }
+
+      const updatedStreamingType: IStreamingTypeResponse = {
+        ...mockStreamingType,
+        supportedGenres: [mockGenreReference, newGenre]
+      };
+
+      mockGenreRepository.findById.mockResolvedValue(mockGenreResponseWithSameGenre as IGenreResponse);
+      mockRepository.findById.mockResolvedValue(mockStreamingType);
+      mockRepository.addGenre.mockResolvedValue(updatedStreamingType);
+      const result = await streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id.toString(),
+        [newGenre]
+      );
+
       expect(result).toEqual(updatedStreamingType);
-      expect(mockRepository.addGenre).toHaveBeenCalledWith(streamingTypeId, mockGenres);
-      expect(mockGenreRepository.findById).toHaveBeenCalledTimes(2);
+      expect(mockRepository.addGenre).toHaveBeenCalledWith(mockStreamingType._id, [newGenre]);
     });
 
-    it('should throw error when streaming type not found', async () => {
+    it('should throw error if streaming type not found', async () => {
+      
+      const newGenre: IGenreReference = {
+        _id: generateValidObjectId() as Types.ObjectId,
+        name: 'Adventure',
+        id: 3,
+        poster: 'https://example.com/poster.jpg'
+      };
+
+      const mockGenreResponseWithSameGenre = {
+        ...mockGenreReference,
+        id: 3,
+        name: 'Adventure'
+      }
+      mockGenreRepository.findById.mockResolvedValue(mockGenreResponseWithSameGenre as IGenreResponse);
+      mockRepository.findByGenreName.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
       mockRepository.addGenre.mockResolvedValue(null);
-      mockGenreRepository.findById.mockResolvedValue({ _id: 'genreId', name: 'Action', id: 1 });
-      
-      await expect(streamingTypeService.addGenreToStreamingType('invalidId', mockGenres))
-        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id.toString(),
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
     });
 
-    it('should throw error when genres array is empty', async () => {
-      await expect(streamingTypeService.addGenreToStreamingType('validId', []))
-        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_REQUIRED, 400));
-    });
-
-    it('should throw error when genre has invalid _id', async () => {
-      const invalidGenres = [{ id: 1, name: 'Action' }] as IGenreReference[];
-      
-      await expect(streamingTypeService.addGenreToStreamingType('validId', invalidGenres))
-        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_CATEGORIES_INVALID_ID, 400));
-    });
-
-    it('should throw error when genre does not exist in database', async () => {
+    it('should throw error if genre not found', async () => {
+      const newGenre: IGenreReference = {
+        _id: generateValidObjectId() as Types.ObjectId,
+        name: 'Comedy',
+        id: 2,
+        poster: 'https://example.com/poster.jpg'
+      };
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
       mockGenreRepository.findById.mockResolvedValue(null);
-      
-      await expect(streamingTypeService.addGenreToStreamingType('validId', mockGenres))
-        .rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_NOT_FOUND, 404));
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_NOT_FOUND, 404));
     });
 
-    it('should throw error when genre already exists in streaming type', async () => {
-      const streamingTypeId = 'validId';
-      const existingGenres = [
-        { _id: new Types.ObjectId(), id: 1, name: 'Action' }
-      ];
-      
-      // Mock the streaming type with existing genres
-      mockRepository.findById.mockResolvedValue({
-        _id: streamingTypeId,
-        name: 'Netflix',
-        supportedGenres: existingGenres
+    it('should throw error if genre already exists with different id', async () => {
+      const newGenre: IGenreReference = {
+        _id: generateValidObjectId() as Types.ObjectId,
+        name: 'Action',
+        id: 2,
+        poster: 'https://example.com/poster.jpg'
+      };
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+      mockGenreRepository.findById.mockResolvedValue(mockGenreReference as IGenreResponse);
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_ID_MISMATCH(newGenre.id, mockGenreReference.id), 400));
+    });
+
+    it('should throw error if genre already exists with different name', async () => {
+      const newGenre: IGenreReference = {
+        _id: generateValidObjectId() as Types.ObjectId,
+        name: 'Adventure',
+        id: 1,
+        poster: 'https://example.com/poster.jpg'
+      };
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+      mockGenreRepository.findById.mockResolvedValue(mockGenreReference as IGenreResponse);
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_NAME_MISMATCH(newGenre.name, mockGenreReference.name), 400));
+    });
+
+    it('should throw error if genre does not have a _id', async () => {
+      const newGenre: IGenreReference = {
+        name: 'Adventure',
+        id: 3,
+        poster: 'https://example.com/poster.jpg'
+      } as unknown as IGenreReference;
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+      mockGenreRepository.findById.mockResolvedValue(mockGenreReference as IGenreResponse);
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_INTERNAL_ID_INVALID, 400));
+    });
+
+    it('should throw error if genre does not have a genre', async () => {
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+      mockGenreRepository.findById.mockResolvedValue(mockGenreReference as IGenreResponse);
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        []
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.GENRE_REQUIRED, 400));
+    });
+
+    it('should throw error if genre _id is not a valid object id', async () => {
+      const newGenre: IGenreReference = {
+        _id: 'invalid-id' as unknown as Types.ObjectId,
+        name: 'Adventure',
+        id: 3,
+        poster: 'https://example.com/poster.jpg'
+      };
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+      mockGenreRepository.findById.mockResolvedValue(mockGenreReference as IGenreResponse);
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.INVALID_ID_FORMAT('genre'), 400));
+    });
+
+    it('should throw error if genre name has on database', async () => {
+      const newGenre: IGenreReference = {
+        _id: generateValidObjectId() as Types.ObjectId,
+        name: 'Action',
+        id: 1,
+        poster: 'https://example.com/poster.jpg'
+      };
+      mockGenreRepository.findById.mockResolvedValue(mockGenreReference as IGenreResponse);
+      mockRepository.findByGenreName.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+
+      await expect(streamingTypeService.addGenreToStreamingType(
+        mockStreamingType._id as unknown as string,
+        [newGenre]
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_GENRE_NAME_EXISTS(mockGenreReference.name), 400));  
+    });
+  });
+
+  describe('deleteGenresFromStreamingTypeByName', () => {
+    it('should delete genres from streaming type by name', async () => {
+      const genreNames = ['Action'];
+      mockRepository.findById.mockResolvedValue(mockStreamingType as IStreamingTypeResponse);
+      mockRepository.deleteByGenresName.mockResolvedValue({
+        ...mockStreamingType,
+        supportedGenres: []
       } as IStreamingTypeResponse);
-      
-      // Mock the genre repository to validate the genre
-      mockGenreRepository.findById.mockResolvedValue({ 
-        _id: 'genreId', 
-        id: 1, 
-        name: 'Action' 
+
+      const result = await streamingTypeService.deleteGenresFromStreamingTypeByName(
+        mockStreamingType._id as unknown as string,
+        genreNames
+      );
+
+      expect(result?.supportedGenres).not.toContainEqual(mockGenreReference);
+      expect(mockRepository.deleteByGenresName).toHaveBeenCalledWith(genreNames, mockStreamingType._id);
+    });
+
+    it('should throw error if streaming type not found', async () => {
+      const genreNames = ['Action'];
+      mockRepository.deleteByGenresName.mockResolvedValue(null);
+      await expect(streamingTypeService.deleteGenresFromStreamingTypeByName(
+        mockStreamingType._id as unknown as string,
+        genreNames
+      )).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
+    });
+  });
+
+  describe('changeCover', () => {
+    it('should change the cover of the streaming type series', async () => {
+      mockRepository.findAll.mockResolvedValue([mockStreamingType]);
+      jest.spyOn(axios, 'get').mockResolvedValue({
+        data: {
+          results: [{ backdrop_path: '/backdrop.jpg' }]
+        }
       });
-      
-      // Try to add the same genre again
-      await expect(streamingTypeService.addGenreToStreamingType(streamingTypeId, existingGenres))
-        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_GENRE_NAME_EXISTS('Action'), 400));
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+      await streamingTypeService.changeCover();
+      expect(mockRepository.update).toHaveBeenCalledWith(mockStreamingType._id, {
+        supportedGenres: [{
+          ...mockGenreReference,
+          poster: 'https://image.tmdb.org/t/p/original/backdrop.jpg'
+        }]
+      });
+    });
+
+    it('should change the cover of the streaming type movies', async () => {
+      mockRepository.findAll.mockResolvedValue([mockStreamingType]);
+      jest.spyOn(axios, 'get').mockResolvedValue({
+        data: {
+          results: [{ backdrop_path: '/backdrop.jpg' }]
+        }
+      });
+      mockStreamingType.name = 'movies';
+      mockStreamingType.description = 'Movies description';
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+      await streamingTypeService.changeCover();
+      expect(mockRepository.update).toHaveBeenCalledWith(mockStreamingType._id, {
+        supportedGenres: [{
+          ...mockGenreReference,
+          poster: 'https://image.tmdb.org/t/p/original/backdrop.jpg'
+        }]
+      });
+    });
+
+    it('should not change the cover if streaming type not has supportedGenres', async () => {
+      const streamingTypeWithoutGenres = {
+        ...mockStreamingType,
+        supportedGenres: undefined
+      } as unknown as IStreamingTypeResponse;
+      mockRepository.findAll.mockResolvedValue([streamingTypeWithoutGenres]);
+      jest.spyOn(axios, 'get').mockResolvedValue({
+        data: {
+          results: [{ backdrop_path: '/backdrop.jpg' }]
+        }
+      });
+      const updateGenreCoversSpy = jest.spyOn(streamingTypeService as any, 'updateGenreCovers');
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+      await streamingTypeService.changeCover();
+      expect(updateGenreCoversSpy).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if TMDB token is invalid', async () => {
+      process.env.TMDB_Bearer_Token = '';
+      await expect(streamingTypeService.changeCover()).rejects.toThrow(new StreamingServiceError(ErrorMessages.TMDB_TOKEN_INVALID, 401));
+    });
+
+    it('should original genre if TMDB api call fails', async () => {
+      mockRepository.findAll.mockResolvedValue([mockStreamingType]);
+      jest.spyOn(axios, 'get').mockRejectedValue(new Error('API call failed'));
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+
+      await streamingTypeService.changeCover();
+      expect(mockRepository.update).toHaveBeenCalledWith(mockStreamingType._id, {
+        supportedGenres: [mockGenreReference]
+      });
+    });
+
+    it('should original genre if TMDB api call returns empty array', async () => {
+      mockRepository.findAll.mockResolvedValue([mockStreamingType]);
+      jest.spyOn(axios, 'get').mockResolvedValue({
+        data: {
+          results: []
+        }
+      });
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+
+      await streamingTypeService.changeCover();
+      expect(mockRepository.update).toHaveBeenCalledWith(mockStreamingType._id, {
+        supportedGenres: [mockGenreReference]
+      });
+    });
+
+    it('should throw error if streaming types are not updated', async () => {
+      mockRepository.findAll.mockResolvedValue([mockStreamingType]);
+      jest.spyOn(axios, 'get').mockResolvedValue({
+        data: {
+          results: [{ backdrop_path: '/backdrop.jpg' }]
+        }
+      });
+      mockRepository.update.mockResolvedValue(null);
+      await expect(streamingTypeService.changeCover()).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
     });
   });
 });
