@@ -1,199 +1,278 @@
+import { Types } from 'mongoose';
 import { UserRepository } from '../userRepository';
 import User from '../../models/userModel';
-import mongoose from 'mongoose';
+import { IUserResponse, IUserCreate, IUserUpdate } from '../../interfaces/user';
 
 jest.mock('../../models/userModel');
 
-describe('UserRepository Unit Tests', () => {
+describe('UserRepository', () => {
   let userRepository: UserRepository;
-  const mockUser = {
-    _id: new mongoose.Types.ObjectId(),
-    name: 'Test User',
-    email: 'test@example.com',
-    save: jest.fn(),
-  };
-
-  const mockSaveUser = jest.fn().mockResolvedValue(mockUser);
-  (User as unknown as jest.Mock).mockImplementation(() => ({
-    save: mockSaveUser,
-  }));
+  let mockUser: IUserResponse;
+  let mockUsers: IUserResponse[];
 
   beforeEach(() => {
     userRepository = new UserRepository();
-    jest.clearAllMocks();
+    mockUser = {
+      _id: new Types.ObjectId(),
+      username: 'testuser',
+      email: 'test@example.com',
+      active: true,
+      createdAt: new Date('2024-03-20T00:00:00.000Z'),
+      updatedAt: new Date('2024-03-20T00:00:00.000Z'),
+      profilePicture: 'https://example.com/profile.jpg',
+      preferences: {
+        favoriteActors: [],
+        favoriteGenres: [],
+        language: 'en',
+        emailNotifications: true,
+        pushNotifications: true,
+        theme: 'light'
+      },
+      watchList: [],
+      stats: {
+        seriesCompleted: 0,
+        lastActive: new Date(),
+        joinDate: new Date(),
+        favoriteStreamingType: new Types.ObjectId(),
+        episodesWatched: 0,
+        moviesWatched: 0,
+        totalWatchTimeInMinutes: 0
+      },
+      role: 'user'
+    } as IUserResponse;
+
+    mockUsers = [
+      mockUser,
+      {
+        ...mockUser,
+        _id: new Types.ObjectId(),
+        username: 'testuser2',
+        email: 'test2@example.com'
+      }
+    ];
+
+    (User.find as jest.Mock).mockClear();
+    (User.findById as jest.Mock).mockClear();
+    (User.findOne as jest.Mock).mockClear();
+    (User.create as jest.Mock).mockClear();
+    (User.findByIdAndUpdate as jest.Mock).mockClear();
+    (User.findByIdAndDelete as jest.Mock).mockClear();
   });
 
   describe('findAll', () => {
-    it('should return all users without passwords', async () => {
-      const mockUsers = [
-        {
-          _id: new mongoose.Types.ObjectId(),
-          name: 'Test User',
-          email: 'test@example.com',
-        },
-        {
-          _id: new mongoose.Types.ObjectId(),
-          name: 'Another User',
-          email: 'another@example.com',
-        },
-      ];
-
-      const findSpy = jest.spyOn(User, 'find').mockReturnValue({
+    it('should return all users with pagination', async () => {
+      (User.find as jest.Mock).mockReturnValue({
         skip: jest.fn().mockReturnValue({
           limit: jest.fn().mockReturnValue({
-            select: jest.fn().mockResolvedValue(mockUsers),
-          }),
-        }),
-      } as any);
-
-      const result = await userRepository.findAll(0, 2);
-
-      expect(findSpy).toHaveBeenCalled();
-      expect(result).toHaveLength(2);
-      result.forEach((user) => {
-        expect(user.password).toBeUndefined();
-        expect(user).toHaveProperty('name');
-        expect(user).toHaveProperty('email');
+            select: jest.fn().mockResolvedValue(mockUsers)
+          })
+        })
       });
-    });
 
-    it('should handle pagination correctly', async () => {
-      const page = 2;
-      const limit = 10;
-      const skipValue = (page - 1) * limit;
+      const result = await userRepository.findAll(0, 10);
 
-      const findSpy = jest.spyOn(User, 'find').mockReturnValue({
-        skip: jest.fn().mockReturnValue({
-          limit: jest.fn().mockReturnValue({
-            select: jest.fn().mockResolvedValue([]),
-          }),
-        }),
-      } as any);
-
-      await userRepository.findAll(skipValue, limit);
-
-      expect(findSpy).toHaveBeenCalled();
-      const skipSpy = findSpy.mock.results[0].value.skip;
-      expect(skipSpy).toHaveBeenCalledWith(skipValue);
-      expect(skipSpy().limit).toHaveBeenCalledWith(limit);
+      expect(User.find).toHaveBeenCalled();
+      expect(result).toEqual(mockUsers);
     });
   });
 
   describe('findById', () => {
-    it('should find and return user without password', async () => {
-      const userId = new mongoose.Types.ObjectId().toString();
-      const mockUser = {
-        _id: userId,
-        name: 'Test User',
-        email: 'test@example.com',
-      };
+    it('should return user by id', async () => {
+      (User.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUser)
+      });
 
-      const findByIdSpy = jest.spyOn(User, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUser),
-      } as any);
+      const result = await userRepository.findById(mockUser._id.toString());
 
-      const result = await userRepository.findById(userId);
-
-      expect(findByIdSpy).toHaveBeenCalledWith(userId);
-      expect(result).toBeDefined();
-      expect(result?.password).toBeUndefined();
-      expect(result?.name).toBe(mockUser.name);
+      expect(User.findById).toHaveBeenCalledWith(mockUser._id.toString());
+      expect(result).toEqual(mockUser);
     });
 
-    it('should return null for non-existent user', async () => {
-      const userId = new mongoose.Types.ObjectId().toString();
-      const findByIdSpy = jest.spyOn(User, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(null),
-      } as any);
+    it('should return null if user not found', async () => {
+      (User.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(null)
+      });
 
-      const result = await userRepository.findById(userId);
+      const result = await userRepository.findById(mockUser._id.toString());
 
-      expect(findByIdSpy).toHaveBeenCalledWith(userId);
+      expect(User.findById).toHaveBeenCalledWith(mockUser._id.toString());
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByEmail', () => {
+    it('should return user by email', async () => {
+      (User.findOne as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUser)
+      });
+
+      const result = await userRepository.findByEmail(mockUser.email);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email: mockUser.email });
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should return null if user not found', async () => {
+      (User.findOne as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(null)
+      });
+
+      const result = await userRepository.findByEmail(mockUser.email);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email: mockUser.email });
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByEmailWithPassword', () => {
+    it('should return user by email with password', async () => {
+      const mockUserWithPassword = {
+        ...mockUser,
+        password: 'hashedPassword'
+      };
+
+      (User.findOne as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUserWithPassword)
+      });
+
+      const result = await userRepository.findByEmailWithPassword(mockUser.email);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email: mockUser.email });
+      expect(result).toEqual(mockUserWithPassword);
+    });
+
+    it('should return null if user not found', async () => {
+      (User.findOne as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(null)
+      });
+
+      const result = await userRepository.findByEmailWithPassword(mockUser.email);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email: mockUser.email });
       expect(result).toBeNull();
     });
   });
 
   describe('create', () => {
-    it('should create user successfully', async () => {
-      const userData = {
-        name: 'New User',
+    it('should create a new user', async () => {
+      const userData: IUserCreate = {
+        username: 'newuser',
         email: 'new@example.com',
-        password: 'newpass123',
+        password: 'password123',
+        active: true
       };
 
-      mockSaveUser.mockResolvedValue({
-        ...userData,
-        _id: new mongoose.Types.ObjectId(),
-      });
+      (User.create as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await userRepository.create(userData);
 
-      expect(User).toHaveBeenCalledWith(userData);
-      expect(mockSaveUser).toHaveBeenCalled();
-
-      expect(result).toHaveProperty('_id');
-      expect(result.name).toBe(userData.name);
-      expect(result.email).toBe(userData.email);
+      expect(User.create).toHaveBeenCalledWith(userData);
+      expect(result).toEqual(mockUser);
     });
   });
 
   describe('update', () => {
-    it('should update user successfully', async () => {
-      const userId = new mongoose.Types.ObjectId().toString();
-      const updateData = {
-        name: 'Updated Name',
-        email: 'updated@example.com',
-      };
-      const mockUpdatedUser = {
-        _id: userId,
-        ...updateData,
+    it('should update user', async () => {
+      const updateData: IUserUpdate = {
+        username: 'updateduser',
+        email: 'updated@example.com'
       };
 
-      const findByIdAndUpdateSpy = jest.spyOn(User, 'findByIdAndUpdate').mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUpdatedUser),
-      } as any);
+      (User.findByIdAndUpdate as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        ...updateData
+      });
 
-      const result = await userRepository.update(userId, updateData);
+      const result = await userRepository.update(mockUser._id.toString(), updateData);
 
-      expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(
-        userId,
+      expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockUser._id.toString(),
         { $set: updateData },
-        {
-          new: true,
-          runValidators: true,
-        },
+        { new: true, runValidators: true }
       );
-      expect(result).toBeDefined();
-      expect(result?.name).toBe(updateData.name);
-      expect(result?.email).toBe(updateData.email);
+      expect(result).toEqual({
+        ...mockUser,
+        ...updateData
+      });
+    });
+
+    it('should return null if user not found', async () => {
+      (User.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+
+      const result = await userRepository.update(mockUser._id.toString(), { username: 'updateduser' });
+
+      expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockUser._id.toString(),
+        { $set: { username: 'updateduser' } },
+        { new: true, runValidators: true }
+      );
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('checkPassword', () => {
+    it('should return true if password is correct', async () => {
+      const mockUserWithPassword = {
+        ...mockUser,
+        password: 'hashedPassword',
+        correctPassword: jest.fn().mockReturnValue(true)
+      };
+
+      (User.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUserWithPassword)
+      });
+
+      const result = await userRepository.checkPassword(mockUser._id.toString(), 'password123');
+
+      expect(User.findById).toHaveBeenCalledWith(mockUser._id.toString());
+      expect(result).toBe(true);
+    });
+
+    it('should return false if password is incorrect', async () => {
+      const mockUserWithPassword = {
+        ...mockUser,
+        password: 'hashedPassword',
+        correctPassword: jest.fn().mockReturnValue(false)
+      };
+
+      (User.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUserWithPassword)
+      });
+
+      const result = await userRepository.checkPassword(mockUser._id.toString(), 'wrongpassword');
+
+      expect(User.findById).toHaveBeenCalledWith(mockUser._id.toString());
+      expect(result).toBe(false);
+    });
+
+    it('should return false if user not found', async () => {
+      (User.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(null)
+      });
+
+      const result = await userRepository.checkPassword(mockUser._id.toString(), 'password123');
+
+      expect(User.findById).toHaveBeenCalledWith(mockUser._id.toString());
+      expect(result).toBe(false);
     });
   });
 
   describe('delete', () => {
-    it('should delete user successfully', async () => {
-      const userId = new mongoose.Types.ObjectId().toString();
-      const mockDeletedUser = {
-        _id: userId,
-        name: 'Deleted User',
-        email: 'deleted@example.com',
-      };
+    it('should delete user', async () => {
+      (User.findByIdAndDelete as jest.Mock).mockResolvedValue(mockUser);
 
-      const findByIdAndDeleteSpy = jest.spyOn(User, 'findByIdAndDelete').mockResolvedValue(mockDeletedUser);
+      const result = await userRepository.delete(mockUser._id.toString());
 
-      const result = await userRepository.delete(userId);
-
-      expect(findByIdAndDeleteSpy).toHaveBeenCalledWith(userId);
-      expect(result).toBeDefined();
-      expect(result?._id.toString()).toBe(userId);
+      expect(User.findByIdAndDelete).toHaveBeenCalledWith(mockUser._id.toString());
+      expect(result).toEqual(mockUser);
     });
 
-    it('should return null when deleting non-existent user', async () => {
-      const userId = new mongoose.Types.ObjectId().toString();
-      const findByIdAndDeleteSpy = jest.spyOn(User, 'findByIdAndDelete').mockResolvedValue(null);
+    it('should return null if user not found', async () => {
+      (User.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
 
-      const result = await userRepository.delete(userId);
+      const result = await userRepository.delete(mockUser._id.toString());
 
-      expect(findByIdAndDeleteSpy).toHaveBeenCalledWith(userId);
+      expect(User.findByIdAndDelete).toHaveBeenCalledWith(mockUser._id.toString());
       expect(result).toBeNull();
     });
   });

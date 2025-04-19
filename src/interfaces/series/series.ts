@@ -25,5 +25,7 @@ export interface ISeriesResponse extends Omit<ISeriesCreate, "genre">, IContentR
 
 export interface ISeriesDocument extends IContentDocument, ISeriesResponse {}
 
-export interface ISeriesModel extends IContentModel {}
+export interface ISeriesModel extends IContentModel {
+  findByTMDBId(tmdbId: number[]): Promise<ISeriesResponse[] | null>;
+}
 

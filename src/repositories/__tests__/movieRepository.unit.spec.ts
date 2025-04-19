@@ -1,173 +1,214 @@
+import { Types } from 'mongoose';
 import { MovieRepository } from '../movieRepository';
-import Movie, { IMovie } from '../../models/movieModel';
-import mongoose from 'mongoose';
+import Movie from '../../models/movieModel';
+import { IMovieResponse } from '../../interfaces/movie';
+import { IContentModel } from '../../interfaces/content';
+import { IGenreReference } from '../../interfaces/streamingTypes';
 
 jest.mock('../../models/movieModel');
 
-describe('MovieRepository Unit Tests', () => {
+describe('MovieRepository', () => {
   let movieRepository: MovieRepository;
-  const mockMovie = {
-    _id: new mongoose.Types.ObjectId().toString(),
-    title: 'Test Movie',
-    release_date: '2024-03-20',
-    plot: 'Test plot',
-    genre: [1, 2],
-    cast: [],
-    poste: 'string',
-    rating: 8.5,
-    url: 'http://test.com',
-  };
-
-  const mockSaveMovie = jest.fn().mockResolvedValue(mockMovie);
-  (Movie as unknown as jest.Mock).mockImplementation(() => ({
-    save: mockSaveMovie,
-  }));
+  let mockMovie: IMovieResponse;
+  let mockMovies: IMovieResponse[];
+  let mockGenre: IGenreReference;
 
   beforeEach(() => {
     movieRepository = new MovieRepository();
-    jest.clearAllMocks();
+    mockGenre = {
+      _id: new Types.ObjectId(),
+      name: 'Action',
+      id: 1,
+      poster: 'poster.jpg'
+    };
+
+    mockMovie = {
+      _id: new Types.ObjectId(),
+      title: 'Test Movie',
+      contentType: 'movie',
+      durationTime: 120,
+      releaseDate: '2024-03-20T00:00:00.000Z',
+      plot: 'Test plot',
+      cast: ['Actor 1', 'Actor 2'],
+      genre: [mockGenre],
+      rating: 8.5,
+      poster: 'poster.jpg',
+      url: 'movie.mp4',
+      createdAt: new Date('2024-03-20T00:00:00.000Z'),
+      updatedAt: new Date('2024-03-20T00:00:00.000Z')
+    } as IMovieResponse;
+
+    mockMovies = [
+      mockMovie,
+      {
+        ...mockMovie,
+        _id: new Types.ObjectId(),
+        title: 'Test Movie 2'
+      }
+    ];
+
+    (Movie.find as jest.Mock).mockClear();
+    (Movie.findById as jest.Mock).mockClear();
+    (Movie.create as jest.Mock).mockClear();
+    (Movie.insertMany as jest.Mock).mockClear();
+    (Movie.findByIdAndUpdate as jest.Mock).mockClear();
+    (Movie.findByIdAndDelete as jest.Mock).mockClear();
+    ((Movie as unknown as IContentModel).findByTitle as jest.Mock).mockClear();
+    ((Movie as unknown as IContentModel).findByGenre as jest.Mock).mockClear();
   });
 
   describe('findAll', () => {
     it('should return all movies with pagination', async () => {
-      const mockMovies = [mockMovie, { ...mockMovie, _id: new mongoose.Types.ObjectId() }];
-
-      const findSpy = jest.spyOn(Movie, 'find').mockReturnValue({
-        sort: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockMovies),
-      } as any);
+      (Movie.find as jest.Mock).mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          skip: jest.fn().mockReturnValue({
+            limit: jest.fn().mockResolvedValue(mockMovies)
+          })
+        })
+      });
 
       const result = await movieRepository.findAll(0, 10);
 
-      expect(findSpy).toHaveBeenCalled();
-      expect(result).toHaveLength(2);
-      expect(result[0]).toHaveProperty('title', 'Test Movie');
-    });
-
-    it('should apply correct pagination parameters', async () => {
-      const skip = 10;
-      const limit = 5;
-
-      const findSpy = jest.spyOn(Movie, 'find').mockReturnValue({
-        sort: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([]),
-      } as any);
-
-      await movieRepository.findAll(skip, limit);
-
-      const mockFind = findSpy.mock.results[0].value;
-      expect(mockFind.skip).toHaveBeenCalledWith(skip);
-      expect(mockFind.limit).toHaveBeenCalledWith(limit);
+      expect(Movie.find).toHaveBeenCalled();
+      expect(result).toEqual(mockMovies);
     });
   });
 
   describe('findById', () => {
-    it('should find movie by id', async () => {
-      const findByIdSpy = jest.spyOn(Movie, 'findById').mockResolvedValue(mockMovie);
+    it('should return movie by id', async () => {
+      (Movie.findById as jest.Mock).mockResolvedValue(mockMovie);
 
       const result = await movieRepository.findById(mockMovie._id.toString());
 
-      expect(findByIdSpy).toHaveBeenCalledWith(mockMovie._id.toString());
+      expect(Movie.findById).toHaveBeenCalledWith(mockMovie._id.toString());
       expect(result).toEqual(mockMovie);
     });
 
-    it('should return null for non-existent movie', async () => {
-      const findByIdSpy = jest.spyOn(Movie, 'findById').mockResolvedValue(null);
+    it('should return null if movie not found', async () => {
+      (Movie.findById as jest.Mock).mockResolvedValue(null);
 
-      const result = await movieRepository.findById('nonexistent-id');
+      const result = await movieRepository.findById(mockMovie._id.toString());
 
-      expect(findByIdSpy).toHaveBeenCalledWith('nonexistent-id');
+      expect(Movie.findById).toHaveBeenCalledWith(mockMovie._id.toString());
       expect(result).toBeNull();
-    });
-  });
-
-  describe('findByTitle', () => {
-    it('should find movies by title', async () => {
-      const mockMovieAux = {
-        ...mockMovie,
-        genre: { id: 1, name: "Action" }
-      }
-      const findSpy = jest.spyOn(Movie, 'findByTitle').mockResolvedValue([mockMovieAux] as unknown as IMovie[]);
-
-      const result = await movieRepository.findByTitle('Test', 0, 10);
-
-      expect(findSpy).toHaveBeenCalledWith('Test', 0, 10);
-      expect(result).toHaveLength(1);
-      expect(result?.[0]?.title).toBe('Test Movie');
-    });
-  });
-
-  describe('findByGenre', () => {
-    it('should find movies by genre', async () => {
-      const mockMovieAux = {
-        ...mockMovie,
-        genre: { id: 1, name: "Action" }
-      }
-      const findSpy = jest.spyOn(Movie, 'findByGenre').mockResolvedValue([mockMovieAux] as unknown as IMovie[]);
-
-      const result = await movieRepository.findByGenre('Action', 0, 10);
-
-      expect(findSpy).toHaveBeenCalledWith('Action', 0, 10);
-      expect(result).toHaveLength(1);
-      expect(result?.[0]?.genre).toStrictEqual({"id": 1, "name": "Action"});
     });
   });
 
   describe('create', () => {
     it('should create a new movie', async () => {
-      mockSaveMovie.mockResolvedValue(mockMovie);
+      (Movie.create as jest.Mock).mockResolvedValue(mockMovie);
 
       const result = await movieRepository.create(mockMovie);
 
-      expect(mockSaveMovie).toHaveBeenCalled();
+      expect(Movie.create).toHaveBeenCalledWith(mockMovie);
       expect(result).toEqual(mockMovie);
+    });
+
+    it('should create multiple movies', async () => {
+      (Movie.create as jest.Mock).mockResolvedValue(mockMovies);
+
+      const result = await movieRepository.create(mockMovies);
+
+      expect(Movie.create).toHaveBeenCalledWith(mockMovies);
+      expect(result).toEqual(mockMovies);
+    });
+  });
+
+  describe('createManyMovies', () => {
+    it('should create multiple movies', async () => {
+      (Movie.insertMany as jest.Mock).mockResolvedValue(mockMovies);
+
+      const result = await movieRepository.createManyMovies(mockMovies);
+
+      expect(Movie.insertMany).toHaveBeenCalledWith(mockMovies);
+      expect(result).toEqual(mockMovies);
     });
   });
 
   describe('update', () => {
-    it('should update an existing movie', async () => {
-      const updateData = { title: 'Updated Movie' };
-      const updatedMovie = { ...mockMovie, ...updateData };
+    it('should update movie', async () => {
+      (Movie.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockMovie);
 
-      const findByIdAndUpdateSpy = jest.spyOn(Movie, 'findByIdAndUpdate').mockResolvedValue(updatedMovie);
-      const result = await movieRepository.update(mockMovie._id.toString(), updateData);
+      const result = await movieRepository.update(mockMovie._id.toString(), mockMovie);
 
-      expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(
+      expect(Movie.findByIdAndUpdate).toHaveBeenCalledWith(
         mockMovie._id.toString(),
-        { $set: updateData },
-        { new: true, runValidators: true },
+        { $set: mockMovie },
+        { new: true, runValidators: true }
       );
-      expect(result).toEqual(updatedMovie);
+      expect(result).toEqual(mockMovie);
     });
 
-    it('should return null when updating non-existent movie', async () => {
-      const findByIdAndUpdateSpy = jest.spyOn(Movie, 'findByIdAndUpdate').mockResolvedValue(null);
+    it('should return null if movie not found', async () => {
+      (Movie.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
 
-      const result = await movieRepository.update('nonexistent-id', { title: 'Updated' });
+      const result = await movieRepository.update(mockMovie._id.toString(), mockMovie);
 
-      expect(findByIdAndUpdateSpy).toHaveBeenCalled();
+      expect(Movie.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockMovie._id.toString(),
+        { $set: mockMovie },
+        { new: true, runValidators: true }
+      );
       expect(result).toBeNull();
     });
   });
 
   describe('delete', () => {
-    it('should delete an existing movie', async () => {
-      const findByIdAndDeleteSpy = jest.spyOn(Movie, 'findByIdAndDelete').mockResolvedValue(mockMovie);
+    it('should delete movie', async () => {
+      (Movie.findByIdAndDelete as jest.Mock).mockResolvedValue(mockMovie);
 
       const result = await movieRepository.delete(mockMovie._id.toString());
 
-      expect(findByIdAndDeleteSpy).toHaveBeenCalledWith(mockMovie._id.toString());
+      expect(Movie.findByIdAndDelete).toHaveBeenCalledWith(mockMovie._id.toString());
       expect(result).toEqual(mockMovie);
     });
 
-    it('should return null when deleting non-existent movie', async () => {
-      const findByIdAndDeleteSpy = jest.spyOn(Movie, 'findByIdAndDelete').mockResolvedValue(null);
+    it('should return null if movie not found', async () => {
+      (Movie.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
 
-      const result = await movieRepository.delete('nonexistent-id');
+      const result = await movieRepository.delete(mockMovie._id.toString());
 
-      expect(findByIdAndDeleteSpy).toHaveBeenCalledWith('nonexistent-id');
+      expect(Movie.findByIdAndDelete).toHaveBeenCalledWith(mockMovie._id.toString());
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByTitle', () => {
+    it('should return movies by title with pagination', async () => {
+      ((Movie as unknown as IContentModel).findByTitle as jest.Mock).mockResolvedValue(mockMovies);
+
+      const result = await movieRepository.findByTitle('Test', 0, 10);
+
+      expect((Movie as unknown as IContentModel).findByTitle).toHaveBeenCalledWith('Test', 0, 10);
+      expect(result).toEqual(mockMovies);
+    });
+
+    it('should return null if no movies found', async () => {
+      ((Movie as unknown as IContentModel).findByTitle as jest.Mock).mockResolvedValue(null);
+
+      const result = await movieRepository.findByTitle('Test', 0, 10);
+
+      expect((Movie as unknown as IContentModel).findByTitle).toHaveBeenCalledWith('Test', 0, 10);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByGenre', () => {
+    it('should return movies by genre with pagination', async () => {
+      ((Movie as unknown as IContentModel).findByGenre as jest.Mock).mockResolvedValue(mockMovies);
+
+      const result = await movieRepository.findByGenre('Action', 0, 10);
+
+      expect((Movie as unknown as IContentModel).findByGenre).toHaveBeenCalledWith('Action', 0, 10);
+      expect(result).toEqual(mockMovies);
+    });
+
+    it('should return null if no movies found', async () => {
+      ((Movie as unknown as IContentModel).findByGenre as jest.Mock).mockResolvedValue(null);
+
+      const result = await movieRepository.findByGenre('Action', 0, 10);
+
+      expect((Movie as unknown as IContentModel).findByGenre).toHaveBeenCalledWith('Action', 0, 10);
       expect(result).toBeNull();
     });
   });

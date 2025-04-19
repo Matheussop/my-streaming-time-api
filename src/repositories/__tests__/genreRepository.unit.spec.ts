@@ -2,8 +2,6 @@ import { Types } from 'mongoose';
 import { GenreRepository } from '../genreRepository';
 import Genre from '../../models/genresModel';
 import { IGenreResponse, IGenreCreate, IGenreUpdate } from '../../interfaces/genres';
-import { StreamingServiceError } from '../../middleware/errorHandler';
-import { ErrorMessages } from '../../constants/errorMessages';
 
 jest.mock('../../models/genresModel');
 

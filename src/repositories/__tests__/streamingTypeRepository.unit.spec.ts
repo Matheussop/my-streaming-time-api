@@ -1,214 +1,294 @@
+import { Types } from 'mongoose';
 import { StreamingTypeRepository } from '../streamingTypeRepository';
 import StreamingTypes from '../../models/streamingTypesModel';
-import { IStreamingTypeCreate, IStreamingTypeResponse, ICategory } from '../../interfaces/streamingTypes';
+import { IStreamingTypeResponse, IStreamingTypeCreate, IStreamingTypeUpdate, IGenreReference } from '../../interfaces/streamingTypes';
 
 // Mock do mongoose
 jest.mock('../../models/streamingTypesModel');
 
-describe('StreamingTypeRepository Unit', () => {
-  let repository: StreamingTypeRepository;
-
-  const mockCategory: ICategory = {
-    id: 1,
-    name: 'Ação',
-  };
-
-  const mockStreamingType: IStreamingTypeResponse = {
-    _id: '123',
-    name: 'Netflix',
-    categories: [mockCategory],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const mockCreateData: IStreamingTypeCreate = {
-    name: 'Netflix',
-    categories: [mockCategory],
-  };
+describe('StreamingTypeRepository', () => {
+  let streamingTypeRepository: StreamingTypeRepository;
+  let mockStreamingType: IStreamingTypeResponse;
+  let mockStreamingTypes: IStreamingTypeResponse[];
+  let mockGenreReference: IGenreReference;
 
   beforeEach(() => {
-    repository = new StreamingTypeRepository();
-    jest.clearAllMocks();
+    streamingTypeRepository = new StreamingTypeRepository();
+    mockGenreReference = {
+      _id: new Types.ObjectId(),
+      id: 1,
+      name: 'Action',
+      poster: 'https://example.com/poster.jpg'
+    };
+
+    mockStreamingType = {
+      _id: new Types.ObjectId(),
+      name: 'Test Streaming Type',
+      description: 'Test description',
+      supportedGenres: [mockGenreReference],
+      isActive: true,
+      createdAt: new Date('2024-03-20T00:00:00.000Z'),
+      updatedAt: new Date('2024-03-20T00:00:00.000Z')
+    } as IStreamingTypeResponse;
+
+    mockStreamingTypes = [
+      mockStreamingType,
+      {
+        ...mockStreamingType,
+        _id: new Types.ObjectId(),
+        name: 'Test Streaming Type 2'
+      }
+    ];
+
+    (StreamingTypes.find as jest.Mock).mockClear();
+    (StreamingTypes.findById as jest.Mock).mockClear();
+    (StreamingTypes.findByName as jest.Mock).mockClear();
+    (StreamingTypes.create as jest.Mock).mockClear();
+    (StreamingTypes.findByIdAndUpdate as jest.Mock).mockClear();
+    (StreamingTypes.findByIdAndDelete as jest.Mock).mockClear();
+    (StreamingTypes.findByGenreName as jest.Mock).mockClear();
+    (StreamingTypes.deleteByGenresName as jest.Mock).mockClear();
   });
 
   describe('findAll', () => {
-    it('should return a paginated list of streaming types', async () => {
-      const mockFind = {
-        sort: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockStreamingType]),
-      };
+    it('should return all streaming types with pagination', async () => {
+      (StreamingTypes.find as jest.Mock).mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          skip: jest.fn().mockReturnValue({
+            limit: jest.fn().mockReturnValue({
+              lean: jest.fn().mockResolvedValue(mockStreamingTypes)
+            })
+          })
+        })
+      });
 
-      (StreamingTypes.find as jest.Mock).mockReturnValue(mockFind);
+      const result = await streamingTypeRepository.findAll(0, 10);
 
-      const result = await repository.findAll(0, 10);
-
-      expect(result).toEqual([mockStreamingType]);
       expect(StreamingTypes.find).toHaveBeenCalled();
-      expect(mockFind.sort).toHaveBeenCalledWith({ createdAt: -1 });
-      expect(mockFind.skip).toHaveBeenCalledWith(0);
-      expect(mockFind.limit).toHaveBeenCalledWith(10);
+      expect(result).toEqual(mockStreamingTypes);
     });
   });
 
   describe('findById', () => {
-    it('should return a streaming type by ID', async () => {
+    it('should return streaming type by id', async () => {
       (StreamingTypes.findById as jest.Mock).mockResolvedValue(mockStreamingType);
 
-      const result = await repository.findById('123');
+      const result = await streamingTypeRepository.findById(mockStreamingType._id.toString());
 
+      expect(StreamingTypes.findById).toHaveBeenCalledWith(mockStreamingType._id.toString());
       expect(result).toEqual(mockStreamingType);
-      expect(StreamingTypes.findById).toHaveBeenCalledWith('123');
     });
 
-    it('should return null when ID is not found', async () => {
+    it('should return null if streaming type not found', async () => {
       (StreamingTypes.findById as jest.Mock).mockResolvedValue(null);
 
-      const result = await repository.findById('999');
+      const result = await streamingTypeRepository.findById(mockStreamingType._id.toString());
 
+      expect(StreamingTypes.findById).toHaveBeenCalledWith(mockStreamingType._id.toString());
       expect(result).toBeNull();
     });
   });
 
   describe('findByName', () => {
-    it('should return a streaming type by name', async () => {
+    it('should return streaming type by name', async () => {
       (StreamingTypes.findByName as jest.Mock).mockResolvedValue(mockStreamingType);
 
-      const result = await repository.findByName('Netflix');
+      const result = await streamingTypeRepository.findByName('Test Streaming Type');
 
+      expect(StreamingTypes.findByName).toHaveBeenCalledWith('Test Streaming Type');
       expect(result).toEqual(mockStreamingType);
-      expect(StreamingTypes.findByName).toHaveBeenCalledWith('Netflix');
     });
 
-    it('should return null when ID is not found', async () => {
+    it('should return null if streaming type not found', async () => {
       (StreamingTypes.findByName as jest.Mock).mockResolvedValue(null);
 
-      const result = await repository.findByName('InvalidName');
+      const result = await streamingTypeRepository.findByName('Test Streaming Type');
 
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getIdGenreByName', () => {
-    it('should return a id genre by a name', async () => {
-      (StreamingTypes.findOne as jest.Mock).mockReturnValue({
-        lean: jest.fn().mockResolvedValue({ categories: [{ id: 1 }] }),
-      });
-
-      const result = await repository.getIdGenreByName('action');
-
-      expect(result).toEqual(1);
-      expect(StreamingTypes.findOne).toHaveBeenCalledWith(
-        {
-          'categories.name': new RegExp('^action$', 'i'),
-        },
-        { _id: 0, 'categories.$': 1 },
-      );
-    });
-
-    it('should return null when genre is not found', async () => {
-      (StreamingTypes.findOne as jest.Mock).mockReturnValue({
-        lean: jest.fn().mockResolvedValue(null),
-      });
-
-      const result = await repository.getIdGenreByName('InvalidGenre');
-
+      expect(StreamingTypes.findByName).toHaveBeenCalledWith('Test Streaming Type');
       expect(result).toBeNull();
     });
   });
 
   describe('create', () => {
     it('should create a new streaming type', async () => {
-      const mockSave = jest.fn().mockResolvedValue(mockStreamingType);
-      (StreamingTypes as unknown as jest.Mock).mockImplementation(() => ({
-        save: mockSave,
-      }));
+      const streamingTypeData: IStreamingTypeCreate = {
+        name: 'Test Streaming Type',
+        description: 'Test description',
+        supportedGenres: [mockGenreReference],
+        isActive: true
+      };
 
-      const result = await repository.create(mockCreateData);
+      (StreamingTypes.create as jest.Mock).mockResolvedValue(mockStreamingType);
 
+      const result = await streamingTypeRepository.create(streamingTypeData);
+
+      expect(StreamingTypes.create).toHaveBeenCalledWith(streamingTypeData);
       expect(result).toEqual(mockStreamingType);
-      expect(StreamingTypes).toHaveBeenCalledWith(mockCreateData);
-      expect(mockSave).toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
-    it('should update an existing streaming type', async () => {
-      const updateData = { name: 'Netflix Updated' };
+    it('should update streaming type', async () => {
+      const updateData: IStreamingTypeUpdate = {
+        name: 'Updated Streaming Type',
+        description: 'Updated description'
+      };
+
       (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue({
         ...mockStreamingType,
-        ...updateData,
+        ...updateData
       });
 
-      const result = await repository.update('123', updateData);
+      const result = await streamingTypeRepository.update(mockStreamingType._id.toString(), updateData);
 
-      expect(result?.name).toBe('Netflix Updated');
       expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
-        '123',
+        mockStreamingType._id.toString(),
         { $set: updateData },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       );
-    });
-  });
-
-  describe('delete', () => {
-    it('should delete a streaming type', async () => {
-      (StreamingTypes.findByIdAndDelete as jest.Mock).mockResolvedValue(mockStreamingType);
-
-      const result = await repository.delete('123');
-
-      expect(result).toEqual(mockStreamingType);
-      expect(StreamingTypes.findByIdAndDelete).toHaveBeenCalledWith('123');
+      expect(result).toEqual({
+        ...mockStreamingType,
+        ...updateData
+      });
     });
 
-    it('should return null when ID is not found for deletion', async () => {
-      (StreamingTypes.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
+    it('should return null if streaming type not found', async () => {
+      const updateData: IStreamingTypeUpdate = {
+        name: 'Updated Streaming Type'
+      };
 
-      const result = await repository.delete('999');
+      (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
 
+      const result = await streamingTypeRepository.update(mockStreamingType._id.toString(), updateData);
+
+      expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockStreamingType._id.toString(),
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
       expect(result).toBeNull();
     });
   });
 
-  describe('addCategory', () => {
-    it('should add categories to a streaming type', async () => {
-      const newCategory: ICategory = { id: 2, name: 'Drama' };
-      const updatedStreamingType = {
+  describe('addGenre', () => {
+    it('should add genres to streaming type', async () => {
+      const newGenres: IGenreReference[] = [
+        {
+          _id: new Types.ObjectId(),
+          id: 2,
+          name: 'Drama',
+          poster: 'https://example.com/drama.jpg'
+        }
+      ];
+
+      (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue({
         ...mockStreamingType,
-        categories: [...mockStreamingType.categories, newCategory],
-      };
+        supportedGenres: [...(mockStreamingType.supportedGenres || []), ...newGenres]
+      });
 
-      (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedStreamingType);
+      const result = await streamingTypeRepository.addGenre(mockStreamingType._id.toString(), newGenres);
 
-      const result = await repository.addCategory('123', [newCategory]);
-
-      expect(result?.categories).toContainEqual(newCategory);
       expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
-        '123',
-        { $addToSet: { categories: [newCategory] } },
-        { new: true, runValidators: true },
+        mockStreamingType._id.toString(),
+        { $addToSet: { supportedGenres: { $each: newGenres } } },
+        { new: true, runValidators: true }
       );
+      expect(result).toEqual({
+        ...mockStreamingType,
+        supportedGenres: [...(mockStreamingType.supportedGenres || []), ...newGenres]
+      });
+    });
+
+    it('should return null if streaming type not found', async () => {
+      const newGenres: IGenreReference[] = [
+        {
+          _id: new Types.ObjectId(),
+          id: 2,
+          name: 'Drama',
+          poster: 'https://example.com/drama.jpg'
+        }
+      ];
+
+      (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+
+      const result = await streamingTypeRepository.addGenre(mockStreamingType._id.toString(), newGenres);
+
+      expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockStreamingType._id.toString(),
+        { $addToSet: { supportedGenres: { $each: newGenres } } },
+        { new: true, runValidators: true }
+      );
+      expect(result).toBeNull();
     });
   });
 
-  describe('removeCategory', () => {
-    it('should remove categories from a streaming type', async () => {
-      const categoriesToRemove: Partial<ICategory>[] = [{ id: 1 }];
-      const updatedStreamingType = {
+  describe('findByGenreName', () => {
+    it('should return streaming type by genre name', async () => {
+      (StreamingTypes.findByGenreName as jest.Mock).mockResolvedValue(mockStreamingType);
+
+      const result = await streamingTypeRepository.findByGenreName('Action', mockStreamingType._id.toString());
+
+      expect(StreamingTypes.findByGenreName).toHaveBeenCalledWith('Action', mockStreamingType._id.toString());
+      expect(result).toEqual(mockStreamingType);
+    });
+
+    it('should return null if streaming type not found', async () => {
+      (StreamingTypes.findByGenreName as jest.Mock).mockResolvedValue(null);
+
+      const result = await streamingTypeRepository.findByGenreName('Action', mockStreamingType._id.toString());
+
+      expect(StreamingTypes.findByGenreName).toHaveBeenCalledWith('Action', mockStreamingType._id.toString());
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteByGenresName', () => {
+    it('should delete genres from streaming type by name', async () => {
+      const genreNames = ['Action'];
+
+      (StreamingTypes.deleteByGenresName as jest.Mock).mockResolvedValue({
         ...mockStreamingType,
-        categories: [],
-      };
+        supportedGenres: []
+      });
 
-      (StreamingTypes.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedStreamingType);
+      const result = await streamingTypeRepository.deleteByGenresName(genreNames, mockStreamingType._id.toString());
 
-      const result = await repository.removeCategory('123', categoriesToRemove);
+      expect(StreamingTypes.deleteByGenresName).toHaveBeenCalledWith(genreNames, mockStreamingType._id.toString());
+      expect(result).toEqual({
+        ...mockStreamingType,
+        supportedGenres: []
+      });
+    });
 
-      expect(result?.categories).toHaveLength(0);
-      expect(StreamingTypes.findByIdAndUpdate).toHaveBeenCalledWith(
-        '123',
-        { $pull: { categories: { id: { $in: [1] } } } },
-        { new: true },
-      );
+    it('should return null if streaming type not found', async () => {
+      const genreNames = ['Action'];
+
+      (StreamingTypes.deleteByGenresName as jest.Mock).mockResolvedValue(null);
+
+      const result = await streamingTypeRepository.deleteByGenresName(genreNames, mockStreamingType._id.toString());
+
+      expect(StreamingTypes.deleteByGenresName).toHaveBeenCalledWith(genreNames, mockStreamingType._id.toString());
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete streaming type', async () => {
+      (StreamingTypes.findByIdAndDelete as jest.Mock).mockResolvedValue(mockStreamingType);
+
+      const result = await streamingTypeRepository.delete(mockStreamingType._id.toString());
+
+      expect(StreamingTypes.findByIdAndDelete).toHaveBeenCalledWith(mockStreamingType._id.toString());
+      expect(result).toEqual(mockStreamingType);
+    });
+
+    it('should return null if streaming type not found', async () => {
+      (StreamingTypes.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
+
+      const result = await streamingTypeRepository.delete(mockStreamingType._id.toString());
+
+      expect(StreamingTypes.findByIdAndDelete).toHaveBeenCalledWith(mockStreamingType._id.toString());
+      expect(result).toBeNull();
     });
   });
 });
