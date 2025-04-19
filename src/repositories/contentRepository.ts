@@ -25,8 +25,7 @@ export class ContentRepository implements IContentRepository {
         400
       );
     }
-    const content = new Content(data);
-    return content.save();
+    return Content.create(data);
   }
 
   async createManyMovies(data: IContentResponse[]){
