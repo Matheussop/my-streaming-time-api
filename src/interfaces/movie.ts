@@ -1,4 +1,4 @@
-import { IContentCreate, IContentDocument, IContentModel, IContentResponse, IContentUpdate } from "./content";
+import { IBaseContentModel, IContentCreate, IContentDocument, IContentResponse, IContentUpdate } from "./content";
 
 export interface IMovieCreate extends IContentCreate {
   durationTime: number;
@@ -12,4 +12,4 @@ export interface IMovieResponse extends Omit<IMovieCreate, "genre">, IContentRes
 
 export interface IMovieDocument extends IContentDocument, IMovieResponse {}
 
-export interface IMovieModel extends IContentModel {}
+export interface IMovieModel extends IBaseContentModel<IMovieDocument> {}

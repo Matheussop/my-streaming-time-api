@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { IContentCreate, IContentDocument, IContentModel, IContentResponse, IContentUpdate } from "../content";
+import { IContentCreate, IContentDocument, IContentResponse, IContentUpdate, IBaseContentModel } from "../content";
 
 export interface ISeasonSummary {
   seasonId: Types.ObjectId | string;
@@ -25,7 +25,6 @@ export interface ISeriesResponse extends Omit<ISeriesCreate, "genre">, IContentR
 
 export interface ISeriesDocument extends IContentDocument, ISeriesResponse {}
 
-export interface ISeriesModel extends IContentModel {
-  findByTMDBId(tmdbId: number[]): Promise<ISeriesResponse[] | null>;
+export interface ISeriesModel extends IBaseContentModel<ISeriesDocument> {
+  findByTMDBId(tmdbId: number[]): Promise<ISeriesDocument[] | null>;
 }
-

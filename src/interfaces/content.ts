@@ -45,8 +45,10 @@ export interface IContentResponse extends Omit<IContentCreate, "genre"> {
 
 export type IContentDocument = Document & IContentResponse;
 
-export interface IContentModel extends Model<IContentDocument> {
-  findByTitle(title: string, skip: number, limit: number): Promise<IContentResponse[] | null>;
-  findByGenre(genre: string, skip: number, limit: number): Promise<IContentResponse[] | null>;
+export interface IBaseContentModel<T> extends Model<T> {
+  findByTitle(title: string, skip: number, limit: number): Promise<T[] | null>;
+  findByGenre(genre: string, skip: number, limit: number): Promise<T[] | null>;
 }
+
+export interface IContentModel extends IBaseContentModel<IContentDocument> {}
 
