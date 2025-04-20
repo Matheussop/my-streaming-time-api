@@ -21,16 +21,6 @@ const contentSchema = new Schema<IContentDocument, IContentModel>(
     genre: { 
       type: Schema.Types.Mixed,
       required: true,
-      validate: {
-        validator: function (value: any) {
-          if (!Array.isArray(value)) return false;
-          if (value.length === 0) return true; // Allow empty arrays
-          const isNumberArray = typeof value[0] === 'number';
-          const isObjectArray = typeof value[0] === 'object' && value[0] !== null && 'id' in value[0] && 'name' in value[0];
-          return isNumberArray || isObjectArray;
-        },
-        message: 'Genre must be an array of numbers or an array of objects with id and name properties',
-      },
     },
     status: { type: String, default: 'Released' },
     poster: { type: String },
@@ -54,12 +44,31 @@ async function validateGenres(genreRef: number[] | Array<{ id: number, name: str
     return []; 
   }
 
+  if (!Array.isArray(genreRef)) {
+    throw new StreamingServiceError("Genre must be an array of numbers or an array of objects with id and name properties", 400);
+  }
+
+  const isNumberArray = genreRef.every(item => typeof item === 'number');
+  
+  const isObjectArray = genreRef.every(item => 
+    typeof item === 'object' && 
+    item !== null && 
+    'id' in item && 
+    'name' in item &&
+    typeof item.id === 'number' &&
+    typeof item.name === 'string'
+  );
+
+  if (!isNumberArray && !isObjectArray) {
+    throw new StreamingServiceError("Genre must be an array of numbers or an array of objects with id and name properties", 400);
+  }
+
   const uniqueGenreIds = [...new Set(genreRef.map(genre => 
     typeof genre === 'number' ? genre : genre.id
   ))];
-  
+
   const existingGenres = await Genre.find({ id: { $in: uniqueGenreIds } });
-  
+
   if (existingGenres.length !== uniqueGenreIds.length) {
     const existingIds = existingGenres.map(g => g.id);
     const invalidIds = uniqueGenreIds
@@ -70,13 +79,10 @@ async function validateGenres(genreRef: number[] | Array<{ id: number, name: str
   
   return uniqueGenreIds.map(item => {
     const matchingGenre = existingGenres.find(g => g.id === item);
-    if (! matchingGenre) {
-      throw new StreamingServiceError("None of the provided genres are registered in our database", 400);
-    }
     return {
-      id: matchingGenre.id,
-      name: matchingGenre.name,
-      _id: matchingGenre._id,
+      id: matchingGenre!.id,
+      name: matchingGenre!.name,
+      _id: matchingGenre!._id,
     };
   });
 }
