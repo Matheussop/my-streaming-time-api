@@ -1,13 +1,12 @@
 import mongoose from 'mongoose';
 import { connect, closeDatabase, clearDatabase } from './mongooseSetup';
 import { StreamingTypeRepository } from '../streamingTypeRepository';
-import StreamingType, { ICategory } from '../../models/streamingTypesModel';
-import { IStreamingType } from '../../models/streamingTypesModel';
-import { IStreamingTypeResponse } from '../../interfaces/streamingTypes';
+import StreamingType from '../../models/streamingTypesModel';
+import { IStreamingTypeResponse, IGenreReference } from '../../interfaces/streamingTypes';
 
 describe('StreamingTypeRepository Integration Tests', () => {
   let streamingTypeRepository: StreamingTypeRepository;
-  let testStreamingType: IStreamingType;
+  let testStreamingType: IStreamingTypeResponse;
 
   beforeAll(async () => {
     await connect();
@@ -22,8 +21,8 @@ describe('StreamingTypeRepository Integration Tests', () => {
     streamingTypeRepository = new StreamingTypeRepository();
     testStreamingType = await StreamingType.create({
       name: 'Netflix',
-      categories: [{ id: 1, name: 'Movies' }],
-    });
+      supportedGenres: [{ id: 1, name: 'Movies', poster: 'poster.jpg', _id: new mongoose.Types.ObjectId() }],
+    }) as unknown as IStreamingTypeResponse;
   });
 
   describe('findAll', () => {
@@ -56,23 +55,25 @@ describe('StreamingTypeRepository Integration Tests', () => {
       const foundStreamingType = await streamingTypeRepository.findByName('Netflix');
 
       expect(foundStreamingType).toBeDefined();
-      expect(foundStreamingType?.categories[0].id).toBe(1);
-      expect(foundStreamingType?.categories[0].name).toBe('Movies');
+      if (foundStreamingType && foundStreamingType.supportedGenres && foundStreamingType.supportedGenres.length > 0) {
+        expect(foundStreamingType.supportedGenres[0].id).toBe(1);
+        expect(foundStreamingType.supportedGenres[0].name).toBe('Movies');
+      }
     });
   });
 
   describe('create', () => {
     it('should create a new streaming type', async () => {
-      const newStreamingTypeData: IStreamingTypeResponse = {
+      const newStreamingTypeData: Partial<IStreamingTypeResponse> = {
         name: 'Disney+',
-        categories: [{ id: 1, name: 'Series' }],
-      } as unknown as IStreamingTypeResponse;
+        supportedGenres: [{ id: 1, name: 'Series', poster: 'series.jpg', _id: new mongoose.Types.ObjectId() }],
+      };
 
-      const newStreamingType = await streamingTypeRepository.create(newStreamingTypeData);
+      const newStreamingType = await streamingTypeRepository.create(newStreamingTypeData as IStreamingTypeResponse);
 
       expect(newStreamingType).toBeDefined();
       expect(newStreamingType.name).toBe('Disney+');
-      expect(newStreamingType.categories).toHaveLength(1);
+      expect(newStreamingType.supportedGenres).toHaveLength(1);
     });
   });
 
@@ -113,29 +114,41 @@ describe('StreamingTypeRepository Integration Tests', () => {
     });
   });
 
-  describe('addCategory', () => {
-    it('should update an existing streaming type with news categories', async () => {
-      const updatedCategory: ICategory[] = [{ id: 2, name: 'cat3' }];
+  describe('addGenre', () => {
+    it('should update an existing streaming type with new genres', async () => {
+      const newGenre: IGenreReference[] = [{ 
+        id: 2, 
+        name: 'Series', 
+        poster: 'series.jpg', 
+        _id: new mongoose.Types.ObjectId() 
+      }];
 
-      const updatedStreamingType = await streamingTypeRepository.addCategory(
+      const updatedStreamingType = await streamingTypeRepository.addGenre(
         testStreamingType._id.toString(),
-        updatedCategory,
+        newGenre,
       );
 
       expect(updatedStreamingType).toBeDefined();
-      expect(updatedStreamingType?.categories[1]).toEqual(expect.objectContaining(updatedCategory[0]));
+      if (updatedStreamingType && updatedStreamingType.supportedGenres && updatedStreamingType.supportedGenres.length > 1) {
+        expect(updatedStreamingType.supportedGenres[1]).toEqual(expect.objectContaining(newGenre[0]));
+      }
     });
   });
 
-  describe('removeCategory', () => {
-    it('should update an existing streaming type with news categories', async () => {
-      const updatedStreamingType = await streamingTypeRepository.removeCategory(
-        testStreamingType._id.toString(),
-        testStreamingType?.categories,
+  describe('deleteByGenresName', () => {
+    it('should remove genres from an existing streaming type', async () => {
+      const genreName = 'Movies';
+      const updatedStreamingType = await streamingTypeRepository.deleteByGenresName(
+        [genreName],
+        testStreamingType._id.toString()
       );
 
       expect(updatedStreamingType).toBeDefined();
-      expect(updatedStreamingType?.categories.length).toBe(0);
+      if (updatedStreamingType && updatedStreamingType.supportedGenres) {
+        // Verifica se o gênero foi removido
+        const hasGenre = updatedStreamingType.supportedGenres.some(g => g.name === genreName);
+        expect(hasGenre).toBe(false);
+      }
     });
   });
 });

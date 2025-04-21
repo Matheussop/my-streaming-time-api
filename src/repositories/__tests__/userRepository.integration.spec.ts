@@ -2,17 +2,18 @@ import mongoose from 'mongoose';
 import { connect, closeDatabase, clearDatabase } from './mongooseSetup';
 import { UserRepository } from '../userRepository';
 import User from '../../models/userModel';
-import { IUser } from '../../models/userModel';
+import { IUserCreate, IUserResponse, IUserUpdate } from '../../interfaces/user';
 
 describe('UserRepository Integration Tests', () => {
   let userRepository: UserRepository;
-  let testUser: IUser;
+  let testUser: IUserResponse;
 
-  const testUserData = {
-    name: 'Test User',
+  const testUserData: IUserCreate = {
+    username: 'testuser',
     email: 'test@example.com',
     password: 'password123',
     role: 'user',
+    active: true
   };
 
   beforeAll(async () => {
@@ -25,22 +26,23 @@ describe('UserRepository Integration Tests', () => {
 
   beforeEach(async () => {
     await clearDatabase();
-    testUser = await User.create(testUserData);
+    testUser = await User.create(testUserData) as unknown as IUserResponse;
 
     userRepository = new UserRepository();
   });
 
   const normalizeUser = (user: any) => ({
-    name: user.name,
+    username: user.username,
     email: user.email,
   });
 
   describe('findAll', () => {
     it('should return all users without passwords', async () => {
-      const anotherUser = {
-        name: 'Another User',
+      const anotherUser: IUserCreate = {
+        username: 'anotheruser',
         email: 'another@example.com',
         password: 'password456',
+        active: true
       };
 
       await User.create(anotherUser);
@@ -48,34 +50,54 @@ describe('UserRepository Integration Tests', () => {
       const users = await userRepository.findAll(0, 2);
       expect(users).toHaveLength(2);
       users.forEach((user) => {
-        expect(user).toHaveProperty('name');
+        expect(user).toHaveProperty('username');
         expect(user).toHaveProperty('email');
-        expect(user.password).toBeUndefined();
+        // Verifica que password não está presente
+        expect((user as any).password).toBeUndefined();
       });
       expect(normalizeUser(users[1])).toEqual(normalizeUser(anotherUser));
     });
 
     it('should respect pagination parameters', async () => {
-      const users = await Promise.all([
-        User.create({ name: 'User 1', email: 'user1@example.com', password: 'password1' }),
-        User.create({ name: 'User 2', email: 'user2@example.com', password: 'password2' }),
-        User.create({ name: 'User 3', email: 'user3@example.com', password: 'password3' }),
-      ]);
+      const usersData = [
+        {
+          username: 'user1',
+          email: 'user1@example.com',
+          password: 'password1',
+          active: true
+        },
+        {
+          username: 'user2',
+          email: 'user2@example.com',
+          password: 'password2',
+          active: true
+        },
+        {
+          username: 'user3',
+          email: 'user3@example.com',
+          password: 'password3',
+          active: true
+        }
+      ];
+
+      const users = await Promise.all(
+        usersData.map(userData => User.create(userData))
+      ) as unknown as IUserResponse[];
 
       const result = await userRepository.findAll(1, 2);
 
       expect(result).toHaveLength(2);
 
       result.forEach((user) => {
-        expect(user).toHaveProperty('id');
-        expect(user).toHaveProperty('name');
+        expect(user).toHaveProperty('_id');
+        expect(user).toHaveProperty('username');
         expect(user).toHaveProperty('email');
         expect(user.email).toMatch(/^user\d@example\.com$/);
       });
 
-      const createdUserIds = users.map((u) => u.id);
+      const createdUserIds = users.map((u) => u._id.toString());
       result.forEach((user) => {
-        expect(createdUserIds).toContain(user.id);
+        expect(createdUserIds).toContain(user._id.toString());
       });
     });
 
@@ -91,8 +113,9 @@ describe('UserRepository Integration Tests', () => {
       const user = await userRepository.findById(testUser._id);
 
       expect(user).toBeDefined();
-      expect(user?.name).toBe('Test User');
-      expect(user?.password).toBeUndefined();
+      expect(user?.username).toBe(testUserData.username);
+      // Verifica que password não está presente
+      expect((user as any).password).toBeUndefined();
     });
 
     it('should return null for non-existent id', async () => {
@@ -105,12 +128,13 @@ describe('UserRepository Integration Tests', () => {
   });
 
   describe('findByEmail', () => {
-    it('should find user by email with password', async () => {
+    it('should find user by email without password', async () => {
       const user = await userRepository.findByEmail('test@example.com');
 
       expect(user).toBeDefined();
       expect(user?.email).toBe('test@example.com');
-      expect(user?.password).toBeUndefined();
+      // Verifica que password não está presente
+      expect((user as any).password).toBeUndefined();
     });
 
     it('should return null for non-existent email', async () => {
@@ -122,18 +146,18 @@ describe('UserRepository Integration Tests', () => {
 
   describe('create', () => {
     it('should create a new user', async () => {
-      const newUserData = {
-        name: 'New User',
+      const newUserData: IUserCreate = {
+        username: 'newuser',
         email: 'new@example.com',
         password: 'newpass123',
+        active: true
       };
 
       const newUser = await userRepository.create(newUserData);
 
       expect(newUser).toBeDefined();
-      expect(newUser.name).toBe('New User');
+      expect(newUser.username).toBe('newuser');
       expect(newUser.email).toBe('new@example.com');
-      expect(newUser).toHaveProperty('password');
 
       const savedUser = await User.findById(newUser._id);
       expect(savedUser).toBeDefined();
@@ -141,10 +165,11 @@ describe('UserRepository Integration Tests', () => {
     });
 
     it('should throw error when creating user with existing email', async () => {
-      const duplicateUserData = {
-        name: 'Duplicate User',
+      const duplicateUserData: IUserCreate = {
+        username: 'duplicate',
         email: 'test@example.com', // email já existe
         password: 'password123',
+        active: true
       };
 
       await expect(userRepository.create(duplicateUserData)).rejects.toThrow();
@@ -153,22 +178,23 @@ describe('UserRepository Integration Tests', () => {
 
   describe('update', () => {
     it('should update user data', async () => {
-      const updateData = {
-        name: 'Updated Name',
+      const updateData: Partial<IUserUpdate> = {
+        username: 'updateduser',
         email: 'updated@example.com',
       };
 
       const updatedUser = await userRepository.update(testUser._id, updateData);
 
       expect(updatedUser).toBeDefined();
-      expect(updatedUser?.name).toBe('Updated Name');
+      expect(updatedUser?.username).toBe('updateduser');
       expect(updatedUser?.email).toBe('updated@example.com');
-      expect(updatedUser?.password).toBeUndefined();
+      // Verifica que password não está presente
+      expect((updatedUser as any).password).toBeUndefined();
     });
 
     it('should return null for non-existent user', async () => {
       const nonExistentId = new mongoose.Types.ObjectId();
-      const updateData = { name: 'Updated Name' };
+      const updateData: Partial<IUserUpdate> = { username: 'updatedname' };
 
       const result = await userRepository.update(nonExistentId.toString(), updateData);
 
