@@ -217,13 +217,10 @@ describe('Error Formatter Utilities', () => {
       
       // Mock console.error to prevent test output noise
       const originalConsoleError = console.error;
-      console.error = jest.fn();
+      console.error = jest.fn() as jest.Mock<typeof console.error>;
 
       // Act
       const response = handleApiError(error);
-
-      // Restore console.error
-      console.error = originalConsoleError;
 
       // Assert
       expect(response.status).toBe(500);
@@ -232,6 +229,9 @@ describe('Error Formatter Utilities', () => {
         message: 'Internal server error'
       });
       expect(console.error).toHaveBeenCalledWith('Unhandled error:', error);
+
+      // Restore console.error
+      console.error = originalConsoleError;
     });
 
     it('should handle string errors and return 500 response', () => {

@@ -41,7 +41,6 @@ export function handleApiError(error: unknown) {
       }
     };
   }
-  
   // Other error types...
   console.error('Unhandled error:', error);
   return {

@@ -83,14 +83,14 @@ describe('Genre Model Unit Tests', () => {
       await Genre.create({
         id: 1,
         name: 'Action'
+      }).then(async () => {
+        const duplicateGenre = {
+          id: 2,
+          name: 'Action'
+        };
+
+        await expect(Genre.create(duplicateGenre)).rejects.toThrow(/duplicate key error/);
       });
-
-      const duplicateGenre = {
-        id: 2,
-        name: 'Action'
-      };
-
-      await expect(Genre.create(duplicateGenre)).rejects.toThrow(/duplicate key error/);
     });
   });
 
