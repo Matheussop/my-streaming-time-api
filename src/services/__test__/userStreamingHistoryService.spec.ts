@@ -9,7 +9,7 @@ import { ISeriesResponse } from '../../interfaces/series/series';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';
 import { describe } from 'node:test';
 import { IGenreReference } from '../../interfaces/streamingTypes';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 
 jest.mock('../../repositories/movieRepository');
 jest.mock('../../repositories/seriesRepository');

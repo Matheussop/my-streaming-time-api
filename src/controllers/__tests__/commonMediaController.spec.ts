@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { CommonMediaController } from '../commonMediaController';
 import { ContentService } from '../../services/commonService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { ContentRepository } from '../../repositories/contentRepository';
 
 jest.mock('../../services/commonService');

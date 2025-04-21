@@ -3,7 +3,7 @@ import { StatisticsController } from '../statisticsController';
 import { StatisticsService } from '../../services/statisticsService';
 import { UserStreamingHistoryService } from '../../services/userStreamingHistoryService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { IUserStreamingHistoryResponse } from '../../interfaces/userStreamingHistory';
 import { WatchTimeStats, ContentTypeDistribution, SeriesProgressStats, GenrePreferenceStats, WatchingPatternStats, UserWatchingStats } from '../../interfaces/statistics';
 import { ContentService } from '../../services/commonService';

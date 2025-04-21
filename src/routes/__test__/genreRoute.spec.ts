@@ -32,7 +32,7 @@ jest.mock('../../middleware/objectIdValidationMiddleware', () => ({
 }));
 
 import router from '../genreRoute';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 
 describe('Genre Routes', () => {
   let app: express.Application;

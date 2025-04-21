@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { UserController } from '../userController';
 import { UserService } from '../../services/userService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { IUserResponse } from '../../interfaces/user';
 import { UserRepository } from '../../repositories/userRepository';
 

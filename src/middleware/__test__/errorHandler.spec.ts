@@ -3,7 +3,7 @@ import mongoose, { Types } from 'mongoose';
 import { StreamingServiceError, errorHandler } from '../errorHandler';
 import { z } from 'zod';
 import { formatZodError } from '../../util/errorFormatter';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 
 // Mock formatZodError
 jest.mock('../../util/errorFormatter', () => ({

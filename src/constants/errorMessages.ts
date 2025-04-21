@@ -90,7 +90,6 @@ export const ErrorMessages = {
   STREAMING_TYPE_CATEGORIES_INVALID_ID: 'Invalid category type ID',
   STREAMING_TYPE_INVALID_DATA: 'Invalid streaming type data',
   STREAMING_TYPE_DUPLICATE_CATEGORY: 'Duplicate category ID',
-  STREAMING_TYPE_INVALID_ID_FORMAT: (type: string) => `Invalid ${type} ID format`,
   STREAMING_TYPE_NAME_EXISTS: 'Streaming type name already exists',
   STREAMING_TYPE_GENRE_NAME_EXISTS: (genreName: string) => `Streaming type genre name "${genreName}" already exists`,
   

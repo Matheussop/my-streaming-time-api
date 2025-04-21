@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getExternalMovies, fetchAndSaveExternalMovies, findOrAddMovie } from '../movieTMDBController';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { IMovieResponse } from '../../interfaces/movie';
 import Movie from '../../models/movieModel';
 

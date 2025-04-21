@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { SeriesController } from '../seriesController';
 import { SeriesService } from '../../services/seriesService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { ISeriesResponse } from '../../interfaces/series/series';
 import { SeriesRepository } from '../../repositories/seriesRepository';
 import { TMDBService } from '../../services/tmdbService';

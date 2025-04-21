@@ -4,7 +4,7 @@ import { GenreRepository } from "../../repositories/genreRepository";
 import { GenreService } from "../genreService";
 import { StreamingServiceError } from "../../middleware/errorHandler";
 import { ErrorMessages } from "../../constants/errorMessages";
-import { generateValidObjectId } from "../../util/test/generateValidObjectId";
+import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
 
 describe('GenreService', () => {
   let genreService: GenreService;

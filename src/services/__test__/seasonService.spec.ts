@@ -3,7 +3,7 @@ import { IEpisode, ISeasonCreate, ISeasonResponse, ISeasonUpdate } from "../../i
 import { SeasonRepository } from "../../repositories/seasonRepository";
 import { SeasonService } from "../seasonService";
 import { TMDBService } from "../tmdbService";
-import { generateValidObjectId } from "../../util/test/generateValidObjectId";
+import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
 
 jest.mock('../tmdbService');
 

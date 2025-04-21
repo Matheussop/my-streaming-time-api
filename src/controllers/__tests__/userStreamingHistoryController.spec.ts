@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { UserStreamingHistoryService } from '../../services/userStreamingHistoryService';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { UserStreamingHistoryController } from '../userStreamingHistoryController';
 import { Types } from 'mongoose';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';

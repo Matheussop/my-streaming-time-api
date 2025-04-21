@@ -2,7 +2,7 @@ import request from 'supertest';
 import express, { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../../constants/httpStatus';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 
 const mockImplementations = {
   getWatchTimeStats: jest.fn(),

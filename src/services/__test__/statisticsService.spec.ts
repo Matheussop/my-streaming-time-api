@@ -3,7 +3,7 @@ import { ContentService } from "../commonService";
 import { StatisticsService } from "../statisticsService";
 import { IContentResponse } from "../../interfaces/content";
 import { IUserStreamingHistoryResponse } from "../../interfaces/userStreamingHistory";
-import { generateValidObjectId } from "../../util/test/generateValidObjectId";
+import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
 
 describe('StatisticsService', () => {
   let statisticsService: StatisticsService;

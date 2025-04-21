@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { StreamingTypeController } from '../streamingTypeController';
 import { StreamingTypeService } from '../../services/streamingTypeService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { StreamingTypeRepository } from '../../repositories/streamingTypeRepository';
 import { IStreamingTypeResponse } from '../../interfaces/streamingTypes';
 import { Messages } from '../../constants/messages';

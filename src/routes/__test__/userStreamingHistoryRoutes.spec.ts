@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../../constants/httpStatus';
 import { Messages } from '../../constants/messages';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 
 const mockImplementations = {
   getUserStreamingHistory: jest.fn(),

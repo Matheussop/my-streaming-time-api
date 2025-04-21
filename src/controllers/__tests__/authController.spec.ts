@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { AuthController } from '../authController';
 import { AuthService } from '../../services/authService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { IUserLoginResponse, IUserResponse, IUserCreate } from '../../interfaces/user';
 
 jest.mock('../../services/authService');

@@ -4,7 +4,7 @@ import { IGenreRepository } from '../../interfaces/repositories';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { IStreamingTypeCreate, IStreamingTypeResponse, IStreamingTypeUpdate, IGenreReference } from '../../interfaces/streamingTypes';
 import { ErrorMessages } from '../../constants/errorMessages';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { StreamingTypeRepository } from '../../repositories/streamingTypeRepository';
 import { IGenreResponse } from "../../interfaces/genres";
 import axios from "axios";

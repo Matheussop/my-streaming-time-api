@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { GenreController } from '../genreController';
 import { GenreService } from '../../services/genreService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { IGenreResponse } from '../../interfaces/genres';
 
 jest.mock('../../services/genreService');

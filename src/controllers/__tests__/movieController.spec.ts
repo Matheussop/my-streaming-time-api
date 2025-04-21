@@ -1,4 +1,4 @@
-import { generateValidObjectId } from './../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { NextFunction, Request, Response } from 'express';
 import { MovieController } from '../movieController';
 import { MovieRepository } from '../../repositories/movieRepository';

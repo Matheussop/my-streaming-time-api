@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { IContentResponse } from "../../interfaces/content";
 import { ContentRepository } from "../../repositories/contentRepository";
 import { ContentService } from "../commonService";
-import { generateValidObjectId } from "../../util/test/generateValidObjectId";
+import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
 
 describe('CommonService', () => {
   let commonService: ContentService;

@@ -5,7 +5,7 @@ import { MovieService } from "../movieService";
 import { TMDBService } from "../tmdbService";
 import { StreamingServiceError } from "../../middleware/errorHandler";
 import { ErrorMessages } from "../../constants/errorMessages";
-import { generateValidObjectId } from "../../util/test/generateValidObjectId";
+import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
 import axios from "axios";
 import { IGenreReference } from "../../interfaces/content";
 

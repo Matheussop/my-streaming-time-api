@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { SeasonController } from '../seasonController';
 import { SeasonService } from '../../services/seasonService';
 import { Types } from 'mongoose';
-import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 import { ISeasonResponse } from '../../interfaces/series/season';
 import { SeasonRepository } from '../../repositories/seasonRepository';
 import { TMDBService } from '../../services/tmdbService';
