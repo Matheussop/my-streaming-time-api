@@ -7,13 +7,7 @@ import { Types } from 'mongoose';
  */
 export const objectIdSchema = z.union([
   z.string().refine(
-    (val) => {
-      try {
-        return Types.ObjectId.isValid(val);
-      } catch (error) {
-        return false;
-      }
-    },
+    (val) => Types.ObjectId.isValid(val),
     {
       message: 'Invalid ID: must be a valid ObjectId'
     }

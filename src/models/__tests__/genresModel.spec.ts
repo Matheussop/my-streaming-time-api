@@ -84,6 +84,8 @@ describe('Genre Model Unit Tests', () => {
         id: 1,
         name: 'Action'
       }).then(async () => {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         const duplicateGenre = {
           id: 2,
           name: 'Action'
