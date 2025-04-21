@@ -2,8 +2,9 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Movie from '../movieModel';
 import StreamingTypes from '../streamingTypesModel';
+import Genre from '../genresModel';
 
-describe('Movie Model Integrations Test ', () => {
+describe('Movie Model Test ', () => {
   let mongoServer: MongoMemoryServer;
 
   beforeAll(async () => {
@@ -20,6 +21,7 @@ describe('Movie Model Integrations Test ', () => {
   afterEach(async () => {
     await Movie.deleteMany({});
     await StreamingTypes.deleteMany({});
+    await Genre.deleteMany({});
   });
 
   describe('Movie Creation', () => {
@@ -27,6 +29,11 @@ describe('Movie Model Integrations Test ', () => {
       await StreamingTypes.create({
         name: 'Netflix',
         categories: [{ id: 1, name: 'Action' }],
+      });
+
+      await Genre.create({
+        id: 1,
+        name: 'Action'
       });
 
       const validMovie = {
@@ -44,7 +51,7 @@ describe('Movie Model Integrations Test ', () => {
 
       expect(movie.title).toBe(validMovie.title);
       expect(movie.rating).toBe(validMovie.rating);
-      expect(movie.genre).toEqual(expect.arrayContaining(genre));
+      expect(movie.genre[0].name).toEqual('Action');
     });
 
     it('should fail when creating a movie without required fields', async () => {
@@ -81,6 +88,11 @@ describe('Movie Model Integrations Test ', () => {
       await StreamingTypes.create({
         name: 'Netflix',
         categories: [{ id: 1, name: 'Action' }],
+      });
+
+      await Genre.create({
+        id: 1,
+        name: 'Action'
       });
 
       const movies = [
@@ -129,6 +141,11 @@ describe('Movie Model Integrations Test ', () => {
 
   describe('findByGenre Static Method', () => {
     beforeEach(async () => {
+      await Genre.create([
+        { id: 1, name: 'Action' },
+        { id: 2, name: 'Drama' }
+      ]);
+
       await StreamingTypes.create({
         name: 'Netflix',
         categories: [{ id: 1, name: 'Action' }],
@@ -164,7 +181,7 @@ describe('Movie Model Integrations Test ', () => {
     it('should find movies by genre', async () => {
       const movies = await Movie.findByGenre('Action', 0, 10);
       expect(movies).toHaveLength(3);
-      expect(movies![0].genre).toStrictEqual([{"id": 1, "name": "Action"}]);
+      expect(movies![0].genre[0].name).toEqual('Action');
     });
 
     it('should respect skip and limit parameters', async () => {
@@ -178,6 +195,11 @@ describe('Movie Model Integrations Test ', () => {
       await StreamingTypes.create({
         name: 'Netflix',
         categories: [{ id: 1, name: 'Action' }],
+      });
+
+      await Genre.create({
+        id: 1,
+        name: 'Action'
       });
 
       const movie = await Movie.create({

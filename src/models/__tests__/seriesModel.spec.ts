@@ -3,7 +3,6 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import Series from '../series/seriesModel';
 import Genre from '../genresModel';
 import { Types } from 'mongoose';
-import { StreamingServiceError } from '../../middleware/errorHandler';
 
 describe('Series Model Unit Tests', () => {
   let mongoServer: MongoMemoryServer;

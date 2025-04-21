@@ -4,6 +4,7 @@ import { IMovieResponse } from '../../interfaces/movie';
 import { IStreamingTypeResponse, IGenreReference } from '../../interfaces/streamingTypes';
 import { StreamingTypeRepository } from '../streamingTypeRepository';
 import { Types } from 'mongoose';
+import Genre from '../../models/genresModel';
 
 describe('MovieRepository Integration Tests', () => {
   let movieRepository: MovieRepository;
@@ -15,13 +16,22 @@ describe('MovieRepository Integration Tests', () => {
     const newStreamingTypeData: Partial<IStreamingTypeResponse> = {
       name: 'Disney+',
       supportedGenres: [
-        { id: 1, name: 'Series', poster: 'series.jpg', _id: new Types.ObjectId() },
-        { id: 2, name: 'Movies', poster: 'movies.jpg', _id: new Types.ObjectId() },
+        { id: 1, name: 'Action', poster: 'Action.jpg', _id: new Types.ObjectId() },
+        { id: 2, name: 'Adventure', poster: 'Adventure.jpg', _id: new Types.ObjectId() },
       ],
     };
 
     const streamingType = await createStreamingType(newStreamingTypeData as IStreamingTypeResponse);
     genres = streamingType.supportedGenres || [];
+
+        
+    await Genre.create({
+      id: 1,
+      name: 'Action'
+    },{
+      id: 2,
+      name: 'Adventure'
+    });
   });
 
   afterAll(async () => {
@@ -43,7 +53,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -62,7 +72,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -82,7 +92,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -103,7 +113,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -122,7 +132,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -142,7 +152,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -163,7 +173,7 @@ describe('MovieRepository Integration Tests', () => {
       title: 'Test Movie',
       contentType: 'movie',
       durationTime: 120,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20',
       plot: 'Test plot',
       cast: ['Actor 1', 'Actor 2'],
       genre: [genres[0]],
@@ -171,7 +181,7 @@ describe('MovieRepository Integration Tests', () => {
       poster: 'poster.jpg',
       url: 'movie.mp4'
     };
-    
+
     await movieRepository.create(movieData);
     const foundMovies = await movieRepository.findByGenre(genres[0].name, 0, 10);
     expect(foundMovies).not.toBeNull();

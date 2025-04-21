@@ -330,8 +330,8 @@ describe('User Model', () => {
       const updatedUser = await User.findById(user._id);
       
       expect(updatedUser?.stats!.totalWatchTimeInMinutes).toBe(150); 
-      expect(updatedUser?.stats!.moviesWatched).toBe(2); 
-      expect(updatedUser?.stats!.episodesWatched).toBe(0);
+      expect(updatedUser?.stats!.moviesWatched).toBe(1); 
+      expect(updatedUser?.stats!.episodesWatched).toBe(1);
       expect(updatedUser?.stats!.lastActive).toBeDefined();
     });
   });

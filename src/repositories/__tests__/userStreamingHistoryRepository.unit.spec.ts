@@ -163,7 +163,8 @@ describe('UserStreamingHistoryRepository', () => {
 
       expect(UserStreamingHistory.hasWatched).toHaveBeenCalledWith(
         mockHistory.userId.toString(),
-        mockWatchHistoryEntry.contentId.toString()
+        mockWatchHistoryEntry.contentId.toString(),
+        mockWatchHistoryEntry.contentType
       );
       expect(result).toBe(true);
     });
@@ -175,7 +176,8 @@ describe('UserStreamingHistoryRepository', () => {
 
       expect(UserStreamingHistory.hasWatched).toHaveBeenCalledWith(
         mockHistory.userId.toString(),
-        mockWatchHistoryEntry.contentId.toString()
+        mockWatchHistoryEntry.contentId.toString(),
+        mockWatchHistoryEntry.contentType
       );
       expect(result).toBe(false);
     });
