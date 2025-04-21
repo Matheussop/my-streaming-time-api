@@ -1,13 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { StreamingServiceError, errorHandler } from '../errorHandler';
+import { z } from 'zod';
+import { formatZodError } from '../../util/errorFormatter';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
+
+// Mock formatZodError
+jest.mock('../../util/errorFormatter', () => ({
+  formatZodError: jest.fn().mockReturnValue([{ path: 'field', message: 'Invalid field' }]),
+}));
 
 describe('Error Handling', () => {
   let mockResponse: Partial<Response>;
   let mockRequest: Partial<Request>;
   let mockNext: NextFunction;
-
+  let mockId: string | Types.ObjectId;
   beforeEach(() => {
+    mockId = generateValidObjectId();
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
@@ -19,6 +28,7 @@ describe('Error Handling', () => {
       params: {},
       query: {},
       ip: '127.0.0.1',
+      user: { userId: mockId },
     };
     mockNext = jest.fn();
   });
@@ -43,6 +53,18 @@ describe('Error Handling', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'error',
         message: 'Not Found',
+      });
+    });
+
+    it('should handle StreamingServiceError with correct properties and empty error', () => {
+      const error = new Error();
+      const mockRequestWithoutUser = { ...mockRequest, user: null } as unknown as Request;
+
+      errorHandler(error, mockRequestWithoutUser as Request, mockResponse as Response, mockNext);
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Internal Server Error',
       });
     });
 
@@ -78,13 +100,31 @@ describe('Error Handling', () => {
       const mongoError = new Error('Duplicate key error') as any;
       mongoError.name = 'MongoServerError';
       mongoError.code = 11000;
+      mongoError.keyValue = { email: 'test@example.com' };
 
       errorHandler(mongoError, mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Duplicate field value entered',
+        message: "A record already exists with value 'test@example.com' for field 'email'",
+        details: "The value 'test@example.com' is already in use for the field 'email'. Please choose a unique value for the field 'email'."
+      });
+    });
+
+    it('should handle MongoServerError with undefined keyValue gracefully', () => {
+      const mongoError = new Error('Duplicate key error') as any;
+      mongoError.name = 'MongoServerError';
+      mongoError.code = 11000;
+      // keyValue is undefined
+
+      errorHandler(mongoError, mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: "A record already exists with value 'unknown' for field 'unknown'",
+        details: "The value 'unknown' is already in use for the field 'unknown'. Please choose a unique value for the field 'unknown'."
       });
     });
 
@@ -97,6 +137,54 @@ describe('Error Handling', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'error',
         message: 'Internal Server Error',
+      });
+    });
+
+    it('should handle Zod validation errors', () => {
+      const zodError = new z.ZodError([
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          received: 'number',
+          path: ['field'],
+          message: 'Invalid field',
+        },
+      ]);
+
+      errorHandler(zodError, mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        errors: [{ path: 'field', message: 'Invalid field' }],
+        message: 'Invalid input data'
+      });
+      expect(formatZodError).toHaveBeenCalledWith(zodError);
+    });
+
+    it('should handle JSON syntax errors with undefined values', () => {
+      const syntaxError = new SyntaxError('Unexpected token undefined in JSON at position 10');
+
+      errorHandler(syntaxError, mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid JSON: The value "undefined" is not allowed in JSON. Use null for missing values.',
+        details: 'Check your payload and replace undefined values with null or remove them.'
+      });
+    });
+
+    it('should handle generic JSON syntax errors', () => {
+      const syntaxError = new SyntaxError('Unexpected token } in JSON at position 10');
+
+      errorHandler(syntaxError, mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid JSON: Syntax error in payload',
+        details: 'Check if your JSON is formatted correctly.'
       });
     });
 
