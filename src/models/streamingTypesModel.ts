@@ -55,10 +55,6 @@ streamingTypesSchema.static('findByName', function(name: string): Promise<IStrea
   return this.findOne({ name: new RegExp(`^${name}$`, 'i') });
 });
 
-streamingTypesSchema.static('findByGenreId', function(genreId: string): Promise<IStreamingTypeResponse[]> {
-  return this.find({ supportedGenres: genreId });
-});
-
 streamingTypesSchema.static('findByGenreName', function(genreName: string, id: string): Promise<IStreamingTypeResponse | null> {
   return this.findOne({ 
     _id: id, 
