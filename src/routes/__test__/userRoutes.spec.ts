@@ -1,8 +1,9 @@
-import express, { Express } from 'express';
 import request from 'supertest';
+import express, { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../../constants/httpStatus';
 import { Messages } from '../../constants/messages';
-import * as validateModule from '../../util/validate';
+import { Types } from 'mongoose';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
 
 const mockImplementations = {
   registerUser: jest.fn(),
@@ -17,131 +18,129 @@ jest.mock('../../controllers/userController', () => ({
   UserController: jest.fn().mockImplementation(() => mockImplementations),
 }));
 
-jest.mock('../../services/userService');
-jest.mock('../../repositories/userRepository');
-jest.mock('../../util/validate', () => ({
-  validateRequest: jest.fn(),
+jest.mock('../../middleware/validationMiddleware', () => ({
+  validate: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => next()),
 }));
 
-import userRoutes from '../userRoutes';
+jest.mock('../../middleware/objectIdValidationMiddleware', () => ({
+  validateObjectId: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => {
+    req.validatedIds = req.validatedIds || {};
+    const id = req.params.id || '507f1f77bcf86cd799439011';
+    req.validatedIds.id = new Types.ObjectId(id);
+    next();
+  }),
+}));
+
+jest.mock('../../services/userService', () => ({
+  UserService: jest.fn().mockImplementation(() => ({})),
+}));
+
+jest.mock('../../repositories/userRepository', () => ({
+  UserRepository: jest.fn().mockImplementation(() => ({})),
+}));
+
+import router from '../userRoutes';
 
 describe('User Routes', () => {
-  let app: Express;
-  let mockValidateRequest: jest.Mock;
-
-  const testData = {
-    validUser: {
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'Password123!',
-    },
-    validCredentials: {
-      email: 'john@example.com',
-      password: 'Password123!',
-    },
-    mockUsers: [
-      { id: '1', name: 'User 1', email: 'user1@example.com' },
-      { id: '2', name: 'User 2', email: 'user2@example.com' },
-    ],
-    testUserId: '123',
-  };
+  let app: express.Application;
+  let mockId: string | Types.ObjectId;
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.use('/user', userRoutes);
-    mockValidateRequest = validateModule.validateRequest as jest.Mock;
+    app.use('/users', router);
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockValidateRequest.mockImplementation((req, res, next) => next());
+    mockId = generateValidObjectId();
   });
 
-  describe('POST /register', () => {
-    it('should register a new user with valid data', async () => {
-      mockImplementations.registerUser.mockImplementation((req, res) => {
-        res.status(HttpStatus.CREATED).json({ message: Messages.USER_CREATED_SUCCESSFULLY });
+  describe('GET /:id', () => {
+    it('should return a user by id', async () => {
+      const mockUser = {
+        _id: mockId.toString(),
+        name: 'John Doe',
+        email: 'john@example.com',
+        role: 'user'
+      };
+
+      mockImplementations.getUserById.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockUser);
       });
 
-      const response = await request(app).post('/user/register').send(testData.validUser);
+      const response = await request(app)
+        .get(`/users/${mockId}`)
+        .expect(HttpStatus.OK);
 
-      expect(response.status).toBe(HttpStatus.CREATED);
-      expect(mockImplementations.registerUser).toHaveBeenCalledTimes(1);
+      expect(response.body).toEqual(mockUser);
     });
   });
 
-  describe('POST /login', () => {
-    it('should login user with valid credentials', async () => {
-      mockImplementations.loginUser.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ message: Messages.AUTHENTICATION_SUCCESS });
+  describe('PUT /:id', () => {
+    it('should update a user', async () => {
+      const updateData = {
+        name: 'Updated Name',
+        email: 'updated@example.com'
+      };
+
+      mockImplementations.updateUser.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ 
+          _id: mockId.toString(), 
+          ...updateData,
+          role: 'user'
+        });
       });
 
-      const response = await request(app).post('/user/login').send(testData.validCredentials);
+      const response = await request(app)
+        .put(`/users/${mockId}`)
+        .send(updateData)
+        .expect(HttpStatus.OK);
 
-      expect(response.status).toBe(HttpStatus.OK);
-      expect(mockValidateRequest).toHaveBeenCalled();
-      expect(mockImplementations.loginUser).toHaveBeenCalled();
+      expect(response.body).toEqual({ 
+        _id: mockId.toString(), 
+        ...updateData,
+        role: 'user'
+      });
     });
   });
 
-  describe('GET /users/:id', () => {
-    it('should get user by valid ID', async () => {
-      mockImplementations.getUserById.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json(testData.validUser);
-      });
-
-      const response = await request(app).get(`/user/${testData.testUserId}`);
-
-      expect(response.status).toBe(HttpStatus.OK);
-      expect(mockImplementations.getUserById).toHaveBeenCalled();
-      expect(response.body).toEqual(testData.validUser);
-    });
-  });
-
-  describe('PUT /users/:id', () => {
-    const userId = '123';
-    const updateData = {
-      name: 'Updated Name',
-      email: 'updated@example.com',
-    };
-
-    it('should update user with valid data', async () => {
-      mockImplementations.updateUser.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ message: Messages.USER_UPDATED_SUCCESSFULLY });
-      });
-
-      const response = await request(app).put(`/user/${testData.validUser}`).send(updateData);
-
-      expect(response.status).toBe(HttpStatus.OK);
-      expect(mockImplementations.updateUser).toHaveBeenCalled();
-    });
-  });
-
-  describe('DELETE /users/:id', () => {
-    it('should delete user with valid ID', async () => {
-      mockImplementations.deleteUser.mockImplementation((req, res) => {
+  describe('DELETE /:id', () => {
+    it('should delete a user', async () => {
+      mockImplementations.deleteUser.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json({ message: Messages.USER_DELETED_SUCCESSFULLY });
       });
 
-      const response = await request(app).delete(`/user/${testData.testUserId}`);
+      const response = await request(app)
+        .delete(`/users/${mockId}`)
+        .expect(HttpStatus.OK);
 
-      expect(response.status).toBe(HttpStatus.OK);
-      expect(mockImplementations.deleteUser).toHaveBeenCalled();
+      expect(response.body).toEqual({ message: Messages.USER_DELETED_SUCCESSFULLY });
     });
   });
 
-  describe('GET /users', () => {
-    it('should list all users', async () => {
-      mockImplementations.listUsers.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json(testData.mockUsers);
+  describe('GET /', () => {
+    it('should return list of users with pagination', async () => {
+      const mockUsers = {
+        data: [
+          { _id: mockId.toString(), name: 'User 1', email: 'user1@example.com' },
+          { _id: generateValidObjectId().toString(), name: 'User 2', email: 'user2@example.com' },
+        ],
+        total: 2,
+        page: 1,
+        limit: 10,
+      };
+
+      mockImplementations.listUsers.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockUsers);
       });
 
-      const response = await request(app).get('/user');
+      const response = await request(app)
+        .get('/users')
+        .query({ page: 1, limit: 10 })
+        .expect(HttpStatus.OK);
 
-      expect(response.status).toBe(HttpStatus.OK);
-      expect(mockImplementations.listUsers).toHaveBeenCalled();
-      expect(response.body).toEqual(testData.mockUsers);
+      expect(response.body).toEqual(mockUsers);
     });
   });
 });

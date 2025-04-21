@@ -316,5 +316,3 @@ export class StatisticsService implements IStatisticsService {
   }
   
 }
-
-export default StatisticsService; 

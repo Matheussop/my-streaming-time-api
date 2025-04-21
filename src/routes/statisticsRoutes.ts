@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { StatisticsController } from '../controllers/statisticsController';
 import { UserStreamingHistoryService } from '../services/userStreamingHistoryService';
-import StatisticsService from '../services/statisticsService';
+import { StatisticsService } from '../services/statisticsService';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { MovieRepository } from '../repositories/movieRepository';
 import { SeriesRepository } from '../repositories/seriesRepository';

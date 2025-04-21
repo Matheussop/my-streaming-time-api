@@ -1,8 +1,9 @@
 import request from 'supertest';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../../constants/httpStatus';
 import { Messages } from '../../constants/messages';
-import * as validateModule from '../../util/validate';
+import { Types } from 'mongoose';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
 
 const mockImplementations = {
   getMoviesByTitle: jest.fn(),
@@ -10,6 +11,7 @@ const mockImplementations = {
   getMovies: jest.fn(),
   getMovieById: jest.fn(),
   updateMovie: jest.fn(),
+  updateMovieFromTMDB: jest.fn(),
   getMoviesByGenre: jest.fn(),
   deleteMovie: jest.fn(),
 };
@@ -28,36 +30,48 @@ jest.mock('../../controllers/movieTMDBController', () => ({
   findOrAddMovie: mockFindOrAddMovie,
 }));
 
-jest.mock('../../util/validate', () => ({
-  validateRequest: jest.fn(),
+jest.mock('../../middleware/validationMiddleware', () => ({
+  validate: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => next()),
+}));
+
+jest.mock('../../middleware/objectIdValidationMiddleware', () => ({
+  validateObjectId: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => {
+    req.validatedIds = req.validatedIds || {};
+    const id = req.params.id || req.params._id || '507f1f77bcf86cd799439011';
+    req.validatedIds.id = new Types.ObjectId(id);
+    next();
+  }),
 }));
 
 import router from '../movieRoutes';
+
 describe('Movie Routes', () => {
   let app: express.Application;
-  let mockValidateRequest: jest.Mock;
+  let mockId: string | Types.ObjectId;
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
     app.use('/movies', router);
-    mockValidateRequest = validateModule.validateRequest as jest.Mock;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockValidateRequest.mockImplementation((req, res, next) => next());
+    mockId = generateValidObjectId();
   });
 
   describe('GET /title', () => {
     it('should return movies by title', async () => {
-      const mockMovies = [{ id: '1', title: 'Test Movie', rating: 8.5 }];
+      const mockMovies = [{ _id: mockId.toString(), title: 'Test Movie', rating: 8.5 }];
 
-      mockImplementations.getMoviesByTitle.mockImplementation((req, res) => {
+      mockImplementations.getMoviesByTitle.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json(mockMovies);
       });
 
-      const response = await request(app).get('/movies/title').query({ title: 'Test Movie' }).expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/movies/title')
+        .query({ title: 'Test Movie' })
+        .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockMovies);
     });
@@ -65,13 +79,16 @@ describe('Movie Routes', () => {
 
   describe('POST /byGenre', () => {
     it('should return movies by genre', async () => {
-      const mockMovies = [{ id: '1', genre: 'Test genre', rating: 8.5 }];
+      const mockMovies = [{ _id: mockId.toString(), genre: [{id: 1, name: 'Action'}], rating: 8.5 }];
 
-      mockImplementations.getMoviesByGenre.mockImplementation((req, res) => {
+      mockImplementations.getMoviesByGenre.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json(mockMovies);
       });
 
-      const response = await request(app).post('/movies/byGenre').query({ genre: 'Test genre' }).expect(HttpStatus.OK);
+      const response = await request(app)
+        .post('/movies/byGenre')
+        .send({ genre: 'Action' })
+        .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockMovies);
     });
@@ -86,13 +103,19 @@ describe('Movie Routes', () => {
         rating: 9.0,
         url: 'http://movie.com',
         releaseDate: '2024-01-01',
+        genre: [{ id: 1, name: 'Action' }],
       };
 
-      mockImplementations.createMovie.mockImplementation((req, res) => {
-        res.status(HttpStatus.ACCEPTED).json({ id: '1', ...newMovie });
+      mockImplementations.createMovie.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.CREATED).json({ _id: mockId.toString(), ...newMovie });
       });
 
-      await request(app).post('/movies').send(newMovie).expect(HttpStatus.ACCEPTED);
+      const response = await request(app)
+        .post('/movies')
+        .send(newMovie)
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), ...newMovie });
     });
   });
 
@@ -100,19 +123,22 @@ describe('Movie Routes', () => {
     it('should return list of movies with pagination', async () => {
       const mockMovies = {
         data: [
-          { id: '1', title: 'Movie 1' },
-          { id: '2', title: 'Movie 2' },
+          { _id: mockId.toString(), title: 'Movie 1' },
+          { _id: generateValidObjectId().toString(), title: 'Movie 2' },
         ],
         total: 2,
         page: 1,
         limit: 10,
       };
 
-      mockImplementations.getMovies.mockImplementation((req, res) => {
+      mockImplementations.getMovies.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json(mockMovies);
       });
 
-      const response = await request(app).get('/movies').query({ page: 1, limit: 10 }).expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/movies')
+        .query({ page: 1, limit: 10 })
+        .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockMovies);
     });
@@ -125,23 +151,29 @@ describe('Movie Routes', () => {
         { id: 2, title: 'External Movie 2' },
       ];
 
-      mockGetExternalMovies.mockImplementation((req, res) => {
+      mockGetExternalMovies.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json(mockExternalMovies);
       });
 
-      const response = await request(app).get('/movies/external').expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/movies/external')
+        .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockExternalMovies);
     });
   });
 
-  describe('POST /external', () => {
+  describe('POST /saveExternalMovies', () => {
     it('should fetch and save external movies', async () => {
-      mockFetchAndSaveExternalMovies.mockImplementation((req, res) => {
+      mockFetchAndSaveExternalMovies.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.ACCEPTED).json({ message: Messages.MOVIE_FETCHED_AND_SAVED_SUCCESSFULLY });
       });
 
-      await request(app).post('/movies/saveExternalMovies').expect(HttpStatus.ACCEPTED);
+      const response = await request(app)
+        .post('/movies/saveExternalMovies')
+        .expect(HttpStatus.ACCEPTED);
+
+      expect(response.body).toEqual({ message: Messages.MOVIE_FETCHED_AND_SAVED_SUCCESSFULLY });
     });
   });
 
@@ -153,27 +185,34 @@ describe('Movie Routes', () => {
         limit: 10,
       };
 
-      mockFindOrAddMovie.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ id: '1', title: 'Movie to Find' });
+      mockFindOrAddMovie.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ _id: mockId.toString(), title: 'Movie to Find' });
       });
 
-      await request(app).post('/movies/findOrAddMovie').send(movieData).expect(HttpStatus.OK);
+      const response = await request(app)
+        .post('/movies/findOrAddMovie')
+        .send(movieData)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), title: 'Movie to Find' });
     });
   });
 
   describe('GET /:id', () => {
     it('should return a movie by id', async () => {
       const mockMovie = {
-        id: '1',
+        _id: mockId.toString(),
         title: 'Test Movie',
         rating: 8.5,
       };
 
-      mockImplementations.getMovieById.mockImplementation((req, res) => {
+      mockImplementations.getMovieById.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json(mockMovie);
       });
 
-      const response = await request(app).get('/movies/1').expect(HttpStatus.OK);
+      const response = await request(app)
+        .get(`/movies/${mockId}`)
+        .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockMovie);
     });
@@ -190,21 +229,54 @@ describe('Movie Routes', () => {
         releaseDate: '2024-02-01',
       };
 
-      mockImplementations.updateMovie.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ id: '1', ...updateData });
+      mockImplementations.updateMovie.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ _id: mockId.toString(), ...updateData });
       });
 
-      await request(app).put('/movies/1').send(updateData).expect(HttpStatus.OK);
+      const response = await request(app)
+        .put(`/movies/${mockId}`)
+        .send(updateData)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), ...updateData });
+    });
+  });
+
+  describe('PUT /:id/:tmdbId', () => {
+    it('should update a movie from TMDB', async () => {
+      const tmdbId = 12345;
+      
+      mockImplementations.updateMovieFromTMDB.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ 
+          _id: mockId.toString(), 
+          title: 'TMDB Movie',
+          tmdbId: tmdbId 
+        });
+      });
+
+      const response = await request(app)
+        .put(`/movies/${mockId}/${tmdbId}`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ 
+        _id: mockId.toString(), 
+        title: 'TMDB Movie',
+        tmdbId: tmdbId 
+      });
     });
   });
 
   describe('DELETE /:id', () => {
     it('should delete a movie', async () => {
-      mockImplementations.deleteMovie.mockImplementation((req, res) => {
+      mockImplementations.deleteMovie.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json({ message: Messages.MOVIE_DELETED_SUCCESSFULLY });
       });
 
-      await request(app).delete('/movies/1').expect(HttpStatus.OK);
+      const response = await request(app)
+        .delete(`/movies/${mockId}`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ message: Messages.MOVIE_DELETED_SUCCESSFULLY });
     });
   });
 });

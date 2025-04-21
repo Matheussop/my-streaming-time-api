@@ -1,8 +1,9 @@
-import express from 'express';
 import request from 'supertest';
+import express, { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../../constants/httpStatus';
 import { Messages } from '../../constants/messages';
-import * as validateModule from '../../util/validate';
+import { Types } from 'mongoose';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
 
 const mockImplementations = {
   getStreamingTypes: jest.fn(),
@@ -10,148 +11,223 @@ const mockImplementations = {
   getStreamingTypeByName: jest.fn(),
   createStreamingType: jest.fn(),
   updateStreamingType: jest.fn(),
-  addCategoryToStreamingType: jest.fn(),
-  removeCategoryFromStreamingType: jest.fn(),
+  addGenreToStreamingType: jest.fn(),
+  deleteGenreFromStreamingTypeByName: jest.fn(),
   deleteStreamingType: jest.fn(),
+  changeCover: jest.fn()
 };
 
 jest.mock('../../controllers/streamingTypeController', () => ({
   StreamingTypeController: jest.fn().mockImplementation(() => mockImplementations),
 }));
-jest.mock('../../util/validate', () => ({
-  validateRequest: jest.fn(),
+
+jest.mock('../../middleware/validationMiddleware', () => ({
+  validate: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => next()),
+}));
+
+jest.mock('../../middleware/objectIdValidationMiddleware', () => ({
+  validateObjectId: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => {
+    req.validatedIds = req.validatedIds || {};
+    const id = req.params.id || req.params._id || '507f1f77bcf86cd799439011';
+    req.validatedIds.id = new Types.ObjectId(id);
+    next();
+  }),
 }));
 
 import router from '../streamingTypeRoutes';
-describe('Streaming Types Routes', () => {
+
+describe('Streaming Type Routes', () => {
   let app: express.Application;
-  let mockValidateRequest: jest.Mock;
+  let mockId: string | Types.ObjectId;
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
     app.use('/streamingTypes', router);
-    mockValidateRequest = validateModule.validateRequest as jest.Mock;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockValidateRequest.mockImplementation((req, res, next) => next());
+    mockId = generateValidObjectId();
   });
 
   describe('GET /', () => {
-    it('should return 200 and list of streaming types', async () => {
-      const mockTypes = [
-        { id: '1', name: 'Netflix', categories: ['Movies', 'Series'] },
-        { id: '2', name: 'Prime Video', categories: ['Movies'] },
+    it('should return list of streaming types with pagination', async () => {
+      const mockStreamingTypes = [
+        { _id: mockId.toString(), name: 'Netflix', supportedGenres: [] },
+        { _id: generateValidObjectId().toString(), name: 'Disney+', supportedGenres: [] },
       ];
 
-      mockImplementations.getStreamingTypes.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json(mockTypes);
+      mockImplementations.getStreamingTypes.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockStreamingTypes);
       });
 
-      const response = await request(app).get('/streamingTypes').expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/streamingTypes')
+        .query({ page: 1, limit: 10 })
+        .expect(HttpStatus.OK);
 
-      expect(response.body).toEqual(mockTypes);
+      expect(response.body).toEqual(mockStreamingTypes);
+    });
+  });
+
+  describe('GET /change-cover', () => {
+    it('should change cover of genres', async () => {
+      mockImplementations.changeCover.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ message: 'Cover changed successfully' });
+      });
+
+      const response = await request(app)
+        .get('/streamingTypes/change-cover')
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ message: 'Cover changed successfully' });
     });
   });
 
   describe('GET /:id', () => {
-    it('should return 200 and streaming type when found', async () => {
-      const mockType = { id: '1', name: 'Netflix', categories: ['Movies', 'Series'] };
+    it('should return a streaming type by id', async () => {
+      const mockStreamingType = {
+        _id: mockId.toString(),
+        name: 'Netflix',
+        supportedGenres: [
+          { id: 1, name: 'Action', _id: generateValidObjectId().toString() }
+        ]
+      };
 
-      mockImplementations.getStreamingTypeById.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json(mockType);
+      mockImplementations.getStreamingTypeById.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockStreamingType);
       });
 
-      const response = await request(app).get('/streamingTypes/1').expect(HttpStatus.OK);
+      const response = await request(app)
+        .get(`/streamingTypes/${mockId}`)
+        .expect(HttpStatus.OK);
 
-      expect(response.body).toEqual(mockType);
+      expect(response.body).toEqual(mockStreamingType);
     });
   });
 
   describe('GET /name/:name', () => {
-    it('should return 200 and streaming type when found by name', async () => {
-      const mockType = { id: '1', name: 'Series', categories: ['Action', 'Drama'] };
+    it('should return a streaming type by name', async () => {
+      const mockStreamingType = {
+        _id: mockId.toString(),
+        name: 'Netflix',
+        supportedGenres: [
+          { id: 1, name: 'Action', _id: generateValidObjectId().toString() }
+        ]
+      };
 
-      mockImplementations.getStreamingTypeByName.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json(mockType);
+      mockImplementations.getStreamingTypeByName.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockStreamingType);
       });
 
-      const response = await request(app).get('/streamingTypes/name/Series').expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/streamingTypes/name/Netflix')
+        .expect(HttpStatus.OK);
 
-      expect(response.body).toEqual(mockType);
+      expect(response.body).toEqual(mockStreamingType);
     });
   });
 
   describe('POST /', () => {
-    const validStreamingType = {
-      name: 'Disney+',
-      categories: ['Movies', 'Series', 'Kids'],
-    };
+    it('should create a new streaming type', async () => {
+      const newStreamingType = {
+        name: 'New Streaming Type',
+        description: 'Test description'
+      };
 
-    it('should return 200 when streaming type is created', async () => {
-      mockImplementations.createStreamingType.mockImplementation((req, res) => {
-        res.status(HttpStatus.ACCEPTED).json({ id: '3', ...validStreamingType });
+      mockImplementations.createStreamingType.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.CREATED).json({ _id: mockId.toString(), ...newStreamingType, supportedGenres: [] });
       });
 
-      await request(app).post('/streamingTypes').send(validStreamingType).expect(HttpStatus.ACCEPTED);
+      const response = await request(app)
+        .post('/streamingTypes')
+        .send(newStreamingType)
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), ...newStreamingType, supportedGenres: [] });
     });
   });
 
   describe('PUT /:id', () => {
-    const updateData = {
-      name: 'Updated Netflix',
-      categories: ['Movies', 'Series', 'Documentaries'],
-    };
+    it('should update a streaming type', async () => {
+      const updateData = {
+        name: 'Updated Streaming Type',
+        description: 'Updated description'
+      };
 
-    it('should return 200 when streaming type is updated', async () => {
-      mockImplementations.updateStreamingType.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ id: '1', ...updateData });
+      mockImplementations.updateStreamingType.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ _id: mockId.toString(), ...updateData, supportedGenres: [] });
       });
 
-      await request(app).put('/streamingTypes/1').send(updateData).expect(HttpStatus.OK);
+      const response = await request(app)
+        .put(`/streamingTypes/${mockId}`)
+        .send(updateData)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), ...updateData, supportedGenres: [] });
     });
   });
 
-  describe('PUT /addCategory/:id', () => {
-    const newCategories = {
-      categories: [
-        { id: 1, name: 'Anime' },
-        { id: 2, name: 'Sports' },
-      ],
-    };
+  describe('PUT /add-genre/:id', () => {
+    it('should add genre to a streaming type', async () => {
+      const genreData = {
+        supportedGenres: [
+          { id: 1, name: 'Action' }
+        ]
+      };
 
-    it('should return 200 when categories are added', async () => {
-      mockImplementations.addCategoryToStreamingType.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ message: Messages.STREAMING_TYPE_CATEGORIES_ADDED_SUCCESSFULLY });
+      const updatedStreamingType = {
+        _id: mockId.toString(),
+        name: 'Netflix',
+        supportedGenres: [
+          { id: 1, name: 'Action', _id: generateValidObjectId().toString() }
+        ]
+      };
+
+      mockImplementations.addGenreToStreamingType.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(updatedStreamingType);
       });
 
-      await request(app).put('/streamingTypes/addCategory/1').send(newCategories).expect(HttpStatus.OK);
+      const response = await request(app)
+        .put(`/streamingTypes/add-genre/${mockId}`)
+        .send(genreData)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(updatedStreamingType);
     });
   });
 
-  describe('PUT /removeCategory/:id', () => {
-    const categoriesToRemove = {
-      categories: [{ id: 1 }, { id: 2 }],
-    };
+  describe('DELETE /delete-genre/:id', () => {
+    it('should delete genre from a streaming type', async () => {
+      const updatedStreamingType = {
+        _id: mockId.toString(),
+        name: 'Netflix',
+        supportedGenres: []
+      };
 
-    it('should return 200 when categories are removed', async () => {
-      mockImplementations.removeCategoryFromStreamingType.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ message: Messages.STREAMING_TYPE_CATEGORIES_REMOVED_SUCCESSFULLY });
+      mockImplementations.deleteGenreFromStreamingTypeByName.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(updatedStreamingType);
       });
 
-      await request(app).put('/streamingTypes/removeCategory/1').send(categoriesToRemove).expect(HttpStatus.OK);
+      const response = await request(app)
+        .delete(`/streamingTypes/delete-genre/${mockId}`)
+        .send({ genresName: ['Action'] })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(updatedStreamingType);
     });
   });
 
   describe('DELETE /:id', () => {
-    it('should return 200 when streaming type is deleted', async () => {
-      mockImplementations.deleteStreamingType.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ message: Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY });
+    it('should delete a streaming type', async () => {
+      mockImplementations.deleteStreamingType.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.NO_CONTENT).send(Messages.STREAMING_TYPE_DELETED_SUCCESSFULLY);
       });
 
-      await request(app).delete('/streamingTypes/1').expect(HttpStatus.OK);
+      await request(app)
+        .delete(`/streamingTypes/${mockId}`)
+        .expect(HttpStatus.NO_CONTENT);
     });
   });
 });

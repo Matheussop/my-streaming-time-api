@@ -1,14 +1,17 @@
 import request from 'supertest';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../../constants/httpStatus';
 import { Messages } from '../../constants/messages';
-import * as validateModule from '../../util/validate';
+import { Types } from 'mongoose';
+import { generateValidObjectId } from '../../util/test/generateValidObjectId';
 
 const mockImplementations = {
   getSeriesByTitle: jest.fn(),
   createSeries: jest.fn(),
+  getSeries: jest.fn(),
   getSerieById: jest.fn(),
   updateSerie: jest.fn(),
+  getSeriesByGenre: jest.fn(),
   deleteSerie: jest.fn(),
   findOrAddSerie: jest.fn(),
 };
@@ -17,120 +20,202 @@ jest.mock('../../controllers/seriesController', () => ({
   SeriesController: jest.fn().mockImplementation(() => mockImplementations),
 }));
 
-jest.mock('../../util/validate', () => ({
-  validateRequest: jest.fn(),
+jest.mock('../../middleware/validationMiddleware', () => ({
+  validate: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => next()),
+}));
+
+jest.mock('../../middleware/objectIdValidationMiddleware', () => ({
+  validateObjectId: jest.fn().mockImplementation(() => (req: Request, res: Response, next: NextFunction) => {
+    req.validatedIds = req.validatedIds || {};
+    const id = req.params.id || req.params._id || '507f1f77bcf86cd799439011';
+    req.validatedIds.id = new Types.ObjectId(id);
+    next();
+  }),
 }));
 
 import router from '../seriesRoutes';
-describe('Serie Routes', () => {
+
+describe('Series Routes', () => {
   let app: express.Application;
-  let mockValidateRequest: jest.Mock;
+  let mockId: string | Types.ObjectId;
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
     app.use('/series', router);
-    mockValidateRequest = validateModule.validateRequest as jest.Mock;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockValidateRequest.mockImplementation((req, res, next) => next());
+    mockId = generateValidObjectId();
   });
 
   describe('GET /title', () => {
     it('should return series by title', async () => {
-      const mockSeries = [{ id: '1', title: 'Test Serie', rating: 8.5 }];
+      const mockSeries = [{ _id: mockId.toString(), title: 'Test Series', rating: 8.5 }];
 
-      mockImplementations.getSeriesByTitle.mockImplementation((req, res) => {
+      mockImplementations.getSeriesByTitle.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json(mockSeries);
       });
 
-      const response = await request(app).get('/series/title').query({ title: 'Test Serie' }).expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/series/title')
+        .query({ title: 'Test Series' })
+        .expect(HttpStatus.OK);
 
       expect(response.body).toEqual(mockSeries);
     });
   });
 
-  describe('POST /', () => {
-    it('should create a new serie', async () => {
-      const newSerie = {
-        title: 'New Serie',
-        plot: 'Test plot',
-        cast: ['Actor 1', 'Actor 2'],
-        rating: 9.0,
-        url: 'http://serie.com',
-        release_date: '2024-01-01',
-      };
-
-      mockImplementations.createSeries.mockImplementation((req, res) => {
-        res.status(HttpStatus.ACCEPTED).json({ id: '1', ...newSerie });
-      });
-
-      await request(app).post('/series').send(newSerie).expect(HttpStatus.ACCEPTED);
-    });
-  });
-
-  describe('GET /:id', () => {
-    it('should return a serie by id', async () => {
-      const mockSerie = {
-        id: '1',
-        title: 'Test Serie',
-        rating: 8.5,
-      };
-
-      mockImplementations.getSerieById.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json(mockSerie);
-      });
-
-      const response = await request(app).get('/series/1').expect(HttpStatus.OK);
-
-      expect(response.body).toEqual(mockSerie);
-    });
-  });
-
-  describe('PUT /:id', () => {
-    it('should update a serie', async () => {
-      const updateData = {
-        title: 'Updated Serie',
-        plot: 'Updated plot',
-        cast: ['Actor 1', 'Actor 2'],
-        rating: 9.5,
-        url: 'http://updated-serie.com',
-        release_date: '2024-02-01',
-      };
-
-      mockImplementations.updateSerie.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ id: '1', ...updateData });
-      });
-
-      await request(app).put('/series/1').send(updateData).expect(HttpStatus.OK);
-    });
-  });
-
-  describe('DELETE /:id', () => {
-    it('should delete a serie', async () => {
-      mockImplementations.deleteSerie.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ message: Messages.MOVIE_DELETED_SUCCESSFULLY });
-      });
-
-      await request(app).delete('/series/1').expect(HttpStatus.OK);
-    });
-  });
-
-  describe('POST /findOrAddSerie', () => {
-    it('should find or add a movie', async () => {
-      const serieData = {
-        title: 'Serie to Find',
+  describe('GET /', () => {
+    it('should return list of series with pagination', async () => {
+      const mockSeriesList = {
+        data: [
+          { _id: mockId.toString(), title: 'Series 1' },
+          { _id: generateValidObjectId().toString(), title: 'Series 2' },
+        ],
+        total: 2,
         page: 1,
         limit: 10,
       };
 
-      mockImplementations.findOrAddSerie.mockImplementation((req, res) => {
-        res.status(HttpStatus.OK).json({ id: '1', title: 'Serie to Find' });
+      mockImplementations.getSeries.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockSeriesList);
       });
 
-      await request(app).post('/series/findOrAddSerie').send(serieData).expect(HttpStatus.OK);
+      const response = await request(app)
+        .get('/series')
+        .query({ page: 1, limit: 10 })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(mockSeriesList);
+    });
+  });
+
+  describe('POST /', () => {
+    it('should create a new series', async () => {
+      const newSeries = {
+        title: 'New Series',
+        plot: 'Test plot',
+        cast: ['Actor 1', 'Actor 2'],
+        rating: 9.0,
+        url: 'http://series.com',
+        releaseDate: '2024-01-01',
+        genre: [{ id: 1, name: 'Action' }],
+        totalEpisodes: 10,
+        totalSeasons: 2,
+      };
+
+      mockImplementations.createSeries.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.CREATED).json({ _id: mockId.toString(), ...newSeries });
+      });
+
+      const response = await request(app)
+        .post('/series')
+        .send(newSeries)
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), ...newSeries });
+    });
+  });
+
+  describe('GET /:id', () => {
+    it('should return a series by id', async () => {
+      const mockSeries = {
+        _id: mockId.toString(),
+        title: 'Test Series',
+        rating: 8.5,
+      };
+
+      mockImplementations.getSerieById.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockSeries);
+      });
+
+      const response = await request(app)
+        .get(`/series/${mockId}`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(mockSeries);
+    });
+  });
+
+  describe('POST /byGenre', () => {
+    it('should return series by genre', async () => {
+      const mockSeries = [{ 
+        _id: mockId.toString(), 
+        genre: [{id: 1, name: 'Action', _id: generateValidObjectId().toString() }], 
+        rating: 8.5 
+      }];
+
+      mockImplementations.getSeriesByGenre.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockSeries);
+      });
+
+      const response = await request(app)
+        .post('/series/byGenre')
+        .send({ genre: 'Action' })
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual(mockSeries);
+    });
+  });
+
+  describe('PUT /:id', () => {
+    it('should update a series', async () => {
+      const updateData = {
+        title: 'Updated Series',
+        plot: 'Updated plot',
+        cast: ['Actor 1', 'Actor 2'],
+        rating: 9.5,
+        url: 'http://updated-series.com',
+        releaseDate: '2024-02-01',
+      };
+
+      mockImplementations.updateSerie.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ _id: mockId.toString(), ...updateData });
+      });
+
+      const response = await request(app)
+        .put(`/series/${mockId}`)
+        .send(updateData)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), ...updateData });
+    });
+  });
+
+  describe('DELETE /:id', () => {
+    it('should delete a series', async () => {
+      mockImplementations.deleteSerie.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ message: Messages.SERIE_DELETED_SUCCESSFULLY });
+      });
+
+      const response = await request(app)
+        .delete(`/series/${mockId}`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ message: Messages.SERIE_DELETED_SUCCESSFULLY });
+    });
+  });
+
+  describe('POST /findOrAddSerie', () => {
+    it('should find or add a series', async () => {
+      const seriesData = {
+        title: 'Series to Find',
+        page: 1,
+        limit: 10,
+      };
+
+      mockImplementations.findOrAddSerie.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ _id: mockId.toString(), title: 'Series to Find' });
+      });
+
+      const response = await request(app)
+        .post('/series/findOrAddSerie')
+        .send(seriesData)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ _id: mockId.toString(), title: 'Series to Find' });
     });
   });
 });
