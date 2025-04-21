@@ -112,7 +112,7 @@ seasonSchema.post('save', async function() {
   
   // Recalculate number os seasons and episodes.
   const allSeasons = await mongoose.model('Season').find({ seriesId: this.seriesId });
-  const totalEpisodes = allSeasons.reduce((sum, season) => sum + season.episodes.length, 0);
+  const totalEpisodes = allSeasons.reduce((sum, season) => sum + (season.episodes?.length || 0), 0);
   
   await Series.findByIdAndUpdate(
     this.seriesId,
