@@ -2,8 +2,8 @@ import { Schema, model } from 'mongoose';
 import { EpisodeWatched, IUserStreamingHistoryCreate, IUserStreamingHistoryDocument, IUserStreamingHistoryModel, IUserStreamingHistoryResponse, SeriesProgress, WatchHistoryEntry } from '../interfaces/userStreamingHistory';
 import User from './userModel';
 import { ErrorMessages } from '../constants/errorMessages';
-import console from 'console';
 import Series from './series/seriesModel';
+import { StreamingServiceError } from '../middleware/errorHandler';
 
 const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument, IUserStreamingHistoryModel>(
   { 
@@ -104,16 +104,17 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument, IUs
   },
 );
 
+//TODO verify if this is needed
 userStreamingHistorySchema.post('save', async function() {
-  if (this.isModified('watchHistory')) {
+  if (this.watchHistory) {
     try {
       const newEntries = this.watchHistory.slice(-this.watchHistory.length);
       
       if (newEntries.length > 0) {
         for (const entry of newEntries) {
-          const contentTypeMapping: Record<string, 'movie' | 'series'> = {
+          const contentTypeMapping: Record<string, 'movie' | 'episode'> = {
             'Movie': 'movie',
-            'Series': 'series'
+            'Series': 'episode'
           };
           
           const mappedContentType = contentTypeMapping[entry.contentType] || 'movie';
@@ -121,12 +122,12 @@ userStreamingHistorySchema.post('save', async function() {
           await User.updateWatchStats(
             this.userId,
             mappedContentType,
-            entry.watchedDurationInMinutes * ((entry.completionPercentage ?? 0) / 100)
+            entry.watchedDurationInMinutes * ((entry.completionPercentage!) / 100)
           );
         }
       }
     } catch (error) {
-      console.error('Error updating user watch stats:', error);
+      throw new StreamingServiceError('Error updating user watch stats:', 400);
     }
   }
 });
@@ -168,9 +169,9 @@ userStreamingHistorySchema.static('addWatchHistoryEntry', async function(
 // Método estático para obter o histórico de visualização paginado
 userStreamingHistorySchema.static('getWatchHistory', async function(
   userId: string,
-  page: number = 1,
-  limit: number = 20,
-  contentType?: string
+  page: number,
+  limit: number,
+  contentType?: 'movie' | 'series'
 ): Promise<{ entries: IUserStreamingHistoryCreate[], total: number, page: number, limit: number }> {
   const skip = (page - 1) * limit;
   
@@ -197,7 +198,7 @@ userStreamingHistorySchema.static('getWatchHistory', async function(
   ]);
   
   return {
-    entries: result.entries || [],
+    entries: result.entries,
     total: result.total.length > 0 ? result.total[0].count : 0,
     page,
     limit
@@ -232,7 +233,7 @@ userStreamingHistorySchema.static('removeWatchHistoryEntry', async function(
     { 'watchHistory.$': 1 }
   );
 
-  if (!userHistory || !userHistory.watchHistory || userHistory.watchHistory.length === 0) {
+  if (!userHistory) {
     return null;
   }
   const durationToSubtract = userHistory.watchHistory[0].watchedDurationInMinutes;
@@ -264,7 +265,7 @@ userStreamingHistorySchema.static('removeEpisodeFromHistory', async function(
   }
 
   // Encontrar a entrada específica da série e o episódio dentro dela
-  const seriesEntry = userHistory.watchHistory.find(entry => entry.contentId === contentId);
+  const seriesEntry = userHistory.watchHistory.find(entry => entry.contentId.toString() === contentId.toString());
   if (!seriesEntry || !seriesEntry.seriesProgress) {
     return null;
   }
@@ -334,7 +335,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     const seriesData = await Series.findById(seriesId);
     
     if (!seriesData) {
-      throw new Error('Series not found');
+      throw new StreamingServiceError('Series not found', 404);
     }
     const episodesWatchedMap: Map<string, EpisodeWatched> = new Map();
     episodesWatchedMap.set(episodeData.episodeId, {
@@ -372,11 +373,9 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
   } else {
     // Série já existe, atualizar progresso
     const seriesEntryIndex = userHistory.watchHistory.findIndex(
-      entry => entry.contentId === seriesId && entry.contentType === 'series'
+      entry => entry.contentId.toString() === seriesId.toString() && entry.contentType === 'series'
     );
-    
-    if (seriesEntryIndex === -1) return null;
-    
+        
     const seriesProgress = userHistory.watchHistory[seriesEntryIndex].seriesProgress?.get(seriesId) || {
       totalEpisodes: 0,
       watchedEpisodes: 0,
@@ -384,9 +383,8 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       completed: false
     };
     // Verificar se este episódio já foi assistido
-    const episodeExists = Array.isArray(seriesProgress.episodesWatched) 
-      ? seriesProgress.episodesWatched.some((ep: EpisodeWatched) => ep.episodeId === episodeData.episodeId)
-      : seriesProgress.episodesWatched.has(episodeData.episodeId);
+    const episodeExists = seriesProgress.episodesWatched instanceof Map
+      && (seriesProgress.episodesWatched as Map<string, EpisodeWatched>).has(episodeData.episodeId)
 
     const now = new Date();
     // Preparar dados para atualização
@@ -420,7 +418,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     );
 
     if (!updatedHistory) {
-      throw new Error('Failed to update episode progress');
+      throw new StreamingServiceError('Failed to update episode progress', 500);
     }
     
     const watchHistoryUpdated = updatedHistory.watchHistory[seriesEntryIndex];
@@ -451,15 +449,15 @@ userStreamingHistorySchema.static('getWatchedEpisodesForSeries', async function(
 });
 
 // Método para calcular o próximo episódio a assistir
-userStreamingHistorySchema.static('calculateNextEpisode', async function(
-  userId: string,
-  seriesId: string
-): Promise<any> {
-  // TODO Implement this method
-  // Este método dependeria do seu serviço de séries para obter
-  // a lista completa de episódios e determinar o próximo
-  // na sequência após o último assistido
-});
+// userStreamingHistorySchema.static('calculateNextEpisode', async function(
+//   userId: string,
+//   seriesId: string
+// ): Promise<any> {
+//   // TODO Implement this method
+//   // Este método dependeria do seu serviço de séries para obter
+//   // a lista completa de episódios e determinar o próximo
+//   // na sequência após o último assistido
+// });
 
 userStreamingHistorySchema.index({ userId: 1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentId': 1 });

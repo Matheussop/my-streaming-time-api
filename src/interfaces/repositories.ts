@@ -36,7 +36,7 @@ export interface IUserStreamingHistoryRepository extends IBaseRepository<IUserSt
   findByUserId(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null>;
   addWatchHistoryEntry(userId: string | Types.ObjectId, streamingData: WatchHistoryEntry): Promise<IUserStreamingHistoryResponse>;
   getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
-  hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
+  hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, contentType: 'movie' | 'series'): Promise<boolean>;
   removeEpisodeFromHistory(
     userId: string | Types.ObjectId,
     contentId: string | Types.ObjectId,

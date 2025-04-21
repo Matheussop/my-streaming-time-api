@@ -62,8 +62,8 @@ export interface IUserStreamingHistoryModel extends Model<IUserStreamingHistoryD
   addWatchHistoryEntry(userId: string | Types.ObjectId, entry: Omit<WatchHistoryEntry, 'watchedAt'> & { watchedAt?: Date }): Promise<IUserStreamingHistoryResponse>;
   removeWatchHistoryEntry(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null>;
   removeEpisodeFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeId: string | Types.ObjectId): Promise<WatchHistoryEntry | null>;
-  getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number): Promise<IUserStreamingHistoryResponse[] | null>;
-  hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean>;
+  getWatchHistory(userId: string | Types.ObjectId, skip: number, limit: number, contentType?: 'movie' | 'series'): Promise<IUserStreamingHistoryResponse[] | null>;
+  hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, contentType: 'movie' | 'series'): Promise<boolean>;
   getWatchedEpisodesForSeries(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<EpisodeWatched[]>;
   calculateNextEpisode(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<number>;
   updateEpisodeProgress(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeDate: EpisodeWatched): Promise<WatchHistoryEntry | null>;

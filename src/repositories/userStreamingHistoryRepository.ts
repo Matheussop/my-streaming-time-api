@@ -28,8 +28,8 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.getWatchHistory(userId, skip, limit);
   }
 
-  async hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<boolean> {
-    return UserStreamingHistory.hasWatched(userId, contentId);
+  async hasWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, contentType: 'movie' | 'series'): Promise<boolean> {
+    return UserStreamingHistory.hasWatched(userId, contentId, contentType);
   }
 
   async update(id: string | Types.ObjectId, data: Partial<IUserStreamingHistoryResponse>): Promise<IUserStreamingHistoryResponse | null> {
