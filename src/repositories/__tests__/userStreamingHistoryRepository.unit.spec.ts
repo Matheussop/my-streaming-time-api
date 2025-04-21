@@ -159,7 +159,7 @@ describe('UserStreamingHistoryRepository', () => {
 
   describe('hasWatched', () => {
     it('should return true if content has been watched', async () => {
-      const result = await repository.hasWatched(mockHistory.userId.toString(), mockWatchHistoryEntry.contentId.toString());
+      const result = await repository.hasWatched(mockHistory.userId.toString(), mockWatchHistoryEntry.contentId.toString(), mockWatchHistoryEntry.contentType);
 
       expect(UserStreamingHistory.hasWatched).toHaveBeenCalledWith(
         mockHistory.userId.toString(),
@@ -171,7 +171,7 @@ describe('UserStreamingHistoryRepository', () => {
     it('should return false if content has not been watched', async () => {
       jest.spyOn(UserStreamingHistory, 'hasWatched').mockResolvedValue(false);
 
-      const result = await repository.hasWatched(mockHistory.userId.toString(), mockWatchHistoryEntry.contentId.toString());
+      const result = await repository.hasWatched(mockHistory.userId.toString(), mockWatchHistoryEntry.contentId.toString(), mockWatchHistoryEntry.contentType);
 
       expect(UserStreamingHistory.hasWatched).toHaveBeenCalledWith(
         mockHistory.userId.toString(),
