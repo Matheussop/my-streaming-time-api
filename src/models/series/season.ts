@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { IEpisode, ISeasonDocument, ISeasonModel, ISeasonResponse } from '../../interfaces/series/season';
+import { IEpisode, ISeasonDocument, ISeasonModel, ISeasonResponse, SeasonStatus } from '../../interfaces/series/season';
 import { ErrorMessages } from '../../constants/errorMessages';
 import Series from './seriesModel';
 
@@ -71,6 +71,31 @@ const seasonSchema = new Schema<ISeasonDocument>(
       type: Number,
       default: 0,
     },
+    // Novos campos para o sistema de cache inteligente
+    status: {
+      type: String,
+      enum: ['COMPLETED', 'ONGOING', 'UPCOMING', 'SPECIAL_INTEREST'],
+      default: 'UPCOMING',
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now,
+    },
+    nextEpisodeDate: {
+      type: Date,
+    },
+    releaseWeekday: {
+      type: Number,
+      min: 0,
+      max: 6,
+    },
+    accessCount: {
+      type: Number,
+      default: 0,
+    },
+    lastAccessed: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -91,6 +116,20 @@ seasonSchema.static('findBySeriesId', function(seriesId: string, skip: number, l
 
 seasonSchema.static('findEpisodesBySeasonNumber', function(seriesId: string, seasonNumber: number): Promise<ISeasonResponse | null> {
   return this.findOne({ seriesId, seasonNumber }).sort({ episodeNumber: 1 });
+});
+
+seasonSchema.static('findByStatus', function(statuses: SeasonStatus[]): Promise<ISeasonResponse[]> {
+  return this.find({ status: { $in: statuses } });
+});
+
+seasonSchema.static('findPopularSeasons', function(threshold: number = 50): Promise<ISeasonResponse[]> {
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+  
+  return this.find({
+    lastAccessed: { $gte: oneDayAgo },
+    accessCount: { $gte: threshold }
+  });
 });
 
 // Hook to update the season summary in the series when a season is saved

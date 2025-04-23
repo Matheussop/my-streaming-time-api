@@ -1,5 +1,5 @@
 import { ISeasonRepository } from "../interfaces/repositories";
-import { ISeasonResponse, ISeasonCreate, ISeasonUpdate, IEpisode } from "../interfaces/series/season";
+import { ISeasonResponse, ISeasonCreate, ISeasonUpdate, SeasonStatus } from "../interfaces/series/season";
 import Season from "../models/series/season";
 import { Types } from "mongoose";
 export class SeasonRepository implements ISeasonRepository {
@@ -12,7 +12,7 @@ export class SeasonRepository implements ISeasonRepository {
   }
 
   async findById(id: string | Types.ObjectId): Promise<ISeasonResponse | null> {
-    return Season.findById(id) as unknown as ISeasonResponse | null;
+    return Season.findById(id).lean() as unknown as ISeasonResponse | null;
   } 
 
   async findEpisodesBySeasonNumber(seriesId: string | Types.ObjectId, seasonNumber: number): Promise<ISeasonResponse | null> {
@@ -29,6 +29,18 @@ export class SeasonRepository implements ISeasonRepository {
 
   async delete(id: string | Types.ObjectId): Promise<ISeasonResponse | null> {
     return Season.findByIdAndDelete(id) as unknown as ISeasonResponse | null;
+  }
+
+  async findByStatus(statuses: SeasonStatus[]): Promise<ISeasonResponse[]> {
+    return Season.findByStatus(statuses) as unknown as ISeasonResponse[];
+  }
+
+  async findPopularSeasons(threshold: number = 50): Promise<ISeasonResponse[]> {
+    return Season.findPopularSeasons(threshold) as unknown as ISeasonResponse[];
+  }
+
+  async updateSeasonAccessCount(seasonId: string | Types.ObjectId): Promise<ISeasonResponse | null> {
+    return Season.findByIdAndUpdate(seasonId, { $inc: { accessCount: 1 }, lastAccessed: new Date() }, { new: true }) as unknown as ISeasonResponse | null;
   }
 }
 

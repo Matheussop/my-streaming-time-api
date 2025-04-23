@@ -3,8 +3,15 @@ import { ISeasonService } from "../interfaces/services";
 import { SeasonRepository } from "../repositories/seasonRepository";
 import { Types } from "mongoose";
 import { TMDBService } from "./tmdbService";
+import { SeasonCacheService } from "./seasonCacheService";
+import logger from "../config/logger";
+
 export class SeasonService implements ISeasonService {
-  constructor(private seasonRepository: SeasonRepository, private tmdbService: TMDBService) {}
+  private seasonCacheService: SeasonCacheService;
+
+  constructor(private seasonRepository: SeasonRepository, private tmdbService: TMDBService) {
+    this.seasonCacheService = new SeasonCacheService(seasonRepository, tmdbService);
+  }
 
   async getSeasons(skip: number, limit: number): Promise<ISeasonResponse[] | null> {
     return this.seasonRepository.findAll(skip, limit);
@@ -34,6 +41,27 @@ export class SeasonService implements ISeasonService {
       return updatedSeason;
     }
 
+    // Check if the data needs to be updated based on the cache policies
+    const needsUpdate = await this.seasonCacheService.shouldUpdateSeason(season);
+    if (needsUpdate) {
+      this.seasonCacheService.updateSeasonData(season)
+        .then(success => {
+          if (success) {
+            logger.info({
+              message: 'Season data updated successfully',
+              seasonId: season._id
+            });
+          }
+        })
+        .catch(error => {
+          logger.error({
+            message: 'Error updating season data asynchronously',
+            seasonId: season._id,
+            error: error.message
+          });
+        });
+    }
+
     return season;
   }
 
@@ -50,21 +78,12 @@ export class SeasonService implements ISeasonService {
   }
 
   private async updateSeasonInfo(season: ISeasonResponse): Promise<IEpisode[] | null> {
-    const episodesData = await this.tmdbService.fetchEpisodes(season.tmdbId, season.seasonNumber);
-    if (!episodesData) {
-      return null;
+    const success = await this.seasonCacheService.updateSeasonData(season);
+    if (success) {
+      const updatedSeason = await this.seasonRepository.findById(season._id);
+      return updatedSeason?.episodes || null;
     }
-    const episodes: IEpisode[] = episodesData.episodes.map((episode: any) => {
-      return {
-        episodeNumber: episode.episode_number,
-        title: episode.name,
-        plot: episode.overview,
-        durationInMinutes: episode.runtime,
-        releaseDate: episode.air_date,
-        poster: `https://image.tmdb.org/t/p/w500${episode.still_path}`,
-      };
-    });
-    return episodes;
+    return null;
   }
 }
 

@@ -1,4 +1,4 @@
-import { Model, Types } from "mongoose";
+import { Model, Types, Document } from "mongoose";
 
 export interface IEpisode {
   _id: string | Types.ObjectId;
@@ -10,6 +10,8 @@ export interface IEpisode {
   poster: string;
 }
 
+export type SeasonStatus = 'COMPLETED' | 'ONGOING' | 'UPCOMING' | 'SPECIAL_INTEREST';
+
 export interface ISeasonCreate {
   seriesId: Types.ObjectId | string;
   seasonNumber: number;
@@ -20,6 +22,12 @@ export interface ISeasonCreate {
   poster?: string;
   episodes?: IEpisode[];
   episodeCount?: number;
+  status?: SeasonStatus;
+  lastUpdated?: Date;
+  nextEpisodeDate?: Date;
+  releaseWeekday?: number;
+  accessCount?: number;
+  lastAccessed?: Date;
 }
 
 export interface ISeasonUpdate {
@@ -32,6 +40,12 @@ export interface ISeasonUpdate {
   poster?: string;
   episodes?: IEpisode[];
   episodeCount?: number;
+  status?: SeasonStatus;
+  lastUpdated?: Date;
+  nextEpisodeDate?: Date;
+  releaseWeekday?: number;
+  accessCount?: number;
+  lastAccessed?: Date;
 }
 
 export interface ISeasonResponse extends ISeasonCreate {
@@ -45,4 +59,6 @@ export type ISeasonDocument = Document & ISeasonResponse;
 export interface ISeasonModel extends Model<ISeasonDocument> {
   findBySeriesId(seriesId: string | Types.ObjectId, skip: number, limit: number): Promise<ISeasonResponse[] | null>;
   findEpisodesBySeasonNumber(seriesId: string | Types.ObjectId, seasonNumber: number): Promise<ISeasonResponse | null>;
+  findByStatus(statuses: SeasonStatus[]): Promise<ISeasonResponse[]>;
+  findPopularSeasons(threshold?: number): Promise<ISeasonResponse[]>;
 }
