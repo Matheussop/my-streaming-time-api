@@ -95,7 +95,9 @@ describe('SeasonRepository', () => {
 
   describe('findById', () => {
     it('should return season by id', async () => {
-      (Season.findById as jest.Mock).mockResolvedValue(mockSeason);
+      (Season.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockSeason)
+      });
 
       const result = await seasonRepository.findById(mockSeason._id.toString());
 
@@ -104,7 +106,9 @@ describe('SeasonRepository', () => {
     });
 
     it('should return null if season not found', async () => {
-      (Season.findById as jest.Mock).mockResolvedValue(null);
+      (Season.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(null)
+      });
 
       const result = await seasonRepository.findById(mockSeason._id.toString());
 
@@ -246,4 +250,41 @@ describe('SeasonRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('findByStatus', () => {
+    it('should return seasons by status', async () => {
+      (Season.findByStatus as jest.Mock).mockResolvedValue(mockSeasons);
+
+      const result = await seasonRepository.findByStatus(['ONGOING']);
+
+      expect(Season.findByStatus).toHaveBeenCalledWith(['ONGOING']);
+      expect(result).toEqual(mockSeasons);
+    });
+  });
+
+  describe('findPopularSeasons', () => {
+    it('should return popular seasons', async () => {
+      (Season.findPopularSeasons as jest.Mock).mockResolvedValue(mockSeasons);
+
+      const result = await seasonRepository.findPopularSeasons();
+
+      expect(Season.findPopularSeasons).toHaveBeenCalled();
+      expect(result).toEqual(mockSeasons);
+    });
+  });
+
+  describe('updateSeasonAccessCount', () => {
+    it('should update season access count', async () => {
+      (Season.findByIdAndUpdate as jest.Mock).mockResolvedValue({
+        ...mockSeason,
+        accessCount: 1
+      });
+
+      const result = await seasonRepository.updateSeasonAccessCount(mockSeason._id.toString());
+
+      expect(Season.findByIdAndUpdate).toHaveBeenCalledWith(mockSeason._id.toString(), { $inc: { accessCount: 1 }, lastAccessed: new Date() }, { new: true });
+      expect(result).toEqual({ ...mockSeason, accessCount: 1 });
+    });
+  });
+  
 }); 

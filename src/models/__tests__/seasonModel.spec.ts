@@ -27,7 +27,11 @@ describe('Season Model Unit Tests', () => {
       title: 'Test Series',
       tmdbId: 1,
       plot: 'Test plot',
+      status: 'ONGOING',
+      nextEpisodeDate: new Date(),
+      releaseWeekday: 1,
       genre: [],
+      lastAccessed: new Date(),
       url: 'http://example.com'
     });
 
@@ -43,6 +47,10 @@ describe('Season Model Unit Tests', () => {
         title: 'Season 1',
         plot: 'Season plot',
         releaseDate: '2024-01-01',
+        status: 'ONGOING',
+        nextEpisodeDate: new Date(),
+        releaseWeekday: 1,
+        lastAccessed: new Date(),
         poster: 'http://example.com/poster.jpg',
         episodes: []
       };
@@ -62,6 +70,10 @@ describe('Season Model Unit Tests', () => {
         title: 'Season 1',
         plot: 'Season plot',
         releaseDate: '2024-01-01',
+        status: 'ONGOING',
+        nextEpisodeDate: new Date(),
+        releaseWeekday: 1,
+        lastAccessed: new Date(),
         poster: 'http://example.com/poster.jpg',
         episodes: null
       };
@@ -79,6 +91,12 @@ describe('Season Model Unit Tests', () => {
         tmdbId: 1,
         seasonNumber: 1,
         title: 'Season 1',
+        plot: 'Season plot',
+        releaseDate: '2024-01-01',
+        status: 'ONGOING',
+        nextEpisodeDate: new Date(),
+        releaseWeekday: 1,
+        lastAccessed: new Date(),
         episodes: [
           {
             episodeNumber: 1,
@@ -192,6 +210,52 @@ describe('Season Model Unit Tests', () => {
       expect(season).not.toBeNull();
       expect(season!.episodes).toHaveLength(2);
       expect(season!.episodes![0].episodeNumber).toBe(1); 
+    });
+  });
+
+  describe('findByStatus Static Method', () => {
+    beforeEach(async () => {
+      await Season.create([
+        {
+          seriesId,
+          tmdbId: 1,
+          seasonNumber: 1,
+          title: 'Season 1',
+          status: 'ONGOING',
+          nextEpisodeDate: new Date(),
+          releaseWeekday: 1,
+          lastAccessed: new Date(),
+          episodes: []
+        }
+      ]);
+    });
+
+    it('should find seasons by status', async () => {
+      const seasons = await Season.findByStatus(['ONGOING']);
+      expect(seasons).toHaveLength(1);
+    });
+  });
+
+  describe('findPopularSeasons Static Method', () => {
+    beforeEach(async () => {
+      await Season.create([
+        {
+          seriesId,
+          tmdbId: 1,
+          seasonNumber: 1,
+          accessCount: 100,
+          title: 'Season 1',
+          status: 'ONGOING',
+          nextEpisodeDate: new Date(),
+          releaseWeekday: 1,
+          lastAccessed: new Date(),
+          episodes: []
+        }
+      ]);
+    });
+    it('should find popular seasons', async () => {
+      const seasons = await Season.findPopularSeasons();
+      expect(seasons).toHaveLength(1);
     });
   });
 

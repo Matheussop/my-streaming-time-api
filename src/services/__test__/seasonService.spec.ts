@@ -4,13 +4,25 @@ import { SeasonRepository } from "../../repositories/seasonRepository";
 import { SeasonService } from "../seasonService";
 import { TMDBService } from "../tmdbService";
 import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
+import { SeasonCacheService } from "../seasonCacheService";
 
 jest.mock('../tmdbService');
+jest.mock('../seasonCacheService', () => {
+  return {
+    SeasonCacheService: jest.fn().mockImplementation(() => {
+      return {
+        shouldUpdateSeason: jest.fn(),
+        updateSeasonData: jest.fn()
+      };
+    })
+  };
+});
 
 describe('SeasonService', () => {
   let seasonService: SeasonService;
   let mockSeasonRepository: jest.Mocked<SeasonRepository>;
   let mockTMDBService: jest.Mocked<TMDBService>;
+  let mockSeasonCacheService: jest.Mocked<SeasonCacheService>;
 
   const mockEpisode: IEpisode = {
     _id: generateValidObjectId() as Types.ObjectId,
@@ -37,7 +49,8 @@ describe('SeasonService', () => {
     episodes: [mockEpisode],
     tmdbId: 12345,
     createdAt: new Date('2024-03-20'),
-    updatedAt: new Date('2024-03-20')
+    updatedAt: new Date('2024-03-20'),
+    status: 'ONGOING'
   };
 
   const mockTMDBEpisodes = {
@@ -61,14 +74,24 @@ describe('SeasonService', () => {
       findEpisodesBySeasonNumber: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
+      findByStatus: jest.fn(),
+      findPopularSeasons: jest.fn(),
+      updateSeasonAccessCount: jest.fn()
     } as unknown as jest.Mocked<SeasonRepository>;
 
     mockTMDBService = {
       fetchEpisodes: jest.fn()
     } as unknown as jest.Mocked<TMDBService>;
 
+    // Garantir que o mock seja redefinido entre os testes
+    jest.clearAllMocks();
+    
+    // Criar o serviço
     seasonService = new SeasonService(mockSeasonRepository, mockTMDBService);
+    
+    // Obter o mock do seasonCacheService que foi criado dentro do construtor
+    mockSeasonCacheService = (SeasonCacheService as unknown as jest.Mock).mock.results[0].value;
   });
 
   describe('getSeasons', () => {
@@ -108,6 +131,8 @@ describe('SeasonService', () => {
   describe('getEpisodesBySeasonNumber', () => {
     it('should return episodes for a season', async () => {
       mockSeasonRepository.findEpisodesBySeasonNumber.mockResolvedValue(mockSeason);
+      mockSeasonCacheService.shouldUpdateSeason.mockResolvedValue(false);
+
       const result = await seasonService.getEpisodesBySeasonNumber(
         mockSeriesId.toString(),
         mockSeason.seasonNumber
@@ -117,6 +142,36 @@ describe('SeasonService', () => {
         mockSeriesId,
         mockSeason.seasonNumber
       );
+      expect(mockSeasonCacheService.shouldUpdateSeason).toHaveBeenCalledWith(mockSeason);
+      expect(mockSeasonCacheService.updateSeasonData).not.toHaveBeenCalled();
+    });
+
+    it('should trigger cache update if shouldUpdateSeason returns true', async () => {
+      mockSeasonRepository.findEpisodesBySeasonNumber.mockResolvedValue(mockSeason);
+      mockSeasonCacheService.shouldUpdateSeason.mockResolvedValue(true);
+      mockSeasonCacheService.updateSeasonData.mockResolvedValue(true);
+
+      const result = await seasonService.getEpisodesBySeasonNumber(
+        mockSeriesId.toString(),
+        mockSeason.seasonNumber
+      );
+      
+      expect(result).toEqual(mockSeason);
+      expect(mockSeasonCacheService.shouldUpdateSeason).toHaveBeenCalledWith(mockSeason);
+      expect(mockSeasonCacheService.updateSeasonData).toHaveBeenCalledWith(mockSeason);
+    });
+
+    it('should be able to log errors if updateSeasonData fails', async () => {
+      mockSeasonRepository.findEpisodesBySeasonNumber.mockResolvedValue(mockSeason);
+      mockSeasonCacheService.shouldUpdateSeason.mockResolvedValue(true);
+      mockSeasonCacheService.updateSeasonData.mockResolvedValue(true);
+      mockSeasonCacheService.updateSeasonData.mockRejectedValue(new Error('Error'));
+      const result = await seasonService.getEpisodesBySeasonNumber(
+        mockSeriesId.toString(),
+        mockSeason.seasonNumber
+      );
+      expect(result).toEqual(mockSeason);
+      expect(mockSeasonCacheService.updateSeasonData).toHaveBeenCalledWith(mockSeason);
     });
 
     it('should update season info if episodes are missing but episodeCount exists', async () => {
@@ -127,7 +182,8 @@ describe('SeasonService', () => {
       };
 
       mockSeasonRepository.findEpisodesBySeasonNumber.mockResolvedValue(seasonWithoutEpisodes);
-      mockTMDBService.fetchEpisodes.mockResolvedValue(mockTMDBEpisodes);
+      mockSeasonCacheService.updateSeasonData.mockResolvedValue(true);
+      mockSeasonRepository.findById.mockResolvedValue(mockSeason);
       mockSeasonRepository.update.mockResolvedValue(mockSeason);
 
       const result = await seasonService.getEpisodesBySeasonNumber(
@@ -136,29 +192,15 @@ describe('SeasonService', () => {
       );
 
       expect(result).toEqual(mockSeason);
-      expect(mockTMDBService.fetchEpisodes).toHaveBeenCalledWith(
-        mockSeason.tmdbId,
-        mockSeason.seasonNumber
-      );
+      expect(mockSeasonCacheService.updateSeasonData).toHaveBeenCalledWith(seasonWithoutEpisodes);
+      expect(mockSeasonRepository.findById).toHaveBeenCalledWith(seasonWithoutEpisodes._id);
       expect(mockSeasonRepository.update).toHaveBeenCalledWith(
         mockSeasonId,
-        expect.objectContaining({
-          episodes: expect.arrayContaining([
-            expect.objectContaining({
-              episodeNumber: mockEpisode.episodeNumber,
-              title: mockEpisode.title,
-              plot: mockEpisode.plot,
-              durationInMinutes: mockEpisode.durationInMinutes,
-              releaseDate: mockEpisode.releaseDate,
-              poster: `https://image.tmdb.org/t/p/w500${mockEpisode.poster}`
-            })
-          ])
-        })
+        { episodes: mockSeason.episodes }
       );
     });
 
-    it('should return null if episodes are not found in TMDB', async () => {
-      const updateSeasonInfoSpy = jest.spyOn(seasonService as any, 'updateSeasonInfo');
+    it('should return null if episodes are not found in cache update', async () => {
       const seasonWithoutEpisodes = {
         ...mockSeason,
         episodes: [],
@@ -166,13 +208,34 @@ describe('SeasonService', () => {
       };
 
       mockSeasonRepository.findEpisodesBySeasonNumber.mockResolvedValue(seasonWithoutEpisodes);
-      mockTMDBService.fetchEpisodes.mockResolvedValue(null);
+      mockSeasonCacheService.updateSeasonData.mockResolvedValue(false);
+
       const result = await seasonService.getEpisodesBySeasonNumber(
         mockSeriesId.toString(),
         mockSeason.seasonNumber
       );
-      expect(updateSeasonInfoSpy).toHaveBeenCalledWith(seasonWithoutEpisodes);
+      
       expect(result).toBeNull();
+      expect(mockSeasonCacheService.updateSeasonData).toHaveBeenCalledWith(seasonWithoutEpisodes);
+    });
+
+    it('should return null if findById returns null', async () => {
+      const seasonWithoutEpisodes = {
+        ...mockSeason,
+        episodes: [],
+        episodeCount: 10
+      };
+
+      mockSeasonRepository.findEpisodesBySeasonNumber.mockResolvedValue(seasonWithoutEpisodes);
+      mockSeasonCacheService.updateSeasonData.mockResolvedValue(true);
+      mockSeasonRepository.findById.mockResolvedValue(null);
+      const result = await seasonService.getEpisodesBySeasonNumber(
+        mockSeriesId.toString(),
+        mockSeason.seasonNumber
+      );
+      
+      expect(result).toBeNull();
+      expect(mockSeasonCacheService.updateSeasonData).toHaveBeenCalledWith(seasonWithoutEpisodes);
     });
 
     it('should return null if season is not found', async () => {
