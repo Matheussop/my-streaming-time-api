@@ -155,7 +155,6 @@ export class SeasonCacheService {
       } else {
         updatedEpisodes = newEpisodes;
       }
-      console.log('updatedEpisodes', updatedEpisodes);
       // Determine the next season status
       const newStatus = this.determineSeasonStatus(season, updatedEpisodes);
       
@@ -221,8 +220,6 @@ export class SeasonCacheService {
     const weekdayCounts = new Map<number, number>();
     
     for (const episode of releasedEpisodes) {
-      if (!episode.releaseDate) continue;
-      
       const weekday = new Date(episode.releaseDate).getDay();
       weekdayCounts.set(weekday, (weekdayCounts.get(weekday) || 0) + 1);
     }
