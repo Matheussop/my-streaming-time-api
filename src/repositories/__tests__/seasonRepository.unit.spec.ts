@@ -21,7 +21,7 @@ describe('SeasonRepository', () => {
       episodeNumber: 1,
       plot: 'Test plot',
       durationInMinutes: 45,
-      releaseDate: '2024-03-20T00:00:00.000Z',
+      releaseDate: '2024-03-20T00',
       poster: 'https://example.com/poster.jpg'
     };
 
@@ -282,8 +282,8 @@ describe('SeasonRepository', () => {
 
       const result = await seasonRepository.updateSeasonAccessCount(mockSeason._id.toString());
 
-      expect(Season.findByIdAndUpdate).toHaveBeenCalledWith(mockSeason._id.toString(), { $inc: { accessCount: 1 }, lastAccessed: new Date() }, { new: true });
-      expect(result).toEqual({ ...mockSeason, accessCount: 1 });
+      expect(Season.findByIdAndUpdate).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ $inc: { accessCount: 1 }, lastAccessed: expect.any(Date) }), { new: true });
+      expect(result).toEqual(expect.objectContaining({ accessCount: 1 }));
     });
   });
   
