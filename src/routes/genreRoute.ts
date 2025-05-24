@@ -107,15 +107,21 @@ router.post('/', validate(genreCreateSchema, 'body'), controller.createGenre);
  *       content:
  *         application/json:
  *           schema:
- *             type: array of object
+ *             type: object
  *             properties:
- *               genre: 
- *                type: array
- *                items: 
- *                  name:
- *                    type: string
- *                  categories:
- *                    type: string
+ *               genres:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       required: true
+ *                     id:
+ *                       type: number
+ *                       required: true
+ *                     poster:
+ *                       type: string
  *     responses:
  *       201:
  *         description: Genre created successfully

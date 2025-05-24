@@ -69,7 +69,7 @@ export class GenreController {
       path: req.path,
     })
 
-    const genresCreated = await this.genreService.createGenre(req.body);
+    const genresCreated = await this.genreService.createGenre(req.body.genres);
     res.status(201).json({ message: "Genres created", genresCreated })
   });
 
