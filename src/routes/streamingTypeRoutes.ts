@@ -102,8 +102,21 @@ router.get('/name/:name', validate(streamingTypeByNameParamSchema, 'params'), co
  *             properties:
  *               name:
  *                 type: string
- *               categories:
+ *               supportedGenres:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                     name:
+ *                       type: string
+ *                     poster:
+ *                       type: string
+ *               description:
  *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Streaming type created successfully
@@ -165,10 +178,17 @@ router.put('/:id',
  *           schema:
  *             type: object
  *             properties:
- *               name:
- *                 type: string
- *               categories:
- *                 type: string
+ *               genres:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                     name:
+ *                       type: string
+ *                     poster:
+ *                       type: string
  *     responses:
  *       200:
  *         description: Streaming type updated successfully

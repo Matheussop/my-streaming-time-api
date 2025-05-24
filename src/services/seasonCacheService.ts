@@ -99,7 +99,7 @@ export class SeasonCacheService {
   
   async updateSeasonData(season: ISeasonResponse): Promise<boolean> {
     try {
-      if (!season.tmdbId || !season.seasonNumber) {
+      if (!season.tmdbId ) {
         logger.error({
           message: 'Missing required season data for update',
           seasonId: season._id

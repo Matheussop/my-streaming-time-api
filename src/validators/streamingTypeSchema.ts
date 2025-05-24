@@ -27,7 +27,7 @@ export const streamingTypeByNameParamSchema = z.object({
 export type StreamingTypeByNameParamSchemaType = z.infer<typeof streamingTypeByNameParamSchema>;
 
 export const streamingTypeAddGenreSchema = z.object({
-  supportedGenres: z.array(genreReferenceSchema),
+  genres: z.array(genreReferenceSchema),
 });
 
 export type StreamingTypeAddGenreSchemaType = z.infer<typeof streamingTypeAddGenreSchema>;
