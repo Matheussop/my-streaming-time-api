@@ -33,14 +33,25 @@ export class TMDBService {
   }
 
   async updateData(repository: any, id: string | Types.ObjectId, tmdbData: any): Promise<void> {
-    const updatedData = {
-      durationTime: tmdbData.runtime,
-      status: tmdbData.status,
-      // Add more fields if necessary
-    };
-
     try {
-      await repository.update(id, updatedData);
+      const updateData: any = {};
+      
+      if (tmdbData.runtime) {
+        updateData.durationTime = tmdbData.runtime;
+      }
+      
+      if (tmdbData.status) {
+        updateData.status = tmdbData.status;
+      }
+      
+      if (tmdbData.videos && tmdbData.videos.results) {
+        const trailer = tmdbData.videos.results.find((video: any) => video.type === 'Trailer');
+        if (trailer) {
+          updateData.videoUrl = trailer.key;
+        }
+      }
+      
+      await repository.update(id, updateData);
     } catch (error: any) {
       logger.error({
         message: 'Error updating data',
@@ -74,6 +85,58 @@ export class TMDBService {
         error: error.message,
       });
       throw new StreamingServiceError('Error fetching episodes', 500);
+    }
+  }
+
+  async fetchMovieGenres(): Promise<any[]> {
+    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
+      throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
+    }
+    
+    const url = 'https://api.themoviedb.org/3/genre/movie/list?language=en-US';
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`
+      }
+    }
+    
+    try {
+      const response = await axios.get(url, options);
+      return response.data.genres || [];
+    } catch (error: any) {
+      logger.error({
+        message: 'Error fetching movie genres from TMDB',
+        error: error.message,
+      });
+      throw new StreamingServiceError('Error fetching movie genres from TMDB', 500);
+    }
+  }
+
+  async fetchTVGenres(): Promise<any[]> {
+    if (!process.env.TMDB_Bearer_Token || process.env.TMDB_Bearer_Token === '') {
+      throw new StreamingServiceError('Invalid TMDB_Bearer_Token', 401);
+    }
+    
+    const url = 'https://api.themoviedb.org/3/genre/tv/list?language=en-US';
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${process.env.TMDB_Bearer_Token}`
+      }
+    }
+    
+    try {
+      const response = await axios.get(url, options);
+      return response.data.genres || [];
+    } catch (error: any) {
+      logger.error({
+        message: 'Error fetching TV genres from TMDB',
+        error: error.message,
+      });
+      throw new StreamingServiceError('Error fetching TV genres from TMDB', 500);
     }
   }
 }

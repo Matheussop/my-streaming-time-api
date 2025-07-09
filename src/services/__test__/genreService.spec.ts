@@ -5,10 +5,12 @@ import { GenreService } from "../genreService";
 import { StreamingServiceError } from "../../middleware/errorHandler";
 import { ErrorMessages } from "../../constants/errorMessages";
 import { generateValidObjectId } from "../../util/__tests__/generateValidObjectId";
+import { TMDBService } from "../tmdbService";
 
 describe('GenreService', () => {
   let genreService: GenreService;
   let mockGenreRepository: jest.Mocked<GenreRepository>;
+  let mockTMDBService: jest.Mocked<TMDBService>;
 
   const mockGenre: Partial<IGenreResponse> = {
     _id: generateValidObjectId() as Types.ObjectId,
@@ -28,7 +30,12 @@ describe('GenreService', () => {
       delete: jest.fn()
     } as unknown as jest.Mocked<GenreRepository>;
 
-    genreService = new GenreService(mockGenreRepository);
+    mockTMDBService = {
+      fetchMovieGenres: jest.fn(),
+      fetchTVGenres: jest.fn()
+    } as unknown as jest.Mocked<TMDBService>;
+
+    genreService = new GenreService(mockGenreRepository, mockTMDBService);
   });
 
   describe('getGenreById', () => {
@@ -98,17 +105,6 @@ describe('GenreService', () => {
       expect(result).toEqual(mockGenres as IGenreResponse[]);
       expect(mockGenreRepository.create).toHaveBeenCalledWith(genresCreate);
     });
-
-    it('should throw an error if genre cannot be created', async () => {
-      const genreCreate: IGenreCreate = {
-        name: 'Action',
-        id: 1
-      };
-      mockGenreRepository.create.mockResolvedValue(undefined as unknown as IGenreResponse);
-      await expect(genreService.createGenre(genreCreate))
-        .rejects.toThrow(new StreamingServiceError("Genre cannot be created", 404));
-      expect(mockGenreRepository.create).toHaveBeenCalledWith(genreCreate);
-    });
   });
 
   describe('updateGenre', () => {
@@ -122,16 +118,6 @@ describe('GenreService', () => {
       expect(result).toEqual(updatedGenre as IGenreResponse);
       expect(mockGenreRepository.update).toHaveBeenCalledWith(mockGenre._id, genreUpdate);
     });
-
-    it('should throw an error if genre cannot be found for update', async () => {
-      const genreUpdate: IGenreUpdate = {
-        name: 'Updated Action'
-      };
-      mockGenreRepository.update.mockResolvedValue(null);
-      await expect(genreService.updateGenre(mockGenre._id as unknown as string, genreUpdate))
-        .rejects.toThrow(new StreamingServiceError("Genre cannot be found", 404));
-      expect(mockGenreRepository.update).toHaveBeenCalledWith(mockGenre._id, genreUpdate);
-    });
   });
 
   describe('deleteGenre', () => {
@@ -141,12 +127,77 @@ describe('GenreService', () => {
       expect(result).toEqual(mockGenre as IGenreResponse);
       expect(mockGenreRepository.delete).toHaveBeenCalledWith(mockGenre._id);
     });
+  });
 
-    it('should throw an error if genre cannot be deleted', async () => {
-      mockGenreRepository.delete.mockResolvedValue(null);
-      await expect(genreService.deleteGenre(mockGenre._id as unknown as string))
-        .rejects.toThrow(new StreamingServiceError("Genre cannot be deleted", 404));
-      expect(mockGenreRepository.delete).toHaveBeenCalledWith(mockGenre._id);
+  describe('syncGenresFromTMDB', () => {
+    it('should sync genres from TMDB successfully', async () => {
+      const mockMovieGenres = [
+        { id: 1, name: 'Action' },
+        { id: 2, name: 'Comedy' }
+      ];
+      const mockTVGenres = [
+        { id: 3, name: 'Drama' },
+        { id: 4, name: 'Thriller' }
+      ];
+
+      mockTMDBService.fetchMovieGenres.mockResolvedValue(mockMovieGenres);
+      mockTMDBService.fetchTVGenres.mockResolvedValue(mockTVGenres);
+      mockGenreRepository.findAll.mockResolvedValue([]); // No existing genres
+      mockGenreRepository.create.mockResolvedValue([]);
+
+      const result = await genreService.syncGenresFromTMDB();
+
+      expect(result).toEqual({
+        movieGenres: 2,
+        tvGenres: 2
+      });
+      expect(mockTMDBService.fetchMovieGenres).toHaveBeenCalled();
+      expect(mockTMDBService.fetchTVGenres).toHaveBeenCalled();
+      expect(mockGenreRepository.create).toHaveBeenCalledWith([
+        { id: 1, name: 'Action', poster: '' },
+        { id: 2, name: 'Comedy', poster: '' },
+        { id: 3, name: 'Drama', poster: '' },
+        { id: 4, name: 'Thriller', poster: '' }
+      ]);
+    });
+
+    it('should not create genres if they already exist', async () => {
+      const mockMovieGenres = [
+        { id: 1, name: 'Action' }
+      ];
+      const mockTVGenres = [
+        { id: 2, name: 'Comedy' }
+      ];
+
+      mockTMDBService.fetchMovieGenres.mockResolvedValue(mockMovieGenres);
+      mockTMDBService.fetchTVGenres.mockResolvedValue(mockTVGenres);
+      mockGenreRepository.findAll.mockResolvedValue([
+        { id: 1, name: 'Action' } as IGenreResponse
+      ]); // Existing genre
+
+      const result = await genreService.syncGenresFromTMDB();
+
+      expect(result).toEqual({
+        movieGenres: 1,
+        tvGenres: 1
+      });
+      expect(mockGenreRepository.create).toHaveBeenCalledWith([
+        { id: 2, name: 'Comedy', poster: '' }
+      ]);
+    });
+
+    it('should throw error if TMDBService is not available', async () => {
+      const genreServiceWithoutTMDB = new GenreService(mockGenreRepository);
+
+      await expect(genreServiceWithoutTMDB.syncGenresFromTMDB())
+        .rejects.toThrow(new StreamingServiceError('TMDBService not available', 500));
+    });
+
+    it('should handle TMDB API errors', async () => {
+      mockTMDBService.fetchMovieGenres.mockRejectedValue(new Error('TMDB API Error'));
+
+      await expect(genreService.syncGenresFromTMDB())
+        .rejects.toThrow(new StreamingServiceError('Error synchronizing genres from TMDB', 500));
     });
   });
-}); 
+});

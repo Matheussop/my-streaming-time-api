@@ -1,5 +1,5 @@
-import { TMDBService } from '../tmdbService';
 import axios from 'axios';
+import { TMDBService } from '../tmdbService';
 import { StreamingServiceError } from '../../middleware/errorHandler';
 import { ErrorMessages } from '../../constants/errorMessages';
 import { Types } from 'mongoose';
@@ -62,6 +62,22 @@ describe('TMDBService', () => {
         season_number: 1,
         episode_number: 1
       }
+    ]
+  };
+
+  const mockMovieGenresResponse = {
+    genres: [
+      { id: 1, name: 'Action' },
+      { id: 2, name: 'Comedy' },
+      { id: 3, name: 'Drama' }
+    ]
+  };
+
+  const mockTVGenresResponse = {
+    genres: [
+      { id: 4, name: 'Crime' },
+      { id: 5, name: 'Mystery' },
+      { id: 6, name: 'Thriller' }
     ]
   };
 
@@ -138,8 +154,24 @@ describe('TMDBService', () => {
 
       expect(mockRepository.update).toHaveBeenCalledWith('123', {
         durationTime: mockMovieResponse.runtime,
-        status: mockMovieResponse.status
+        status: mockMovieResponse.status,
+        videoUrl: 'test-key'
       });
+    });
+
+    it('should update data without optional fields', async () => {
+      const mockRepository = {
+        update: jest.fn().mockResolvedValue(true)
+      };
+
+      const dataWithoutOptional = {
+        id: 1,
+        title: 'Test Movie'
+      };
+
+      await tmdbService.updateData(mockRepository, '123', dataWithoutOptional);
+
+      expect(mockRepository.update).toHaveBeenCalledWith('123', {});
     });
 
     it('should throw error if update fails', async () => {
@@ -183,6 +215,90 @@ describe('TMDBService', () => {
 
       await expect(tmdbService.fetchEpisodes(1, 1))
         .rejects.toThrow(new StreamingServiceError('Error fetching episodes', 500));
+    });
+  });
+
+  describe('fetchMovieGenres', () => {
+    it('should fetch movie genres successfully', async () => {
+      mockedAxios.get.mockResolvedValue({ data: mockMovieGenresResponse });
+
+      const result = await tmdbService.fetchMovieGenres();
+
+      expect(result).toEqual(mockMovieGenresResponse.genres);
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        'https://api.themoviedb.org/3/genre/movie/list?language=en-US',
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            Authorization: 'Bearer valid-token'
+          }
+        }
+      );
+    });
+
+    it('should return empty array if no genres in response', async () => {
+      mockedAxios.get.mockResolvedValue({ data: {} });
+
+      const result = await tmdbService.fetchMovieGenres();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error if TMDB token is invalid', async () => {
+      process.env.TMDB_Bearer_Token = '';
+
+      await expect(tmdbService.fetchMovieGenres())
+        .rejects.toThrow(new StreamingServiceError('Invalid TMDB_Bearer_Token', 401));
+    });
+
+    it('should throw error if API call fails', async () => {
+      mockedAxios.get.mockRejectedValue(new Error('API call failed'));
+
+      await expect(tmdbService.fetchMovieGenres())
+        .rejects.toThrow(new StreamingServiceError('Error fetching movie genres from TMDB', 500));
+    });
+  });
+
+  describe('fetchTVGenres', () => {
+    it('should fetch TV genres successfully', async () => {
+      mockedAxios.get.mockResolvedValue({ data: mockTVGenresResponse });
+
+      const result = await tmdbService.fetchTVGenres();
+
+      expect(result).toEqual(mockTVGenresResponse.genres);
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        'https://api.themoviedb.org/3/genre/tv/list?language=en-US',
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            Authorization: 'Bearer valid-token'
+          }
+        }
+      );
+    });
+
+    it('should return empty array if no genres in response', async () => {
+      mockedAxios.get.mockResolvedValue({ data: {} });
+
+      const result = await tmdbService.fetchTVGenres();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error if TMDB token is invalid', async () => {
+      process.env.TMDB_Bearer_Token = '';
+
+      await expect(tmdbService.fetchTVGenres())
+        .rejects.toThrow(new StreamingServiceError('Invalid TMDB_Bearer_Token', 401));
+    });
+
+    it('should throw error if API call fails', async () => {
+      mockedAxios.get.mockRejectedValue(new Error('API call failed'));
+
+      await expect(tmdbService.fetchTVGenres())
+        .rejects.toThrow(new StreamingServiceError('Error fetching TV genres from TMDB', 500));
     });
   });
 }); 

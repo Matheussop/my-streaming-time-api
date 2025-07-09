@@ -63,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced validation for Bearer token format
   - Improved error messages for authentication failures
   - Better handling of malformed authorization headers
+-  Now, when the application is started for the first time, it checks if there are any genres in the database
+  - Synchronization: If there are no genres, the application automatically fetches all movie and TV genres from TMDB
+  - Storage: The genres are saved in the local database with the same IDs as TMDB to maintain compatibility
+
 
 ### Changed
 - User Streaming History: Enhanced data model and operations

@@ -86,4 +86,5 @@ export interface IGenreService {
   createGenre(genre: IGenreCreate | IGenreCreate[]): Promise<IGenreResponse | IGenreResponse[]>;
   updateGenre(id: string | Types.ObjectId, genre: IGenreUpdate): Promise<IGenreResponse | null>;
   deleteGenre(genreId: string | Types.ObjectId): Promise<IGenreResponse | null>;
+  syncGenresFromTMDB(): Promise<{ movieGenres: number, tvGenres: number }>;
 }

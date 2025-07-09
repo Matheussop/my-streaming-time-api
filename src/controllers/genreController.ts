@@ -101,4 +101,18 @@ export class GenreController {
     const genre = await this.genreService.deleteGenre(id);
     res.status(200).json({ message: "Genre Deleted", genre});
   });
+
+  syncGenresFromTMDB = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Syncing genres from TMDB',
+      method: req.method,
+      path: req.path,
+    });
+
+    const result = await this.genreService.syncGenresFromTMDB();
+    res.status(200).json({ 
+      message: "Genres synchronized from TMDB", 
+      result 
+    });
+  });
 }

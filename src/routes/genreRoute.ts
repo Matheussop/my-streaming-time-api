@@ -6,11 +6,12 @@ import { validate } from '../middleware/validationMiddleware';
 import { paginationSchema } from '../validators/common';
 import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { createManyGenreSchema, genreByNameSchema, genreCreateSchema, genreUpdateSchema } from '../validators';
-
+import { TMDBService } from '../services/tmdbService';
 
 const router = Router();
 const repository = new GenreRepository();
-const service = new GenreService(repository);
+const tmdbService = new TMDBService();
+const service = new GenreService(repository, tmdbService);
 const controller = new GenreController(service);
 /**
  * @swagger
@@ -30,6 +31,20 @@ const controller = new GenreController(service);
  *         description: A list of genres
  */
 router.get('/', validate(paginationSchema), controller.getAllGenre);
+
+/**
+ * @swagger
+ * /genre/sync:
+ *   post:
+ *     summary: Synchronize genres from TMDB
+ *     tags: [Genres]
+ *     responses:
+ *       200:
+ *         description: Genres synchronized successfully
+ *       500:
+ *         description: Error synchronizing genres
+ */
+router.post('/sync', controller.syncGenresFromTMDB);
 
 /**
  * @swagger
