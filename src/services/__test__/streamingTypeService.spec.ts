@@ -497,4 +497,56 @@ describe('StreamingTypeService', () => {
       await expect(streamingTypeService.changeCover()).rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_NOT_FOUND, 404));
     });
   });
+
+  describe('syncStreamingTypesWithGenres', () => {
+    it('should sync streaming types with genres successfully', async () => {
+      const mockGenres = [
+        { _id: new Types.ObjectId(), id: 1, name: 'Action', poster: '', createdAt: new Date(), updatedAt: new Date() },
+        { _id: new Types.ObjectId(), id: 2, name: 'Comedy', poster: '', createdAt: new Date(), updatedAt: new Date() }
+      ];
+
+      mockGenreRepository!.findAll.mockResolvedValue(mockGenres);
+      mockRepository.findByName.mockResolvedValue(null); // No existing streaming types
+      mockRepository.create.mockResolvedValue(mockStreamingType);
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+
+      const result = await streamingTypeService.syncStreamingTypesWithGenres();
+
+      expect(result).toEqual({ created: 3, updated: 0 });
+      expect(mockGenreRepository!.findAll).toHaveBeenCalledWith(0, 1000);
+      expect(mockRepository.findByName).toHaveBeenCalledTimes(3);
+      expect(mockRepository.create).toHaveBeenCalledTimes(3);
+    });
+
+    it('should update existing streaming types with new genres', async () => {
+      const mockGenres = [
+        { _id: new Types.ObjectId(), id: 1, name: 'Action', poster: '', createdAt: new Date(), updatedAt: new Date() }
+      ];
+
+      mockGenreRepository!.findAll.mockResolvedValue(mockGenres);
+      mockRepository.findByName.mockResolvedValue(mockStreamingType); // Existing streaming type
+      mockRepository.update.mockResolvedValue(mockStreamingType);
+
+      const result = await streamingTypeService.syncStreamingTypesWithGenres();
+
+      expect(result).toEqual({ created: 0, updated: 3 });
+      expect(mockRepository.update).toHaveBeenCalledTimes(3);
+    });
+
+    it('should throw error when no genres are found', async () => {
+      mockGenreRepository!.findAll.mockResolvedValue([]);
+
+      await expect(streamingTypeService.syncStreamingTypesWithGenres())
+        .rejects
+        .toThrow('No genres found. Please sync genres first.');
+    });
+
+    it('should throw error when GenreRepository is not available', async () => {
+      const serviceWithoutGenreRepo = new StreamingTypeService(mockRepository);
+
+      await expect(serviceWithoutGenreRepo.syncStreamingTypesWithGenres())
+        .rejects
+        .toThrow('GenreRepository not available');
+    });
+  });
 });

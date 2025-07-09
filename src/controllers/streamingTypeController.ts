@@ -131,4 +131,18 @@ export class StreamingTypeController {
     await this.service.changeCover();
     res.status(204).send(Messages.COVER_CHANGED_SUCCESSFULLY);
   });
+
+  syncStreamingTypesWithGenres = catchAsync(async (req: Request, res: Response) => {
+    logger.info({
+      message: 'Synchronizing streaming types with genres',
+      method: req.method,
+      path: req.path,
+    });
+
+    const result = await this.service.syncStreamingTypesWithGenres();
+    res.status(200).json({
+      message: 'Streaming types synchronized successfully',
+      result
+    });
+  });
 }

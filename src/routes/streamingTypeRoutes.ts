@@ -244,4 +244,18 @@ router.delete('/:id',
   validateObjectId('params'),
   controller.deleteStreamingType);
 
+/**
+ * @swagger
+ * /streamingTypes/sync:
+ *   post:
+ *     summary: Synchronize streaming types with genres
+ *     tags: [StreamingTypes]
+ *     responses:
+ *       200:
+ *         description: Streaming types synchronized successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/sync', controller.syncStreamingTypesWithGenres);
+
 export default router;

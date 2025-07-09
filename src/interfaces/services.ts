@@ -43,6 +43,7 @@ export interface IStreamingTypeService {
   addGenreToStreamingType(id: string, genres: IGenreReference[]): Promise<IStreamingTypeResponse>;
   deleteStreamingType(id: string | Types.ObjectId): Promise<IStreamingTypeResponse | null>;
   deleteGenresFromStreamingTypeByName(id: string, genresName: string[]): Promise<IStreamingTypeResponse | null>;
+  syncStreamingTypesWithGenres(): Promise<{ created: number, updated: number }>;
 }
 
 export interface IContentService {

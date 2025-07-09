@@ -290,4 +290,77 @@ export class StreamingTypeService implements IStreamingTypeService {
       throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_GENRE_NAME_EXISTS(errors.join(', ')), 400);
     }
   }
+
+  /**
+   * Synchronizes streamingTypes with available genres
+   * Creates default streamingTypes and links them with existing genres
+   */
+  async syncStreamingTypesWithGenres(): Promise<{ created: number, updated: number }> {
+    if (!this.genreRepository) {
+      throw new StreamingServiceError('GenreRepository not available', 500);
+    }
+
+    try {
+      logger.info('Starting streaming types synchronization with genres...');
+
+      const allGenres = await this.genreRepository.findAll(0, 1000);
+      
+      if (allGenres.length === 0) {
+        logger.warn('No genres found. Please sync genres first.');
+        return { created: 0, updated: 0 };
+      }
+
+      const defaultStreamingTypes = [
+        {
+          name: 'movies',
+          description: 'Streaming service focused on movies',
+          supportedGenres: allGenres.map(genre => ({
+            id: genre.id,
+            name: genre.name,
+            poster: genre.poster || '',
+            _id: genre._id
+          }))
+        },
+        {
+          name: 'series',
+          description: 'Streaming service focused on TV series',
+          supportedGenres: allGenres.map(genre => ({
+            id: genre.id,
+            name: genre.name,
+            poster: genre.poster || '',
+            _id: genre._id
+          }))
+        }
+      ];
+
+      let created = 0;
+      let updated = 0;
+
+      for (const streamingTypeData of defaultStreamingTypes) {
+        const existingStreamingType = await this.repository.findByName(streamingTypeData.name);
+        
+        if (existingStreamingType) {
+          await this.repository.update(existingStreamingType._id, {
+            supportedGenres: streamingTypeData.supportedGenres
+          });
+          updated++;
+          logger.info(`Updated streaming type: ${streamingTypeData.name}`);
+        } else {
+          await this.repository.create(streamingTypeData);
+          created++;
+          logger.info(`Created streaming type: ${streamingTypeData.name}`);
+        }
+      }
+
+      logger.info(`Streaming types synchronization completed. Created: ${created}, Updated: ${updated}`);
+      return { created, updated };
+
+    } catch (error: any) {
+      logger.error({
+        message: 'Error synchronizing streaming types with genres',
+        error: error.message,
+      });
+      throw new StreamingServiceError('Error synchronizing streaming types with genres', 500);
+    }
+  }
 }
