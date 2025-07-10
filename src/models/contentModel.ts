@@ -137,7 +137,6 @@ contentSchema.static('findByGenre', function (genreName: string, skip: number, l
 contentSchema.index({ title: 'text', plot: 'text' });
 contentSchema.index({ 'genre._id': 1 });
 contentSchema.index({ tmdbId: 1 });
-contentSchema.index({ title: 1, contentType: 1 }, { unique: true });
 
 const Content = mongoose.model<IContentDocument, IContentModel>('Content', contentSchema);
 
