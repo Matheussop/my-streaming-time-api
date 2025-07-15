@@ -6,7 +6,7 @@ import { ErrorMessages } from '../constants/errorMessages';
 
 interface IUserSchema extends Document, IUserResponse {
   _id: string | Types.ObjectId;
-  password: string;
+  password?: string;
   correctPassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
@@ -16,6 +16,7 @@ interface IUserSchema extends Document, IUserResponse {
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   passwordChangedAt?: Date;
+  __v?: number;
 }
 
 interface IUserMethods {
@@ -181,7 +182,7 @@ userSchema.static('findByEmail', function (email: string) {
 userSchema.methods.correctPassword = async function(
   candidatePassword: string
 ): Promise<boolean> {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, this.password || '');
 };
 
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp: number): boolean {

@@ -40,6 +40,7 @@ export interface IContentResponse extends Omit<IContentCreate, "genre"> {
   contentType?: 'movie' | 'series';
   createdAt: Date;
   updatedAt: Date;
+  __v?: number;
 }
 
 

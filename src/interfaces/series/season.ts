@@ -52,6 +52,7 @@ export interface ISeasonResponse extends ISeasonCreate {
   _id: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  __v?: number;
 }
 
 export type ISeasonDocument = Document & ISeasonResponse;

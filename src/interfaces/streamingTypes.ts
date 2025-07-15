@@ -24,6 +24,7 @@ export interface IStreamingTypeResponse extends IStreamingTypeCreate {
   _id: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  __v?: number;
 }
 
 export type IStreamingTypeDocument = IStreamingTypeResponse & Document;

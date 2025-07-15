@@ -53,6 +53,7 @@ export interface IUserStreamingHistoryResponse extends IUserStreamingHistoryCrea
   _id: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  __v?: number;
 }
 
 export type IUserStreamingHistoryDocument = IUserStreamingHistoryResponse & Document;
