@@ -269,3 +269,50 @@ ISC
 
 Matheus Spindula
 
+## 🚀 Deploy em Produção
+
+> **Nota:** A URL de produção não está listada publicamente para evitar uso indevido, já que este é um projeto aberto. Para rodar localmente ou em produção, siga as instruções abaixo e utilize sua própria instância da API.
+
+Você pode consumir todos os endpoints REST a partir da URL configurada no seu ambiente de deploy.
+
+### Como rodar o frontend localmente usando a API de produção
+
+No seu frontend, aponte as requisições para a URL da sua instância da API.  
+Exemplo de configuração de ambiente no frontend:
+```
+REACT_APP_API_URL=https://sua-api-no-render-ou-outro-servico.com
+```
+
+### Documentação da API em produção
+
+Acesse a documentação Swagger em:  
+`/api-docs` na URL da sua instância da API.
+
+---
+
+## 🔒 Dicas para Produção
+
+- Nunca suba seu `.env` real para o repositório.
+- No MongoDB Atlas, restrinja o acesso ao IP do Render.
+- Monitore os logs pelo painel do Render.
+- Use variáveis de ambiente seguras no Render.
+
+---
+
+## 🌎 Exemplo de `.env.example` para produção
+
+```env
+MONGO_URI=your_mongodb_atlas_connection_string
+TMDB_Bearer_Token=your_tmdb_api_token
+NODE_ENV=production
+PORT=3000
+```
+
+---
+
+## 🛠️ Como atualizar o deploy
+
+1. Faça push para a branch principal do seu repositório.
+2. O Render fará o deploy automaticamente.
+3. Acompanhe os logs pelo painel do Render.
+
