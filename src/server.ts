@@ -93,6 +93,14 @@ const startServer = async () => {
 
     setupSwagger(app);
 
+    // Health check endpoint for frontend
+    app.get('/health', (req, res) => {
+      res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString()
+      });
+    });
+
     // Public routes
     const publicRoutes = express.Router();
     publicRoutes.use('/auth', authRoutes);
