@@ -6,7 +6,6 @@ import { MovieService } from '../../services/movieService';
 import Movie from '../../models/movieModel';
 
 import { Messages } from '../../constants/messages';
-import { StreamingTypeRepository } from '../../repositories/streamingTypeRepository';
 import { Types } from 'mongoose';
 import { TMDBService } from '../../services/tmdbService';
 import { IMovieResponse } from '../../interfaces/movie';
@@ -15,11 +14,26 @@ import { IGenreReference } from '../../interfaces/streamingTypes';
 jest.mock('../../services/movieService');
 jest.mock('../../config/logger');
 
+function createMockRequest({
+  body = {},
+  query = {},
+  params = {},
+  validatedIds = {},
+}: Partial<Request> & { validatedIds?: any }) {
+  return {
+    body,
+    query,
+    params,
+    validatedIds,
+    method: "GET",
+    path: "/movies",
+  } as Partial<Request>;
+}
+
 describe('MovieController', () => {
   let controller: MovieController;
   let mockService: jest.Mocked<MovieService>;
   let mockMovieRepository: jest.Mocked<MovieRepository>;
-  let mockStreamingTypeRepository: jest.Mocked<StreamingTypeRepository>;
   let mockTMDBService: jest.Mocked<TMDBService>;
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
@@ -32,17 +46,12 @@ describe('MovieController', () => {
     validId = generateValidObjectId();
     mockGenre = { _id: validId, id: 1, name: 'Action', poster: 'poster-url' };
     mockMovieRepository = {} as jest.Mocked<MovieRepository>;
-    mockStreamingTypeRepository = {} as jest.Mocked<StreamingTypeRepository>;
     mockTMDBService = {} as jest.Mocked<TMDBService>;
     mockService = new MovieService(mockTMDBService, mockMovieRepository) as jest.Mocked<MovieService>;
     controller = new MovieController(mockService);
-    mockReq = {
+    mockReq = createMockRequest({
       validatedIds: { id: validId as Types.ObjectId },
-      query: {},
-      body: {},
-      method: 'GET',
-      path: '/movies'
-    };
+    });
     mockRes = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnValue(mockRes),
@@ -78,8 +87,23 @@ describe('MovieController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(moviesByTitle);
     });
-  });
 
+    it("should call next with error if service throws", async () => {
+      const error = new Error("Failed to fetch by title");
+      mockReq.body = { title: 'Test' };
+      mockReq = createMockRequest({ body: { title: "Test" } });
+      mockService.getMoviesByTitle.mockImplementationOnce(() => {
+        throw error;
+      });
+
+      await controller.getMoviesByTitle(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getMoviesByTitle).toHaveBeenCalledWith(mockReq.body.title, 0, 10);
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
+    
+  });
   describe('getMoviesByGenre', () => {
     it('should return movies filtered by genre', async () => {
       const moviesByGenre = [mockMovie];
@@ -92,8 +116,23 @@ describe('MovieController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(moviesByGenre);
     });
-  });
+    it("should call next with error if service throws", async () => {
+      const error = new Error("Failed to fetch by genre");
+    
+      mockReq.body = { genre: 'Test' };
+    
+      mockService.getMoviesByGenre.mockImplementation(() => {
+        throw error;
+      });
 
+      await controller.getMoviesByGenre(mockReq as Request, mockRes as Response, mockNext);
+    
+      expect(mockService.getMoviesByGenre).toHaveBeenCalledWith("Test", 0, 10);
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.status).not.toHaveBeenCalled();
+      expect(mockRes.json).not.toHaveBeenCalled();
+    });
+  });
   describe('getMovies', () => {
     it('should return paginated movies list', async () => {
       const validSecondaryId = new Types.ObjectId();
@@ -122,6 +161,21 @@ describe('MovieController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(defaultMovies);
     });
+
+    it("should call next with error if service throws", async () => {
+      const error = new Error("Failed to fetch movies");
+        
+      mockService.getMovies.mockImplementation(() => {
+        throw error;
+      });
+
+      await controller.getMovies(mockReq as Request, mockRes as Response, mockNext);
+    
+      expect(mockService.getMovies).toHaveBeenCalledWith(0, 10);
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.status).not.toHaveBeenCalled();
+      expect(mockRes.json).not.toHaveBeenCalled();
+    });
   });
 
   describe('getMovieById', () => {
@@ -134,6 +188,21 @@ describe('MovieController', () => {
       expect(mockService.getMovieById).toHaveBeenCalledWith(validId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(movieById);
+    });
+
+    it("should call next with error if service throws", async () => {
+      const error = new Error("Failed to fetch by ID");
+        
+      mockService.getMovieById.mockImplementation(() => {
+        throw error;
+      });
+
+      await controller.getMovieById(mockReq as Request, mockRes as Response, mockNext);
+    
+      expect(mockService.getMovieById).toHaveBeenCalledWith(validId);
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.status).not.toHaveBeenCalled();
+      expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
 

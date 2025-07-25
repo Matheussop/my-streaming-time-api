@@ -14,7 +14,8 @@ const mockImplementations = {
   addGenreToStreamingType: jest.fn(),
   deleteGenreFromStreamingTypeByName: jest.fn(),
   deleteStreamingType: jest.fn(),
-  changeCover: jest.fn()
+  changeCover: jest.fn(),
+  syncStreamingTypesWithGenres: jest.fn()
 };
 
 jest.mock('../../controllers/streamingTypeController', () => ({

@@ -11,6 +11,7 @@ const mockImplementations = {
   createManyGenre: jest.fn(),
   updateGenre: jest.fn(),
   deleteGenre: jest.fn(),
+  syncGenresFromTMDB: jest.fn()
 };
 
 jest.mock('../../controllers/genreController', () => ({

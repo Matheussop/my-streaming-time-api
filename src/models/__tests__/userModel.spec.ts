@@ -26,6 +26,10 @@ describe('User Model', () => {
   });
 
   describe('User Creation and Validation', () => {
+    beforeEach(async () => {
+      await mongoose.connection.dropDatabase();
+    });
+
     it('should create a user successfully', async () => {
       const userData = {
         username: 'johndoe',
@@ -137,6 +141,8 @@ describe('User Model', () => {
     });
 
     it('should enforce unique usernames', async () => {
+      await User.init();
+
       await User.create({
         username: 'uniqueuser',
         email: 'first@example.com',
@@ -161,6 +167,8 @@ describe('User Model', () => {
     });
 
     it('should enforce unique emails', async () => {
+      await User.init();
+
       await User.create({
         username: 'firstuser',
         email: 'same@example.com',

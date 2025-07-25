@@ -134,7 +134,7 @@ describe('GenreController', () => {
   describe('createManyGenre', () => {
     it('should create multiple genres successfully', async () => {
       const genresData = [mockGenre];
-      mockReq.body = genresData;
+      mockReq.body = { genres: genresData};
       mockService.createGenre.mockResolvedValue(genresData);
 
       await controller.createManyGenre(mockReq as Request, mockRes as Response, mockNext);

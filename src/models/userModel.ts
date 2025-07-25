@@ -165,8 +165,6 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
   },
 );
 
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
 userSchema.index({ 'preferences.favoriteGenres': 1 });
 userSchema.index({ 'stats.lastActive': -1 });
 

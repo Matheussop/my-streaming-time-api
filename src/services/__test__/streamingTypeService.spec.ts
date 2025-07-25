@@ -501,8 +501,8 @@ describe('StreamingTypeService', () => {
   describe('syncStreamingTypesWithGenres', () => {
     it('should sync streaming types with genres successfully', async () => {
       const mockGenres = [
-        { _id: new Types.ObjectId(), id: 1, name: 'Action', poster: '', createdAt: new Date(), updatedAt: new Date() },
-        { _id: new Types.ObjectId(), id: 2, name: 'Comedy', poster: '', createdAt: new Date(), updatedAt: new Date() }
+        { _id: new Types.ObjectId(), id: 1, name: 'movies', poster: '', createdAt: new Date(), updatedAt: new Date() },
+        { _id: new Types.ObjectId(), id: 2, name: 'series', poster: '', createdAt: new Date(), updatedAt: new Date() },
       ];
 
       mockGenreRepository!.findAll.mockResolvedValue(mockGenres);
@@ -512,10 +512,10 @@ describe('StreamingTypeService', () => {
 
       const result = await streamingTypeService.syncStreamingTypesWithGenres();
 
-      expect(result).toEqual({ created: 3, updated: 0 });
+      expect(result).toEqual({ created: 2, updated: 0 });
       expect(mockGenreRepository!.findAll).toHaveBeenCalledWith(0, 1000);
-      expect(mockRepository.findByName).toHaveBeenCalledTimes(3);
-      expect(mockRepository.create).toHaveBeenCalledTimes(3);
+      expect(mockRepository.findByName).toHaveBeenCalledTimes(2);
+      expect(mockRepository.create).toHaveBeenCalledTimes(2);
     });
 
     it('should update existing streaming types with new genres', async () => {
