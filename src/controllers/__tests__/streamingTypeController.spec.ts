@@ -203,7 +203,7 @@ describe('StreamingTypeController', () => {
       mockReq = {
         params: { id: validId.toString() },
         validatedIds: { id: validId },
-        body: { supportedGenres: genresName },
+        body: { genres: genresName },
         method: 'POST',
         path: `/streaming-types/${validId}/categories`,
       };
@@ -244,7 +244,7 @@ describe('StreamingTypeController', () => {
         name: 'Action'
       }];
       mockReq.validatedIds = { id };
-      mockReq.body = {supportedGenres: genreData};
+      mockReq.body = {genres: genreData};
 
       mockService.addGenreToStreamingType.mockResolvedValue(mockStreamingType);
 

@@ -165,6 +165,8 @@ describe('UserRepository Integration Tests', () => {
     });
 
     it('should throw error when creating user with existing email', async () => {
+      await User.init();
+
       const duplicateUserData: IUserCreate = {
         username: 'duplicate',
         email: 'test@example.com', // email já existe

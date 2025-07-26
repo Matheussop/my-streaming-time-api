@@ -9,7 +9,7 @@ export const genreReferenceSchema = z.object({
 
 export const streamingTypeCreateSchema = z.object({
   name: z.string().min(1),
-  supportedGenres: z.array(genreReferenceSchema).optional(),
+  genres: z.array(genreReferenceSchema).optional(),
   description: z.string().min(1).optional(),
   isActive: z.boolean().optional(),
 });

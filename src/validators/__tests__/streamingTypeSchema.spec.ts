@@ -71,7 +71,7 @@ describe('streamingTypeCreateSchema', () => {
     const objectId = new Types.ObjectId();
     const validStreamingType = {
       name: 'Netflix',
-      supportedGenres: [
+      genres: [
         { _id: objectId, id: 1, name: 'Action' },
         { _id: objectId.toString(), id: 2, name: 'Drama' }
       ],
@@ -110,10 +110,10 @@ describe('streamingTypeCreateSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject when supportedGenres has invalid genres', () => {
+  it('should reject when genres has invalid genres', () => {
     const invalidStreamingType = {
       name: 'Disney+',
-      supportedGenres: [
+      genres: [
         { _id: 'invalid-id', id: 1, name: 'Action' }
       ]
     };
@@ -141,7 +141,7 @@ describe('streamingTypeUpdateSchema', () => {
     const objectId = new Types.ObjectId();
     const validUpdate = {
       name: 'Updated Name',
-      supportedGenres: [
+      genres: [
         { _id: objectId, id: 1, name: 'Action' }
       ],
       description: 'Updated description',
@@ -209,7 +209,7 @@ describe('streamingTypeAddGenreSchema', () => {
   it('should validate valid genre additions', () => {
     const objectId = new Types.ObjectId();
     const validAddition = {
-      supportedGenres: [
+      genres: [
         { _id: objectId, id: 1, name: 'Action' },
         { _id: objectId.toString(), id: 2, name: 'Drama' }
       ]
@@ -219,16 +219,16 @@ describe('streamingTypeAddGenreSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should reject when supportedGenres is missing', () => {
+  it('should reject when genres is missing', () => {
     const invalidAddition = {};
     
     const result = streamingTypeAddGenreSchema.safeParse(invalidAddition);
     expect(result.success).toBe(false);
   });
 
-  it('should reject when any genre in supportedGenres is invalid', () => {
+  it('should reject when any genre in genres is invalid', () => {
     const invalidAddition = {
-      supportedGenres: [
+      genres: [
         { _id: 'invalid-id', id: 1, name: 'Action' }
       ]
     };

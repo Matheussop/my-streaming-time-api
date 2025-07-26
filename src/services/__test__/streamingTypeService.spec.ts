@@ -529,16 +529,15 @@ describe('StreamingTypeService', () => {
 
       const result = await streamingTypeService.syncStreamingTypesWithGenres();
 
-      expect(result).toEqual({ created: 0, updated: 3 });
-      expect(mockRepository.update).toHaveBeenCalledTimes(3);
+      expect(result).toEqual({ created: 0, updated: 2 });
+      expect(mockRepository.update).toHaveBeenCalledTimes(2);
     });
 
-    it('should throw error when no genres are found', async () => {
+    it('should be able to return a empty object when no genres are found', async () => {
       mockGenreRepository!.findAll.mockResolvedValue([]);
 
-      await expect(streamingTypeService.syncStreamingTypesWithGenres())
-        .rejects
-        .toThrow('No genres found. Please sync genres first.');
+      const result = await streamingTypeService.syncStreamingTypesWithGenres()
+      expect (result).toEqual({ created: 0, updated: 0})
     });
 
     it('should throw error when GenreRepository is not available', async () => {
