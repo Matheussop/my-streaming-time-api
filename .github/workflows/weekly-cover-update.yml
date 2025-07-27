@@ -1,0 +1,22 @@
+name: Weekly Cover Update
+
+on:
+  schedule:
+    - cron: '0 12 * * 0'  # Todos os domingos às 12h UTC (09h de Brasília)
+  workflow_dispatch:       # Permite execução manual
+
+jobs:
+  call-cover-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call /streamingTypes/change-cover
+        run: |
+          curl -X POST "$COVER_UPDATE_API_URL" \
+            -H "Authorization: $COVER_UPDATE_TOKEN" \
+            -H "Content-Type: application/json"
+          run: |
+            echo "Calling URL: $COVER_UPDATE_API_URL"
+        env:
+          COVER_UPDATE_API_URL: ${{ secrets.COVER_UPDATE_API_URL }}
+          COVER_UPDATE_TOKEN: ${{ secrets.COVER_UPDATE_TOKEN }}
