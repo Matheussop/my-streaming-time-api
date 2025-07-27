@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 4. Create release tag
 5. Deploy to production
 
-## [Unreleased]
+## [1.3.0]
 ### Planned
 - User authentication and authorization
 - Enhanced error handling

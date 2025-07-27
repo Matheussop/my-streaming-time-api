@@ -1,6 +1,6 @@
 # My Streaming Time API
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-green.svg)
 
 A RESTful API for streaming history management, allowing users to track watched movies, viewing time, and content categorization.
@@ -249,9 +249,10 @@ npm run test:coverage
 
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
-Current version: 1.2.0
+Current version: 1.3.0
 
 For detailed release notes and version history, please see our [CHANGELOG.md](CHANGELOG.md).
+For detailed architecture ideas and notes, please see our [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 🤝 Contributing
 
