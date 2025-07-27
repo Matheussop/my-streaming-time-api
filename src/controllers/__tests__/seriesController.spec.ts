@@ -61,6 +61,7 @@ describe('SeriesController', () => {
       body: {},
       params: {},
       validatedIds: {},
+      query: {},
       method: 'GET',
       path: '/series'
     };
@@ -114,7 +115,8 @@ describe('SeriesController', () => {
       const page = 1;
       const limit = 10;
       const skip = 0;
-      mockReq.body = { title, page, limit };
+      mockReq.query = { title };
+      mockReq.body = { page, limit };
 
       mockService.getSeriesByTitle.mockResolvedValue([mockSeries]);
 
@@ -129,7 +131,7 @@ describe('SeriesController', () => {
       const title = 'Test';
       const limit = 10;
       const skip = 0;
-      mockReq.body = { title };
+      mockReq.query = { title };
       mockService.getSeriesByTitle.mockResolvedValue([mockSeries]);
 
       await controller.getSeriesByTitle(mockReq as Request, mockRes as Response, mockNext);

@@ -441,7 +441,9 @@ describe('seriesByTitleParamSchema', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toEqual({
-        title: 'Test Series'
+        title: 'Test Series',
+        page: 1,
+        limit: 10
       });
     }
   });
