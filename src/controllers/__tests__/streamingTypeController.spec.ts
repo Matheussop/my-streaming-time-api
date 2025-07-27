@@ -266,8 +266,10 @@ describe('StreamingTypeController', () => {
       await controller.changeCover(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockService.changeCover).toHaveBeenCalled();
-      expect(mockRes.status).toHaveBeenCalledWith(204);
-      expect(mockRes.send).toHaveBeenCalledWith(Messages.COVER_CHANGED_SUCCESSFULLY);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: Messages.COVER_CHANGED_SUCCESSFULLY
+      }));
     });
   });
 
