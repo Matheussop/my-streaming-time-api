@@ -129,8 +129,12 @@ export class StreamingTypeController {
     });
 
     await this.service.changeCover();
-    res.status(204).send(Messages.COVER_CHANGED_SUCCESSFULLY);
-  });
+    res.status(200).json({
+      message: Messages.COVER_CHANGED_SUCCESSFULLY,
+      updated: true,
+      executedBy: req.user,
+      timestamp: new Date().toISOString()
+    });  });
 
   syncStreamingTypesWithGenres = catchAsync(async (req: Request, res: Response) => {
     logger.info({
