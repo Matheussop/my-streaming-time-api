@@ -22,7 +22,7 @@ const userController = new UserController(userService);
 
 /**
  * @swagger
- * /users/{id}:
+ * /user/{id}:
  *   get:
  *     summary: Retrieve a user by ID
  *     tags: [Users]
@@ -44,7 +44,7 @@ userRoutes.get('/:id',
 
 /**
  * @swagger
- * /users/{id}:
+ * /user/{id}:
  *   put:
  *     summary: Update a user by ID
  *     tags: [Users]
@@ -82,7 +82,7 @@ userRoutes.put(
 
 /**
  * @swagger
- * /users/{id}:
+ * /user/{id}:
  *   delete:
  *     summary: Delete a user by ID
  *     tags: [Users]

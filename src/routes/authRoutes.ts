@@ -32,7 +32,7 @@ const authMiddleware = new AuthMiddleware();
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               username:
  *                 type: string
  *               email:
  *                 type: string
