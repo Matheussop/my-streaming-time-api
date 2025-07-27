@@ -1,4 +1,5 @@
 export const Messages = {
+  STREAMING_TYPES_SYNCHRONIZED_COVER_CHANGED_SUCCESSFULLY: 'Streaming types synchronized successfully',
   COVER_CHANGED_SUCCESSFULLY: 'Cover changed successfully',
 
   // Series 

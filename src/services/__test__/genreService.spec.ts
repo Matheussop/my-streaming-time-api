@@ -199,5 +199,30 @@ describe('GenreService', () => {
       await expect(genreService.syncGenresFromTMDB())
         .rejects.toThrow(new StreamingServiceError('Error synchronizing genres from TMDB', 500));
     });
+
+    it('should not synchronize genres if they are already synchronized', async () => {
+      const mockMovieGenres = [
+        { id: 1, name: 'Action' },
+        { id: 2, name: 'Comedy' }
+      ];
+      const mockTVGenres = [
+        { id: 3, name: 'Drama' },
+        { id: 4, name: 'Thriller' }
+      ];
+
+      mockTMDBService.fetchMovieGenres.mockResolvedValue(mockMovieGenres);
+      mockTMDBService.fetchTVGenres.mockResolvedValue(mockTVGenres);
+      mockGenreRepository.findAll.mockResolvedValue([...mockMovieGenres, ...mockTVGenres] as IGenreResponse[]);
+
+      const result = await genreService.syncGenresFromTMDB();
+
+      expect(result).toEqual({
+        movieGenres: 2,
+        tvGenres: 2
+      });
+      expect(mockTMDBService.fetchMovieGenres).toHaveBeenCalled();
+      expect(mockTMDBService.fetchTVGenres).toHaveBeenCalled();
+      expect(mockGenreRepository.create).not.toHaveBeenCalled();
+    })
   });
 });

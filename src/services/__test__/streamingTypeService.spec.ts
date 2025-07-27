@@ -547,5 +547,14 @@ describe('StreamingTypeService', () => {
         .rejects
         .toThrow('GenreRepository not available');
     });
+
+    it("should throw error when a unexpected error occurred ", async () => {
+      const error = new Error("Unexpected Error Occurred");
+      mockGenreRepository!.findAll.mockRejectedValue(error);
+
+      await expect(streamingTypeService.syncStreamingTypesWithGenres())
+        .rejects
+        .toThrow('Error synchronizing streaming types with genres');
+    })
   });
 });

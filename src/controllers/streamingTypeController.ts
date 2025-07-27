@@ -141,7 +141,7 @@ export class StreamingTypeController {
 
     const result = await this.service.syncStreamingTypesWithGenres();
     res.status(200).json({
-      message: 'Streaming types synchronized successfully',
+      message: Messages.STREAMING_TYPES_SYNCHRONIZED_COVER_CHANGED_SUCCESSFULLY,
       result
     });
   });

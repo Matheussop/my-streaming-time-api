@@ -270,4 +270,19 @@ describe('StreamingTypeController', () => {
       expect(mockRes.send).toHaveBeenCalledWith(Messages.COVER_CHANGED_SUCCESSFULLY);
     });
   });
+
+  describe('syncStreamingTypesWithGenres', () => {
+    it('should sync streaming types with genres', async () => {
+      const synchronizedStreamingTypes = { created: 20, updated:20}
+      mockService.syncStreamingTypesWithGenres.mockResolvedValue(synchronizedStreamingTypes)
+      await controller.syncStreamingTypesWithGenres(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.syncStreamingTypesWithGenres).toHaveBeenCalled();
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: Messages.STREAMING_TYPES_SYNCHRONIZED_COVER_CHANGED_SUCCESSFULLY,
+        result: synchronizedStreamingTypes
+      });
+    });
+  });
 });

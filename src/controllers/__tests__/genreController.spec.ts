@@ -206,4 +206,20 @@ describe('GenreController', () => {
       expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
+
+  describe('syncGenresFromTMDB', ()=> {
+    it("should sync genres from TMDB", async () => {
+      const synchronizedGenres = { movieGenres: 20, tvGenres: 20}
+      mockService.syncGenresFromTMDB.mockResolvedValue(synchronizedGenres);
+
+      await controller.syncGenresFromTMDB(mockReq as Request, mockRes as Response, mockNext)
+
+      expect(mockService.syncGenresFromTMDB).toHaveBeenCalled()
+      expect(mockRes.status).toHaveBeenCalledWith(200)
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: expect.stringContaining("Genres synchronized"),
+        result: expect.objectContaining(synchronizedGenres)
+      })
+    })
+  })
 });
