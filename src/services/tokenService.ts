@@ -24,15 +24,18 @@ export class TokenService {
     return TokenService.instance;
   }
 
-  generateToken(userId: Types.ObjectId): string {
-    const payload: ITokenPayload = { userId };
+  generateToken(userId: Types.ObjectId, userRole?: string): string {
+    const payload: ITokenPayload = { userId, userRole};
     return jwt.sign(payload, this.JWT_SECRET, { expiresIn: this.TOKEN_EXPIRATION } as SignOptions);
   }
 
-  verifyToken(token: string): { userId: Types.ObjectId } {
+  verifyToken(token: string): { userId: Types.ObjectId, role?: string } {
     try {
       const decoded = jwt.verify(token, this.JWT_SECRET) as ITokenPayload;
-      return { userId: decoded.userId };
+      if(decoded && decoded.userRole) {
+        return { userId: decoded.userId, role: decoded.userRole };
+      }
+      return { userId: decoded.userId, role: undefined};
     } catch (error) {
       throw new StreamingServiceError('Invalid or expired token', 401);
     }

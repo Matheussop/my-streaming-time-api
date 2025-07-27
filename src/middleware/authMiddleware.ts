@@ -13,6 +13,10 @@ declare global {
   }
 } 
 
+const botWhitelist = [
+  '/streamingTypes/change-cover',
+];
+
 export class AuthMiddleware {
   private readonly BEARER_PREFIX = 'Bearer ';
   private tokenService: TokenService;
@@ -43,7 +47,21 @@ export class AuthMiddleware {
       }
       
       const token = this.extractTokenFromHeader(authHeader);
-      const { userId } = this.tokenService.verifyToken(token);
+      const { userId, role } = this.tokenService.verifyToken(token);
+
+      if (!userId || typeof userId !== 'string') {
+        throw new StreamingServiceError('Invalid token', 401);
+      }
+
+      if(role && role === 'bot'){
+        const requestPath = req.path;
+
+        const isAllowed = botWhitelist.some((allowedPath) => requestPath.startsWith(allowedPath));
+        if (!isAllowed) {
+          throw new StreamingServiceError('Bot is not allowed to access this endpoint', 401);
+        }
+      }
+
       req.user = { userId: userId as Types.ObjectId | string };
       next();
     } catch (error) {

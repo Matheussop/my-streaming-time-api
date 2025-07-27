@@ -24,7 +24,7 @@ export class AuthService implements IAuthService {
       throw new StreamingServiceError('Invalid credentials', 401);
     }
 
-    const token = this.tokenService.generateToken(user._id as Types.ObjectId);
+    const token = this.tokenService.generateToken(user._id as Types.ObjectId, user.role);
     const refreshToken = this.tokenService.generateRefreshToken(user._id as Types.ObjectId);
 
     return {

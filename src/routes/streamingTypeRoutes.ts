@@ -34,7 +34,7 @@ router.get('/', validate(paginationSchema), controller.getStreamingTypes);
 /**
  * @swagger
  * /streamingTypes/change-cover:
- *   post:
+ *   get:
  *     summary: Change the cover of the genres
  *     tags: [StreamingTypes]
  *     responses:
