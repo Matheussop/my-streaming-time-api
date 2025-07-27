@@ -42,7 +42,7 @@ const seriesController = new SeriesController(seriesService);
  */
 seriesRouter.get(
   '/title',
-  validate(seriesByTitleParamSchema),
+  validate(seriesByTitleParamSchema, "query"),
   seriesController.getSeriesByTitle,
 );
 /**

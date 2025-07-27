@@ -6,7 +6,7 @@ import { SeriesService } from '../services/seriesService';
 import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { Messages } from "../constants/messages";
-import { PaginationSchemaType } from "../validators";
+import { PaginationSchemaType, SeriesByTitleParamSchemaType } from "../validators";
 
 export class SeriesController {
   skipCheckTitles: boolean = true;
@@ -30,7 +30,7 @@ export class SeriesController {
   });
 
   getSeriesByTitle = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    const { title, page = 1, limit = 10 } = req.body;
+    const { title, page = 1, limit = 10 } = req.query as unknown as SeriesByTitleParamSchemaType;
     const skip = (Number(page) - 1) * Number(limit);
     logger.info({
       message: 'Fetching series by title',
@@ -38,9 +38,12 @@ export class SeriesController {
       method: req.method,
       path: req.path,
     });
-
     const series = await this.seriesService.getSeriesByTitle(title, skip, limit);
-    res.status(200).json(series);
+    if (series && series.length > 0) {
+      res.status(200).json(series)
+    } else {
+      res.status(404).json({ message: "Series not found with the provided title" });
+    }
   });
 
   getSerieById = catchAsync(async (req: Request, res: Response) => {

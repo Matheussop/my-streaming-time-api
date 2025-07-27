@@ -96,7 +96,7 @@ export const seriesByTitleParamSchema = paginationSchema.extend({
     required_error: "Title is required",
     invalid_type_error: "Title must be text"
   }).min(2, "Title must have at least 2 characters")
-}).partial();
+});
 
 export type SeriesByTitleParamSchemaType = z.infer<typeof seriesByTitleParamSchema>;
 
