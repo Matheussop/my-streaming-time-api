@@ -30,6 +30,7 @@ describe('AuthService', () => {
     _id: '123',
     email: 'test@example.com',
     username: 'testuser',
+    role: "user",
     active: true,
     createdAt: new Date('2024-03-20'),
     updatedAt: new Date('2024-03-20')
@@ -69,7 +70,7 @@ describe('AuthService', () => {
       });
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
       expect(mockUserRepository.checkPassword).toHaveBeenCalledWith(mockUser._id, 'password');
-      expect(mockTokenService.generateToken).toHaveBeenCalledWith(mockUser._id);
+      expect(mockTokenService.generateToken).toHaveBeenCalledWith(mockUser._id, mockUser.role);
       expect(mockTokenService.generateRefreshToken).toHaveBeenCalledWith(mockUser._id);
     });
 

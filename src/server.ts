@@ -67,7 +67,6 @@ const initializeApp = async () => {
     }
   } catch (error) {
     console.error('Error during application initialization:', error);
-    // Don't exit the process, just log the error
   }
 };
 

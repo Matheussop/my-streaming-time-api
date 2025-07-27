@@ -29,7 +29,7 @@ export interface IUserCreate {
   preferences?: IUserPreferences;
   watchList?: Types.ObjectId[] ;
   stats?: IUserStats;
-  role?: 'user' | 'admin' | 'moderator';
+  role?: 'user' | 'admin' | 'moderator' | 'bot';
 }
 
 export interface IUserUpdate {
@@ -40,7 +40,7 @@ export interface IUserUpdate {
   preferences?: IUserPreferences;
   watchList?: Types.ObjectId[];
   stats?: IUserStats;
-  role?: 'user' | 'admin' | 'moderator';
+  role?: 'user' | 'admin' | 'moderator' | 'bot';
 }
 
 export interface IUserResponse extends Omit<IUserCreate, 'password'> { 

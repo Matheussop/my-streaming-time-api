@@ -11,6 +11,7 @@ export interface IAuthService {
 
 export interface ITokenPayload {
   userId: Types.ObjectId;
+  userRole?: string;
   iat?: number;
   exp?: number;
 } 

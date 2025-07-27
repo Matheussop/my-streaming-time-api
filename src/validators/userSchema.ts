@@ -31,7 +31,7 @@ export const UserCreateSchema = z.object({
   profilePicture: z.string().url().optional(),
   preferences: UserPreferencesSchema.optional(),
   stats: UserStatsSchema.optional(),
-  role: z.enum(['user', 'admin', 'moderator']).optional().default('user'),
+  role: z.enum(['user', 'admin', 'moderator', 'bot']).optional().default('user'),
 });
 
 export type UserCreateSchemaType = z.infer<typeof UserCreateSchema>;

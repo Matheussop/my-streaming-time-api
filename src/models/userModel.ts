@@ -77,7 +77,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
     },
     role: {
       type: String,
-      enum: ['user', 'admin', 'moderator'],
+      enum: ['user', 'admin', 'moderator', 'bot'],
       default: 'user',
     },
     profilePicture: {
