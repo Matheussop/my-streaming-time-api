@@ -25,7 +25,7 @@ const controller = new UserStreamingHistoryController(userStreamingHistoryServic
 
 /**
  * @swagger
- * /streaming-history/get-episodes-watched:
+ * /user-streaming-history/get-episodes-watched:
  *   get:
  *     summary: Get episodes watched by user
  *     tags: [Streaming History]
@@ -58,7 +58,7 @@ router.get('/get-episodes-watched',
 
 /**
  * @swagger
- * /streaming-history/{userId}:
+ * /user-streaming-history/{userId}:
  *   get:
  *     summary: Get user's streaming history
  *     tags: [Streaming History]
@@ -84,7 +84,7 @@ router.get('/:userId',
 
 /**
  * @swagger
- * /streaming-history:
+ * /user-streaming-history:
  *   post:
  *     summary: Add streaming entry to user's history
  *     tags: [Streaming History]
@@ -124,7 +124,7 @@ router.post(
 
 /**
  * @swagger
- * /streaming-history/remove-entry:
+ * /user-streaming-history/remove-entry:
  *   delete:
  *     summary: Remove streaming entry from user's history
  *     tags: [Streaming History]
@@ -155,7 +155,7 @@ router.delete(
 
 /**
  * @swagger
- * /streaming-history/remove-episode:
+ * /user-streaming-history/remove-episode:
  *   delete:
  *     summary: Remove streaming episode from user's history
  *     tags: [Streaming History]
@@ -188,7 +188,7 @@ router.delete(
 
 /**
  * @swagger
- * /streaming-history:
+ * /user-streaming-history:
  *   get:
  *     summary: Get user's streaming view by id
  *     tags: [Streaming History]
@@ -219,7 +219,7 @@ router.get(
 
 /**
  * @swagger
- * /streaming-history/add-episode:
+ * /user-streaming-history/add-episode:
  *   post:
  *     summary: Add episode to user's history
  *     tags: [Streaming History]
@@ -249,7 +249,7 @@ router.post(
 
 /**
  * @swagger
- * /streaming-history/mark-season-watched:
+ * /user-streaming-history/mark-season-watched:
  *   post:
  *     summary: Mark all episodes from a season as watched
  *     tags: [Streaming History]
@@ -280,7 +280,7 @@ router.post(
 
 /**
  * @swagger
- * /streaming-history/total-watch-time/{userId}:
+ * /user-streaming-history/total-watch-time/{userId}:
  *   get:
  *     summary: Get user's total watch time
  *     tags: [Streaming History]

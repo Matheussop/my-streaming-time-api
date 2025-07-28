@@ -9,6 +9,8 @@ import { SeasonRepository } from '../repositories/seasonRepository';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { IMovieResponse } from '../interfaces/movie';
 import { ISeriesResponse } from '../interfaces/series/series';
+import { ErrorMessages } from '../constants/errorMessages';
+import { Messages } from '../constants/messages';
 
 export class UserStreamingHistoryService implements IUserStreamingHistoryService {
   constructor(
@@ -114,20 +116,35 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     if (!season || !season.episodes) {
       throw new StreamingServiceError('Season not found', 404);
     }
-
-    let lastEntry: WatchHistoryEntry | null = null;
-    for (const episode of season.episodes) {
-      const episodeData: EpisodeWatched = {
+    const seasonId = season._id.toString();
+    const episodesWatches: EpisodeWatched[] = season.episodes.map(episode => {
+      return { 
         episodeId: episode._id.toString(),
         seasonNumber: seasonNumber,
         episodeNumber: episode.episodeNumber,
         watchedDurationInMinutes: episode.durationInMinutes || 0,
         completionPercentage: 100,
         watchedAt: new Date(),
-      };
-      lastEntry = await this.repository.updateEpisodeProgress(userId, contentId, episodeData);
+      }
+    });
+    const updatedHistory = await this.repository.updateSeasonProgress(userId, contentId, episodesWatches);
+    if (!updatedHistory) {
+      logger.error({
+        message: ErrorMessages.HISTORY_SEASON_MARK_WATCHED,
+        error: ErrorMessages.HISTORY_UPDATE_FAILED,
+        userId,
+        contentId,
+        seasonId
+      });
+      throw new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404);
     }
-    return lastEntry;
+    logger.info({
+      message: Messages.HISTORY_STREAMING_MARKED_SUCCESSFULLY,
+      userId,
+      contentId,
+      seasonId
+    });
+    return updatedHistory;
   }
 
   async getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null> {

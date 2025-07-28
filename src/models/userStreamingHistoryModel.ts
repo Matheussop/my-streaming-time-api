@@ -329,6 +329,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     'watchHistory.contentType': 'series'
   });
   
+  const now = new Date();
   if (!userHistory) {
     // Se não existir, criar uma nova entrada para a série
     // Primeiro precisamos obter os dados básicos da série
@@ -339,12 +340,8 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     }
     const episodesWatchedMap: Map<string, EpisodeWatched> = new Map();
     episodesWatchedMap.set(episodeData.episodeId, {
-      episodeId: episodeData.episodeId,
-      seasonNumber: episodeData.seasonNumber,
-      episodeNumber: episodeData.episodeNumber,
-      watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
-      completionPercentage: episodeData.completionPercentage,
-      watchedAt: episodeData.watchedAt || new Date()
+      ...episodeData,
+      watchedAt: episodeData.watchedAt || now
     });
 
     const seriesProgress: Map<string, SeriesProgress> = new Map();
@@ -354,7 +351,7 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       episodesWatched: episodesWatchedMap,
       lastWatched: {
         ...episodeData,
-        watchedAt: new Date()
+        watchedAt: now
       },
       completed: seriesData.totalEpisodes === 1
     });
@@ -424,6 +421,97 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
     const watchHistoryUpdated = updatedHistory.watchHistory[seriesEntryIndex];
     return watchHistoryUpdated;
   }
+});
+
+userStreamingHistorySchema.static("updateSeasonProgress", async function(
+  userId: string,
+  seriesId: string,
+  episodes: EpisodeWatched[]
+): Promise<WatchHistoryEntry | null>{
+  const userHistory = await this.findOne({
+    userId,
+    'watchHistory.contentId': seriesId,
+    'watchHistory.contentType': 'series'
+  });
+
+  const now = new Date();
+
+  const watchedMap = new Map<string, EpisodeWatched>();
+  let watchedEpisodesCount = 0;
+  for (const ep of episodes) {
+    watchedMap.set(ep.episodeId, {
+      ...ep,
+      watchedAt: ep.watchedAt || now
+    });
+    watchedEpisodesCount++;
+  }
+
+  if(!userHistory) {
+    const seriesData = await Series.findById(seriesId);
+
+    const seriesProgress: Map<string, any> = new Map();
+    seriesProgress.set(seriesId, {
+      totalEpisodes: seriesData?.totalEpisodes || 0,
+      watchedEpisodes: watchedEpisodesCount,
+      episodesWatched: watchedMap,
+      lastWatched: episodes[episodes.length - 1],
+      completed: seriesData?.totalEpisodes === watchedEpisodesCount
+    });
+
+    const entry = await this.addWatchHistoryEntry(userId, {
+      contentId: seriesId,
+      contentType: 'series',
+      title: seriesData?.title || "Unknown Title",
+      watchedDurationInMinutes: episodes.reduce((sum, e) => sum + (e.watchedDurationInMinutes || 0), 0),
+      completionPercentage: 0, 
+      seriesProgress
+    });
+
+    return entry?.watchHistory[0] || null;
+  }
+  
+  // If history already exist update
+  const seriesEntryIndex = userHistory.watchHistory.findIndex(
+    entry => entry.contentId.toString() === seriesId.toString() && entry.contentType === 'series'
+  );
+      
+  const seriesEntryPath = `watchHistory.${seriesEntryIndex}.seriesProgress.${seriesId}`;
+
+  const seriesProgress = userHistory.watchHistory[seriesEntryIndex].seriesProgress?.get(seriesId) || {
+    totalEpisodes: 0,
+    watchedEpisodes: 0,
+    episodesWatched: new Map<string, EpisodeWatched>(),
+    completed: false
+  };
+
+  const updatedEpisodesMap = new Map(seriesProgress.episodesWatched || []);
+  let newWatchedCount = 0;
+
+  for (const ep of episodes){
+    if(!updatedEpisodesMap.has(ep.episodeId)){
+      newWatchedCount++;
+    }
+    updatedEpisodesMap.set(ep.episodeId, {
+      ...ep,
+      watchedAt: ep.watchedAt || now,
+    })
+  }
+
+  const updateObj: any = {};
+  updateObj[`${seriesEntryPath}.episodesWatched`] = Object.fromEntries(updatedEpisodesMap);
+  updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress.watchedEpisodes || 0) + newWatchedCount;
+  updateObj[`${seriesEntryPath}.lastWatched`] = episodes[episodes.length - 1];
+
+  const updatedHistory = await this.findOneAndUpdate(
+    { userId },
+    { $set: updateObj },
+    { new: true }
+  );
+
+  if (!updatedHistory) throw new StreamingServiceError('Failed to update episode progress', 500);
+  
+  const watchHistoryUpdated = updatedHistory.watchHistory[seriesEntryIndex];
+  return watchHistoryUpdated;
 });
 
 // Método para obter todos os episódios assistidos de uma série

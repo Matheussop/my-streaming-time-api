@@ -31,12 +31,13 @@ export const Messages = {
   STREAMING_TYPE_CATEGORIES_ADDED_SUCCESSFULLY: 'Categories added successfully',
   STREAMING_TYPE_CATEGORIES_REMOVED_SUCCESSFULLY: 'Categories removed successfully',
   STREAMING_TYPE_COVER_CHANGE_SUCCESSFULLY: "Covers changed successfully",
+
   // History Streaming messages
   STREAMING_HISTORY_FOUND: 'Streaming history found',
   STREAMING_ADDED_SUCCESSFULLY: 'Streaming added successfully',
   STREAMING_REMOVED_SUCCESSFULLY: 'Streaming removed successfully',
   STREAMING_NOT_FOUND: 'Streaming not found or failed to update history',
-
+  HISTORY_STREAMING_MARKED_SUCCESSFULLY: "Season marked as watched",
   // Authentication & Authorization messages
   AUTHENTICATION_SUCCESS: 'Authentication successful',
   LOGOUT_SUCCESS: 'Logout successful',
