@@ -13,7 +13,8 @@ const mockImplementations = {
   getByUserIdAndStreamingId: jest.fn(),
   addEpisodeToHistory: jest.fn(),
   removeEpisodeFromHistory: jest.fn(),
-  getEpisodesWatched: jest.fn()
+  getEpisodesWatched: jest.fn(),
+  markSeasonAsWatched: jest.fn()
 };
 
 jest.mock('../../controllers/userStreamingHistoryController', () => ({
@@ -277,6 +278,27 @@ describe('User Streaming History Routes', () => {
 
       expect(response.body).toHaveProperty('message', 'Episode added to history successfully');
       expect(response.body).toHaveProperty('episode');
+    });
+  });
+
+  describe('POST /mark-season-watched', () => {
+    it('should mark season as watched', async () => {
+      const payload = {
+        userId: mockUserId.toString(),
+        contentId: mockContentId.toString(),
+        seasonNumber: 1,
+      };
+
+      mockImplementations.markSeasonAsWatched = jest.fn((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ message: 'Season marked as watched' });
+      });
+
+      const response = await request(app)
+        .post('/streaming-history/mark-season-watched')
+        .send(payload)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ message: 'Season marked as watched' });
     });
   });
 

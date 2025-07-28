@@ -131,7 +131,23 @@ export class UserStreamingHistoryController {
 
     const history = await this.service.addEpisodeToHistory(userId, contentId, episodeData);
     res.status(201).json({ message: 'Episode added to history successfully', history });
-  }); 
+  });
+
+  markSeasonAsWatched = catchAsync(async (req: Request, res: Response) => {
+    const { userId, contentId, seasonNumber } = req.body;
+
+    logger.info({
+      message: 'Mark season as watched',
+      userId,
+      contentId,
+      seasonNumber,
+      method: req.method,
+      path: req.path,
+    });
+
+    const history = await this.service.markSeasonAsWatched(userId, contentId, seasonNumber);
+    res.status(200).json({ message: 'Season marked as watched', history });
+  });
   
   getEpisodesWatched = catchAsync(async (req: Request, res: Response) => {
     const { userId, contentId } = req.query as { userId: string; contentId: string; };

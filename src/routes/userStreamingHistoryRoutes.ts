@@ -8,11 +8,12 @@ import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import { paginationSchema } from '../validators';
 import { 
-  userStreamingHistoryAddEntrySchema, 
+  userStreamingHistoryAddEntrySchema,
   userStreamingHistoryRemoveEntrySchema,
   userStreamingHistoryGetByUserIdAndStreamingIdSchema,
   userStreamingHistoryAddEpisodeSchema,
-  userStreamingHistoryRemoveEpisodeSchema, 
+  userStreamingHistoryRemoveEpisodeSchema,
+  userStreamingHistoryMarkSeasonSchema,
 } from '../validators/userStreamingHistorySchema';
 
 const router: Router = Router();
@@ -244,6 +245,37 @@ router.post(
   '/add-episode',
   validate(userStreamingHistoryAddEpisodeSchema),
   controller.addEpisodeToHistory,
+);
+
+/**
+ * @swagger
+ * /streaming-history/mark-season-watched:
+ *   post:
+ *     summary: Mark all episodes from a season as watched
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - contentId
+ *               - seasonNumber
+ *     responses:
+ *       200:
+ *         description: Season marked as watched
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+
+router.post(
+  '/mark-season-watched',
+  validate(userStreamingHistoryMarkSeasonSchema),
+  controller.markSeasonAsWatched,
 );
 
 /**

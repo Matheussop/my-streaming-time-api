@@ -280,6 +280,33 @@ describe('UserStreamingHistoryController', () => {
     });
   });
 
+  describe('markSeasonAsWatched', () => {
+    it('should mark season as watched', async () => {
+      const userId = validId;
+      const contentId = validId;
+      const seasonNumber = 1;
+      mockReq.body = { userId, contentId, seasonNumber };
+
+      const watchHistoryEntry: WatchHistoryEntry = {
+        contentId: contentId,
+        contentType: 'series',
+        title: 'Test Series',
+        watchedDurationInMinutes: 0,
+        completionPercentage: 0,
+        seriesProgress: new Map(),
+        watchedAt: new Date(),
+      };
+
+      mockService.markSeasonAsWatched.mockResolvedValue(watchHistoryEntry);
+
+      await controller.markSeasonAsWatched(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.markSeasonAsWatched).toHaveBeenCalledWith(userId, contentId, seasonNumber);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'Season marked as watched', history: watchHistoryEntry });
+    });
+  });
+
   describe('getEpisodesWatched', () => {
     it('should get episodes watched', async () => {
       const userId = validId;

@@ -298,6 +298,26 @@ describe('UserStreamingHistoryService', () => {
     });
   });
 
+  describe('markSeasonAsWatched', () => {
+    it('should mark season as watched', async () => {
+      const episodes = [{
+        _id: mockEpisodeId.toString(),
+        episodeNumber: 1,
+        durationInMinutes: 45,
+      }];
+      const season = { episodes } as any;
+      jest.spyOn(mockUserStreamingHistoryRepository, 'updateEpisodeProgress').mockResolvedValue(mockWatchHistoryEntry);
+      const seasonRepo = (userStreamingHistoryService as any).seasonRepository;
+      jest.spyOn(seasonRepo, 'findEpisodesBySeasonNumber').mockResolvedValue(season);
+
+      const result = await userStreamingHistoryService.markSeasonAsWatched(mockUserId, mockContentId, 1);
+
+      expect(seasonRepo.findEpisodesBySeasonNumber).toHaveBeenCalledWith(mockContentId, 1);
+      expect(mockUserStreamingHistoryRepository.updateEpisodeProgress).toHaveBeenCalled();
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+  });
+
   describe('getEpisodesWatched', () => {
     it('should return episodes watched for a series', async () => {
       const historyWithEpisodes = {

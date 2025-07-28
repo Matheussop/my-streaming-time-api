@@ -5,6 +5,7 @@ import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { MovieRepository } from '../repositories/movieRepository';
 import { SeriesRepository } from '../repositories/seriesRepository';
+import { SeasonRepository } from '../repositories/seasonRepository';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { IMovieResponse } from '../interfaces/movie';
 import { ISeriesResponse } from '../interfaces/series/series';
@@ -14,6 +15,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     private repository: UserStreamingHistoryRepository,
     private movieRepository: MovieRepository,
     private seriesRepository: SeriesRepository,
+    private seasonRepository: SeasonRepository = new SeasonRepository(),
   ) {}
 
   async getUserHistory(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse> {
@@ -105,6 +107,27 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       episodeId: episodeData.episodeId
     });
     return updatedHistory;
+  }
+
+  async markSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null> {
+    const season = await this.seasonRepository.findEpisodesBySeasonNumber(contentId, seasonNumber);
+    if (!season || !season.episodes) {
+      throw new StreamingServiceError('Season not found', 404);
+    }
+
+    let lastEntry: WatchHistoryEntry | null = null;
+    for (const episode of season.episodes) {
+      const episodeData: EpisodeWatched = {
+        episodeId: episode._id.toString(),
+        seasonNumber: seasonNumber,
+        episodeNumber: episode.episodeNumber,
+        watchedDurationInMinutes: episode.durationInMinutes || 0,
+        completionPercentage: 100,
+        watchedAt: new Date(),
+      };
+      lastEntry = await this.repository.updateEpisodeProgress(userId, contentId, episodeData);
+    }
+    return lastEntry;
   }
 
   async getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null> {
