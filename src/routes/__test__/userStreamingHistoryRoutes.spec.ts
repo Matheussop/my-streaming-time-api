@@ -289,7 +289,7 @@ describe('User Streaming History Routes', () => {
         seasonNumber: 1,
       };
 
-      mockImplementations.markSeasonAsWatched = jest.fn((req: Request, res: Response) => {
+      mockImplementations.markSeasonAsWatched.mockImplementation((req: Request, res: Response) => {
         res.status(HttpStatus.OK).json({ message: 'Season marked as watched' });
       });
 
