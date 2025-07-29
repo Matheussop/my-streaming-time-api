@@ -14,7 +14,8 @@ const mockImplementations = {
   addEpisodeToHistory: jest.fn(),
   removeEpisodeFromHistory: jest.fn(),
   getEpisodesWatched: jest.fn(),
-  markSeasonAsWatched: jest.fn()
+  markSeasonAsWatched: jest.fn(),
+  unMarkSeasonAsWatched: jest.fn()
 };
 
 jest.mock('../../controllers/userStreamingHistoryController', () => ({
