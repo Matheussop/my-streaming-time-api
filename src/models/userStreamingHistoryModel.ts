@@ -459,7 +459,6 @@ userStreamingHistorySchema.static('getWatchedEpisodesForSeries', async function(
 //   // na sequência após o último assistido
 // });
 
-userStreamingHistorySchema.index({ userId: 1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentId': 1 });
 userStreamingHistorySchema.index({ 'watchHistory.watchedAt': -1 });
 userStreamingHistorySchema.index({ 'watchHistory.contentType': 1 });
