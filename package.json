@@ -17,6 +17,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:debug": "jest --runInBand --detectOpenHandles --logHeapUsage",
     "prettier:write": "prettier --write \"src/**/*.ts\""
   },
   "keywords": [],

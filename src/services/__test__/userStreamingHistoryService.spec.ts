@@ -7,7 +7,6 @@ import { UserStreamingHistoryService } from '../userStreamingHistoryService';
 import { IMovieResponse } from '../../interfaces/movie';
 import { ISeriesResponse } from '../../interfaces/series/series';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';
-import { describe } from 'node:test';
 import { IGenreReference } from '../../interfaces/streamingTypes';
 import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
 

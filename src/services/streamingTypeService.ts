@@ -304,7 +304,6 @@ export class StreamingTypeService implements IStreamingTypeService {
       logger.info('Starting streaming types synchronization with genres...');
 
       const allGenres = await this.genreRepository.findAll(0, 1000);
-      console.log(allGenres.length, "allGeres");
       if (allGenres.length === 0) {
         logger.warn('No genres found. Please sync genres first.');
         return { created: 0, updated: 0 };

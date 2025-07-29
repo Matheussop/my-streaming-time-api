@@ -33,6 +33,17 @@ jest.mock('../../middleware/objectIdValidationMiddleware', () => ({
   }),
 }));
 
+jest.mock('cron', () => {
+  return {
+    CronJob: jest.fn().mockImplementation(() => {
+      return {
+        start: jest.fn(),
+        stop: jest.fn(),
+      };
+    }),
+  };
+});
+
 import router from '../seasonRoutes';
 
 describe('Season Routes', () => {
