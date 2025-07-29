@@ -1,8 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { AuthMiddleware } from '../authMiddleware';
 import { StreamingServiceError } from '../errorHandler';
-import { TokenService } from '../../services/tokenService';
 
 // Mock TokenService
 jest.mock('../../services/tokenService', () => {
@@ -44,7 +43,8 @@ describe('AuthMiddleware', () => {
       },
       body: {
         refreshToken: 'valid-refresh-token'
-      }
+      },
+      path: ""
     };
     
     mockResponse = {
@@ -68,7 +68,7 @@ describe('AuthMiddleware', () => {
     mockGenerateRefreshToken.mockReturnValue('new-refresh-token');
   });
 
-  describe('authenticate middleware', () => {
+  describe('authenticate', () => {
     it('should set user in request when valid token is provided', async () => {
       await authMiddleware.authenticate(mockRequest as Request, mockResponse as Response, mockNext);
       
@@ -117,6 +117,35 @@ describe('AuthMiddleware', () => {
           statusCode: 401
         })
       );
+    });
+
+    it('should call next with error when token has a invalid type for userID', async () => {
+      const { mockVerifyToken } = require('../../services/tokenService');
+      mockVerifyToken.mockReturnValue({
+        userId: 1,
+      });
+      const verificationError = new StreamingServiceError('Invalid token', 401);
+
+      await authMiddleware.authenticate(mockRequest as Request, mockResponse as Response, mockNext);
+      
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining(verificationError));
+    });
+
+    it('should call next with an error when the role is bot and it tries to access an unauthorized path', async () => {
+      const mockReqWithPath = {
+        ...mockRequest,
+        path: "Unauthorized Path",
+      }
+      const { mockVerifyToken } = require('../../services/tokenService');
+      mockVerifyToken.mockReturnValue({
+        userId: mockUserId,
+        role: "bot"
+      });
+      const verificationError = new StreamingServiceError('Invalid token', 401);
+
+      await authMiddleware.authenticate(mockReqWithPath as Request, mockResponse as Response, mockNext);
+      
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining(verificationError));
     });
 
     it('should call next with error when token verification fails', async () => {

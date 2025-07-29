@@ -2,6 +2,7 @@ import { TokenService } from '../tokenService';
 import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { StreamingServiceError } from '../../middleware/errorHandler';
+import { ITokenPayload } from '../../interfaces/auth';
 
 jest.mock('jsonwebtoken');
 
@@ -10,14 +11,13 @@ describe('TokenService', () => {
   const mockUserId = new Types.ObjectId();
   const mockToken = 'mock-token';
   const mockRefreshToken = 'mock-refresh-token';
-  const mockDecodedToken = { userId: mockUserId };
+  const mockDecodedToken: ITokenPayload = { userId: mockUserId };
 
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
     tokenService = TokenService.getInstance();
   });
-
 
   describe('getInstance', () => {
     it('should return the same instance', () => {
@@ -70,6 +70,17 @@ describe('TokenService', () => {
       const result = tokenService.verifyToken(mockToken);
 
       expect(result).toEqual({ userId: mockUserId });
+      expect(jwt.verify).toHaveBeenCalledWith(mockToken, 'test-secret');
+    });
+
+    it('should verify a valid token with a role', () => {
+      const mockDecodedTokenWithRole: ITokenPayload = {...mockDecodedToken, userRole: "user" };
+
+      (jwt.verify as jest.Mock).mockReturnValue(mockDecodedTokenWithRole);
+      
+      const result = tokenService.verifyToken(mockToken);
+
+      expect(result).toEqual({ userId: mockUserId, role: "user" });
       expect(jwt.verify).toHaveBeenCalledWith(mockToken, 'test-secret');
     });
 
