@@ -245,14 +245,34 @@ npm run test
 npm run test:coverage
 ```
 
+## 🧪 Debugging Tests
+
+You can use the following command to help detect open handles or memory leaks during test execution:
+
+```bash
+npm run test:debug
+```
+
 ## 📦 Versioning
 
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
-Current version: 1.3.0
+Current version: 1.3.1
 
 For detailed release notes and version history, please see our [CHANGELOG.md](CHANGELOG.md).
 For detailed architecture ideas and notes, please see our [ARCHITECTURE.md](ARCHITECTURE.md).
+
+
+## 🤖 GitHub Workflows
+
+A weekly scheduled GitHub Action was added to automatically trigger cover image updates for streaming types.
+
+- **Schedule:** Every Sunday at 12:00 UTC
+- **Steps:**
+  - Wake up Render server using `/health` endpoint
+  - Trigger `/streamingTypes/change-cover`
+
+You can find the workflow in `.github/workflows/cron.yaml`
 
 ## 🤝 Contributing
 
