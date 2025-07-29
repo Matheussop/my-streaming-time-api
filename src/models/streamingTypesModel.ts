@@ -48,7 +48,6 @@ const streamingTypesSchema = new Schema<IStreamingTypeDocument, IStreamingTypeMo
   }
 );
 
-streamingTypesSchema.index({ name: 1 }, { unique: true });
 streamingTypesSchema.index({ 'supportedGenres.name': 1 });
 
 streamingTypesSchema.static('findByName', function(name: string): Promise<IStreamingTypeResponse | null> {

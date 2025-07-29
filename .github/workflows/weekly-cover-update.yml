@@ -10,8 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Wake up server via /health
+        run: |
+          for i in {1..5}; do
+            echo "Checking health (attempt $i)..."
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_CHECK_URL")
+            if [ "$code" = "200" ]; then
+              echo "Server is up!"
+              break
+            fi
+            echo "Still sleeping... waiting 15s"
+            sleep 15
+          done
+        env:
+          HEALTH_CHECK_URL: ${{ secrets.HEALTH_CHECK_URL }}
+
       - name: Call /streamingTypes/change-cover
         run: |
+          echo "Calling $COVER_UPDATE_API_URL"
           curl -X GET "$COVER_UPDATE_API_URL" \
             -H "Authorization: $COVER_UPDATE_TOKEN" \
             -H "Content-Type: application/json"

@@ -37,10 +37,6 @@ const genreSchema = new Schema<IGenreSchema>(
   }
 );
 
-genreSchema.index({ name: 1 });
-genreSchema.index({ id: 1 });
-
-
 genreSchema.static('findByName', function(name: string): Promise<IGenreResponse | null> {
   return this.findOne({ name: new RegExp(`^${name}$`, 'i') });
 });

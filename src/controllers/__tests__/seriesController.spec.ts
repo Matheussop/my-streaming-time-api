@@ -8,6 +8,7 @@ import { SeriesRepository } from '../../repositories/seriesRepository';
 import { TMDBService } from '../../services/tmdbService';
 import { SeasonRepository } from '../../repositories/seasonRepository';
 import { Messages } from '../../constants/messages';
+import { ErrorMessages } from '../../constants/errorMessages';
 
 jest.mock('../../services/seriesService');
 
@@ -140,6 +141,20 @@ describe('SeriesController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith([mockSeries]);
     });
+
+    it('should return a not found message when series not found by title', async () => {
+      const title = 'Test';
+      const limit = 10;
+      const skip = 0;
+      mockReq.query = { title };
+      mockService.getSeriesByTitle.mockResolvedValue([]);
+
+      await controller.getSeriesByTitle(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.getSeriesByTitle).toHaveBeenCalledWith(title, skip, limit);
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({ message: ErrorMessages.SERIES_NOT_FOUND_BY_TITLE }));
+    })
   });
 
   describe('getSeriesByGenre', () => {

@@ -35,6 +35,7 @@ export const ErrorMessages = {
   // Series erros
   SERIE_NOT_FOUND: 'Serie not found',
   SERIES_NOT_FOUND: 'Series not found',
+  SERIES_NOT_FOUND_BY_TITLE: 'Series not found with the provided title',
   SERIES_TITLE_REQUIRED: 'Title is required',
   SERIES_NUMBER_OF_EPISODES_REQUIRED: 'Number of episodes is required',
   SERIES_NUMBER_OF_SEASONS_REQUIRED: 'Number of seasons is required',

@@ -7,6 +7,7 @@ import { StreamingServiceError } from '../middleware/errorHandler';
 import axios from 'axios';
 import { Messages } from "../constants/messages";
 import { PaginationSchemaType, SeriesByTitleParamSchemaType } from "../validators";
+import { ErrorMessages } from "../constants/errorMessages";
 
 export class SeriesController {
   skipCheckTitles: boolean = true;
@@ -42,7 +43,7 @@ export class SeriesController {
     if (series && series.length > 0) {
       res.status(200).json(series)
     } else {
-      res.status(404).json({ message: "Series not found with the provided title" });
+      res.status(404).json({ message: ErrorMessages.SERIES_NOT_FOUND_BY_TITLE });
     }
   });
 

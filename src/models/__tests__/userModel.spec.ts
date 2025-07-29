@@ -227,6 +227,19 @@ describe('User Model', () => {
       expect(isPasswordCorrect).toBe(false);
     });
 
+    it('should reject empty password', async () => {
+      const emptyPassword = '';
+
+      const mockUser = {
+        username: 'testauth',
+        email: 'testauth@example.com',
+        correctPassword: User.prototype.correctPassword
+      } as Partial<typeof User> as any;
+            
+      const isPasswordEmpty = await mockUser.correctPassword(emptyPassword);
+      expect(isPasswordEmpty).toBe(false);
+    });
+
     it('should detect password change after JWT issued', async () => {
       const user = new User({
         username: 'testauth',

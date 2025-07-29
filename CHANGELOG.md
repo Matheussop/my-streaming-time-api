@@ -13,6 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 4. Create release tag
 5. Deploy to production
 
+## [1.3.1]
+### Added
+- Enhanced test coverage for `seriesController` and `authMiddleware` with new scenarios
+- Added unit tests for `/season` routes with CronJob mocked to prevent open handles
+- New GitHub Action workflow: weekly auto-trigger for cover updates on Sundays
+- Health check step in workflow to handle cold start on Render
+- New `test:debug` script for Jest with open handle and heap tracking
+- Extended response metadata for streaming cover update endpoint
+
+### Changed
+- Cleaned up redundant indexes in `genres`, `streamingTypes`, and `userStreamingHistory` schemas
+- Improved test stability and coverage in `streamingTypeController`
+- Updated response format in `/change-cover` for more consistent API structure
+
+### Fixed
+- Corrected response status and formatting in `changeCover` tests
+
 ## [1.3.0]
 ### Planned
 - User authentication and authorization
