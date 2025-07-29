@@ -147,6 +147,25 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     return updatedHistory;
   }
 
+  async unMarkSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null> {
+    const updatedHistory = await this.repository.unMarkSeasonAsWatched(userId, contentId, seasonNumber);
+    if (!updatedHistory) {
+      logger.error({
+        message: ErrorMessages.HISTORY_SEASON_UNMARK_WATCHED,
+        error: ErrorMessages.HISTORY_UPDATE_FAILED,
+        userId,
+        contentId,
+      });
+      throw new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404);
+    }
+    logger.info({
+      message: Messages.HISTORY_STREAMING_UNMARKED_SUCCESSFULLY,
+      userId,
+      contentId,
+    });
+    return updatedHistory
+  }
+
   async getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null> {
     const history = await this.getUserHistory(userId);
     const seriesProgress = history.watchHistory.find((entry) => entry.contentId.toString() === contentId.toString())?.seriesProgress?.get(contentId.toString());

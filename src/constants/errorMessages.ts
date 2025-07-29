@@ -15,6 +15,7 @@ export const ErrorMessages = {
   HISTORY_DURATION_NEGATIVE: "Streaming duration must be positive",
   HISTORY_TOTAL_DURATION_NEGATIVE: "Streaming total duration must be positive",
   HISTORY_SEASON_MARK_WATCHED: "Failed marking season as watched",
+  HISTORY_SEASON_UNMARK_WATCHED: "Failed unmarking season as watched",
   HISTORY_UPDATE_FAILED: "Failed to update history",
   // Genre errors
   GENRE_NOT_FOUND: "Genre is not found",

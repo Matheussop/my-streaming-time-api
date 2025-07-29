@@ -44,6 +44,10 @@ export class UserStreamingHistoryRepository implements IUserStreamingHistoryRepo
     return UserStreamingHistory.updateSeasonProgress(userId,  seasonId, episodesWatches);
   }
 
+  async unMarkSeasonAsWatched(userId: string | Types.ObjectId, seasonId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null> {
+    return UserStreamingHistory.unMarkSeasonAsWatched(userId,  seasonId, seasonNumber);
+  }
+
   async delete(id: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse | null> {
     return UserStreamingHistory.findByIdAndDelete(id);
   }

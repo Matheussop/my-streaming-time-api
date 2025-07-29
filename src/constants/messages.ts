@@ -38,6 +38,7 @@ export const Messages = {
   STREAMING_REMOVED_SUCCESSFULLY: 'Streaming removed successfully',
   STREAMING_NOT_FOUND: 'Streaming not found or failed to update history',
   HISTORY_STREAMING_MARKED_SUCCESSFULLY: "Season marked as watched",
+  HISTORY_STREAMING_UNMARKED_SUCCESSFULLY: "Season unmarked as watched",
   // Authentication & Authorization messages
   AUTHENTICATION_SUCCESS: 'Authentication successful',
   LOGOUT_SUCCESS: 'Logout successful',

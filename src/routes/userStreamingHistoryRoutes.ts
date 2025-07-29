@@ -280,6 +280,37 @@ router.post(
 
 /**
  * @swagger
+ * /user-streaming-history/unmark-season-watched:
+ *   post:
+ *     summary: UnMark all episodes from a season as watched
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - contentId
+ *               - seasonNumber
+ *     responses:
+ *       200:
+ *         description: New history
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+
+router.delete(
+  '/unmark-season-watched',
+  validate(userStreamingHistoryMarkSeasonSchema),
+  controller.unMarkSeasonAsWatched,
+);
+
+/**
+ * @swagger
  * /user-streaming-history/total-watch-time/{userId}:
  *   get:
  *     summary: Get user's total watch time

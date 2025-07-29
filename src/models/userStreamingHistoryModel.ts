@@ -514,6 +514,68 @@ userStreamingHistorySchema.static("updateSeasonProgress", async function(
   return watchHistoryUpdated;
 });
 
+userStreamingHistorySchema.static("unMarkSeasonAsWatched", async function(
+  userId: string,
+  seriesId: string,
+  seasonNumber: number,
+): Promise<WatchHistoryEntry | null>{
+  const userHistory = await this.findOne({
+    userId,
+    'watchHistory.contentId': seriesId,
+    'watchHistory.contentType': 'series'
+  });
+
+  if (!userHistory) return null;
+
+  const seriesEntryIndex = userHistory.watchHistory.findIndex(
+    entry => entry.contentId.toString() === seriesId.toString()
+  );
+
+  const seriesEntry = userHistory.watchHistory[seriesEntryIndex];
+  const seriesProgress = seriesEntry.seriesProgress?.get(seriesId);
+
+  if (!seriesProgress) return null;
+
+  const updatedEpisodesMap = new Map(seriesProgress.episodesWatched);
+  let removedCount = 0;
+  let removedDuration = 0;
+
+  for (const [episodeId, episode] of updatedEpisodesMap) {
+    if (episode.seasonNumber === seasonNumber) {
+      removedDuration += episode.watchedDurationInMinutes || 0;
+      updatedEpisodesMap.delete(episodeId);
+      removedCount++;
+    }
+  }
+
+  const updatedWatchedEpisodes = updatedEpisodesMap.size;
+  const lastWatched = Array.from(updatedEpisodesMap.values()).pop() || null;
+
+  const baseEntryPath = `watchHistory.${seriesEntryIndex}`;
+  const seriesEntryPath = `${baseEntryPath}.seriesProgress.${seriesId}`;
+
+  const updateObj: any = {};
+  updateObj[`${seriesEntryPath}.episodesWatched`] = Object.fromEntries(updatedEpisodesMap);
+  updateObj[`${seriesEntryPath}.watchedEpisodes`] = updatedWatchedEpisodes;
+  updateObj[`${seriesEntryPath}.lastWatched`] = lastWatched;
+  updateObj[`${seriesEntryPath}.completed`] = updatedWatchedEpisodes === seriesProgress.totalEpisodes;
+
+  const currentDuration = seriesEntry.watchedDurationInMinutes || 0;
+  updateObj[`${baseEntryPath}.watchedDurationInMinutes`] = Math.max(currentDuration - removedDuration, 0);
+
+  const totalWatchPath = 'totalWatchTimeInMinutes';
+  const currentTotalWatch = userHistory.totalWatchTimeInMinutes || 0;
+  updateObj[totalWatchPath] = Math.max(currentTotalWatch - removedDuration, 0);
+
+  const updated = await this.findOneAndUpdate(
+    { userId },
+    { $set: updateObj },
+    { new: true }
+  );
+
+  return updated?.watchHistory[seriesEntryIndex] || null;
+});
+
 // Método para obter todos os episódios assistidos de uma série
 userStreamingHistorySchema.static('getWatchedEpisodesForSeries', async function(
   userId: string,
