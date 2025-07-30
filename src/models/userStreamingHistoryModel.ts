@@ -479,16 +479,11 @@ userStreamingHistorySchema.static("updateSeasonProgress", async function(
   
   const baseEntryPath = `watchHistory.${seriesEntryIndex}`;   
   const seriesEntryPath = `watchHistory.${seriesEntryIndex}.seriesProgress.${seriesId}`;
-
+  
   const seriesEntry = userHistory.watchHistory[seriesEntryIndex];
-  const seriesProgress = seriesEntry.seriesProgress?.get(seriesId) || {
-    totalEpisodes: 0,
-    watchedEpisodes: 0,
-    episodesWatched: new Map<string, EpisodeWatched>(),
-    completed: false
-  };
+  const seriesProgress = seriesEntry.seriesProgress!.get(seriesId);
 
-  const updatedEpisodesMap = new Map(seriesProgress.episodesWatched || []);
+  const updatedEpisodesMap = new Map(seriesProgress!.episodesWatched);
   let newWatchedCount = 0;
   let addDuration = 0;
 
@@ -507,16 +502,16 @@ userStreamingHistorySchema.static("updateSeasonProgress", async function(
   
   const updateObj: any = {};
   updateObj[`${seriesEntryPath}.episodesWatched`] = Object.fromEntries(updatedEpisodesMap);
-  updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress.watchedEpisodes || 0) + newWatchedCount;
+  updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress!.watchedEpisodes || 0) + newWatchedCount;
   updateObj[`${seriesEntryPath}.lastWatched`] = episodes[episodes.length - 1];
 
-  const currentDuration = seriesEntry.watchedDurationInMinutes || 0;
+  const currentDuration = seriesEntry.watchedDurationInMinutes;
   updateObj[`${baseEntryPath}.watchedDurationInMinutes`] = Math.max(currentDuration + addDuration, 0);
 
   const totalWatchPath = 'totalWatchTimeInMinutes';
   const currentTotalWatch = userHistory.totalWatchTimeInMinutes || 0;
   updateObj[totalWatchPath] = Math.max(currentTotalWatch + addDuration, 0);
-
+  
   const updatedHistory = await this.findOneAndUpdate(
     { userId },
     { $set: updateObj },

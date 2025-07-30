@@ -5,16 +5,8 @@ import Series from '../series/seriesModel';
 import User from '../userModel';
 import Genre from '../genresModel';
 import { StreamingServiceError } from '../../middleware/errorHandler';
-import { IUserStreamingHistoryResponse } from '../../interfaces/userStreamingHistory';
+import { EpisodeWatched, IUserStreamingHistoryResponse } from '../../interfaces/userStreamingHistory';
 
-interface EpisodeWatched {
-  episodeId: string;
-  seasonNumber: number;
-  episodeNumber: number;
-  watchedAt: Date;
-  watchedDurationInMinutes: number;
-  completionPercentage: number;
-}
 
 describe('UserStreamingHistory Model', () => {
   let mongoServer: MongoMemoryServer;
@@ -877,6 +869,279 @@ describe('UserStreamingHistory Model', () => {
       ));
 
     });
+
+    it('should update season progress and add episodes to user history', async () => {
+      const episode1 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 45,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      const episode2 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 2,
+        watchedDurationInMinutes: 50,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(
+        userId,
+        seriesId,
+        [episode1, episode2]
+      );
+    
+      expect(result).toBeDefined();
+      expect(result!.contentId).toBe(seriesId);
+      expect(result!.contentType).toBe('series');
+      expect(result!.watchedDurationInMinutes).toBe(95);
+    
+      const progress = result!.seriesProgress?.get(seriesId);
+      expect(progress).toBeDefined();
+      expect(progress?.watchedEpisodes).toBe(2);
+      expect(progress?.episodesWatched.has(episode1.episodeId)).toBe(true);
+      expect(progress?.episodesWatched.has(episode2.episodeId)).toBe(true);
+    });
+    
+    it('should create a new history entry when none exists', async () => {
+      const seriesWithoutHistory = await Series.create({
+        title: 'New Series',
+        genre: [1],
+        totalSeasons: 1,
+        totalEpisodes: 2
+      });
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(userId, seriesWithoutHistory._id.toString(), [
+        {
+          episodeId: new mongoose.Types.ObjectId().toString(),
+          seasonNumber: 1,
+          episodeNumber: 1,
+          watchedDurationInMinutes: 30,
+          completionPercentage: 100,
+          watchedAt: new Date()
+        }
+      ]);
+    
+      expect(result).toBeDefined();
+      expect(result!.watchedDurationInMinutes).toBe(30);
+    });
+
+    it('should add only new episodes and ignore already watched ones', async () => {
+      const episodeId = new mongoose.Types.ObjectId().toString();
+    
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId,
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 50,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]);
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId,
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 50,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]);
+    
+      const progress = result!.seriesProgress?.get(seriesId);
+      expect(progress!.watchedEpisodes).toBe(1); // ainda 1
+    });
+    
+    it('should increment watchedDurationInMinutes and totalWatchTimeInMinutes correctly', async () => {
+      const ep1 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+      const ep2 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 2,
+        watchedDurationInMinutes: 40,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [ep1, ep2]);
+    
+      expect(result!.watchedDurationInMinutes).toBe(70);
+    });
+    
+    it('should throw error if findOneAndUpdate fails', async () => {
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, []);
+    
+      jest.spyOn(UserStreamingHistory, 'findOneAndUpdate').mockResolvedValueOnce(null);
+    
+      await expect(UserStreamingHistory.updateSeasonProgress(userId, seriesId, [
+        {
+          episodeId: new mongoose.Types.ObjectId().toString(),
+          seasonNumber: 1,
+          episodeNumber: 1,
+          watchedDurationInMinutes: 30,
+          completionPercentage: 100,
+          watchedAt: new Date()
+        }
+      ])).rejects.toThrow('Failed to update episode progress');
+    });
+
+    it('should unmark all episodes from a season', async () => {
+      const episode1 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 2,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 45,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      const episode2 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 2,
+        episodeNumber: 2,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [episode1, episode2]);
+    
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(userId, seriesId, 2);
+    
+      expect(result).toBeDefined();
+    
+      const seriesProgress = result!.seriesProgress?.get(seriesId);
+      expect(seriesProgress).toBeDefined();
+      expect(seriesProgress!.watchedEpisodes).toBe(0);
+      expect(seriesProgress!.episodesWatched.size).toBe(0);
+    });
+    
+    it('should return null if no user history exists', async () => {
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(
+        new mongoose.Types.ObjectId().toString(),
+        seriesId,
+        1
+      );
+      expect(result).toBeNull();
+    });
+    
+    it('should return null if seriesProgress is missing', async () => {
+      await UserStreamingHistory.create({
+        userId,
+        watchHistory: [{
+          contentId: seriesId,
+          contentType: 'series',
+          title: 'Without progress',
+          watchedDurationInMinutes: 30,
+          completionPercentage: 100,
+          seriesProgress: null
+        }]
+      });
+    
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(userId, seriesId, 1);
+      expect(result).toBeNull();
+    });
+    
+    it('should return same object if no episodes match season number', async () => {
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 2,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]);
+    
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(userId, seriesId, 3);
+      const progress = result!.seriesProgress!.get(seriesId);
+    
+      expect(progress!.watchedEpisodes).toBe(1);
+    });
+    
+    it('should remove only episodes from specific season', async () => {
+      const s1ep1 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 20,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      const s2ep1 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 2,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 25,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [s1ep1, s2ep1]);
+    
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(userId, seriesId, 1);
+      const progress = result!.seriesProgress!.get(seriesId);
+    
+      expect(progress!.watchedEpisodes).toBe(1);
+      expect(progress!.episodesWatched.has(s1ep1.episodeId)).toBe(false);
+      expect(progress!.episodesWatched.has(s2ep1.episodeId)).toBe(true);
+    });
+    
+    it('should update lastWatched correctly after removing', async () => {
+      const ep1 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      };
+    
+      const ep2 = {
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 2,
+        watchedDurationInMinutes: 35,
+        completionPercentage: 100,
+      } as EpisodeWatched;
+    
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [ep1, ep2]);
+    
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(userId, seriesId, 1);
+      const progress = result!.seriesProgress!.get(seriesId)!;
+      const progressPlain = Object.fromEntries(progress.episodesWatched.entries());
+      
+      expect(progress.watchedEpisodes).toBe(0);
+      expect(progressPlain).toBeDefined();
+      expect(Object.prototype.hasOwnProperty.call(progress, 'lastWatched')).toBe(false);
+    });
+    
+    it('should return null if findOneAndUpdate fails', async () => {
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]);
+    
+      jest.spyOn(UserStreamingHistory, 'findOneAndUpdate').mockResolvedValueOnce(null);
+    
+      const result = await UserStreamingHistory.unMarkSeasonAsWatched(userId, seriesId, 1);
+      expect(result).toBeNull();
+    });
+
   });
 
   describe('toJSON Transform', () => {

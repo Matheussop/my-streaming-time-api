@@ -4,9 +4,8 @@ import {
   userStreamingHistoryUpdateSchema,
   userStreamingHistoryAddEntrySchema,
   userContentIdentifierSchema,
-  userStreamingHistoryRemoveEntrySchema,
   userStreamingHistoryRemoveEpisodeSchema,
-  userStreamingHistoryGetByUserIdAndStreamingIdSchema,
+  userStreamingHistoryMarkSeasonSchema,
   userStreamingHistoryAddEpisodeSchema
 } from '../userStreamingHistorySchema';
 
@@ -539,3 +538,84 @@ describe('userStreamingHistoryAddEpisodeSchema', () => {
     }
   });
 }); 
+
+describe('userStreamingHistoryMarkSeasonSchema', () => {
+  const validId = new Types.ObjectId();
+
+  it('should validate a valid input', () => {
+    const validInput = {
+      userId: validId,
+      contentId: validId,
+      seasonNumber: 1
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  it('should fail when userId is missing', () => {
+    const input = {
+      contentId: validId,
+      seasonNumber: 1
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);
+    expect(result.success).toBe(false);
+  });
+
+  it('should fail when contentId is missing', () => {
+    const input = {
+      userId: validId,
+      seasonNumber: 1
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);
+    expect(result.success).toBe(false);
+  });
+
+  it('should fail when seasonNumber is missing', () => {
+    const input = {
+      userId: validId,
+      contentId: validId
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);
+    expect(result.success).toBe(false);
+  });
+
+  it('should fail when seasonNumber is less than 1', () => {
+    const input = {
+      userId: validId,
+      contentId: validId,
+      seasonNumber: 0
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);
+    expect(result.success).toBe(false);
+  });
+
+  it('should fail when seasonNumber is not a number', () => {
+    const input = {
+      userId: validId,
+      contentId: validId,
+      seasonNumber: '1'
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);
+    expect(result.success).toBe(false);
+  });
+
+  it('should fail when userId and contentId are invalid strings', () => {
+    const input = {
+      userId: 'invalid',
+      contentId: 'invalid',
+      seasonNumber: 2
+    };
+
+    const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.errors.some(e => e.message.includes('Invalid ID'))).toBe(true);
+    }
+  });
+});

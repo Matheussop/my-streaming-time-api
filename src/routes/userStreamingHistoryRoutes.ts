@@ -25,6 +25,13 @@ const controller = new UserStreamingHistoryController(userStreamingHistoryServic
 
 /**
  * @swagger
+ * tags:
+ *   name: Streaming History
+ *   description: User streaming history management
+ */
+
+/**
+ * @swagger
  * /user-streaming-history/get-episodes-watched:
  *   get:
  *     summary: Get episodes watched by user
@@ -48,13 +55,6 @@ router.get('/get-episodes-watched',
   validateObjectId('query', 'userId'),
   validateObjectId('query', 'contentId'),
   controller.getEpisodesWatched);
-
-/**
- * @swagger
- * tags:
- *   name: Streaming History
- *   description: User streaming history management
- */
 
 /**
  * @swagger
@@ -296,7 +296,7 @@ router.post(
  *               - seasonNumber
  *     responses:
  *       200:
- *         description: New history
+ *         description: A history object
  *       400:
  *         description: Invalid request data
  *       500:
