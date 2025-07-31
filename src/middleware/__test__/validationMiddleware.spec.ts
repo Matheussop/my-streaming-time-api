@@ -40,7 +40,6 @@ describe('Validation Middleware', () => {
   });
 
   it('should validate valid body data and call next()', async () => {
-    // Arrange
     const validateMiddleware = validate(mockSchema);
     mockRequest.body = {
       name: 'Test User',
@@ -48,10 +47,8 @@ describe('Validation Middleware', () => {
       age: 25,
     };
 
-    // Act
     await validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-    // Assert
     expect(mockNext).toHaveBeenCalledTimes(1);
     expect(mockNext).toHaveBeenCalledWith();
     expect(mockRequest.body).toEqual({
@@ -62,7 +59,6 @@ describe('Validation Middleware', () => {
   });
 
   it('should validate valid params data and call next() with params', async () => {
-    // Arrange
     const validateMiddleware = validate(mockSchema, 'params');
     const mockParams = {
       name: 'Test User',
@@ -80,17 +76,14 @@ describe('Validation Middleware', () => {
     });
     mockSchema.parseAsync = mockParseAsync;
 
-    // Act
     await validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
 
-    // Assert
     expect(mockNext).toHaveBeenCalledTimes(1);
     expect(mockParseAsync).toHaveBeenCalledWith(mockParams);
   });
 
   it('should validate valid query data and call next() with query', async () => {
-    // Arrange
     const validateMiddleware = validate(mockSchema, 'query');
     const mockQuery = {
       name: 'Test User',
@@ -112,10 +105,8 @@ describe('Validation Middleware', () => {
     );
     mockSchema.parseAsync = mockParseAsync;
 
-    // Act
     await validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-    // Assert
     const mockRequestWithNumberAge = {
       ...mockRequest,
       query: {
@@ -129,7 +120,6 @@ describe('Validation Middleware', () => {
   });
 
   it('should pass zod error to error handler when validation fails for body', async () => {
-    // Arrange
     const validateMiddleware = validate(mockSchema);
     mockRequest.body = {
       name: 'Te', // nome muito curto
@@ -167,17 +157,14 @@ describe('Validation Middleware', () => {
 
     mockSchema.parseAsync = jest.fn().mockRejectedValue(zodError);
 
-    // Act
     await expect(
       validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext)
     ).rejects.toThrow(zodError);
 
-    // Assert
     expect(mockSchema.parseAsync).toHaveBeenCalledWith(mockRequest.body);
   });
 
   it('should transform data according to schema transformations', async () => {
-    // Arrange
     const transformSchema = z.object({
       email: z.string().email().toLowerCase(),
       age: z.string().transform(val => parseInt(val, 10)),
@@ -201,16 +188,13 @@ describe('Validation Middleware', () => {
     // Mock do parseAsync para simular a transformação
     transformSchema.parseAsync = jest.fn().mockResolvedValue(expectedTransformedData);
 
-    // Act
     await validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-    // Assert
     expect(mockNext).toHaveBeenCalledTimes(1);
     expect(mockRequest.body).toEqual(expectedTransformedData);
   });
 
   it('should handle optional fields correctly', async () => {
-    // Arrange
     const validateMiddleware = validate(mockSchema);
     mockRequest.body = {
       name: 'Test User',
@@ -218,10 +202,8 @@ describe('Validation Middleware', () => {
       // age is omitted (optional)
     };
 
-    // Act
     await validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-    // Assert
     expect(mockNext).toHaveBeenCalledTimes(1);
     expect(mockRequest.body).toEqual({
       name: 'Test User',
@@ -230,7 +212,6 @@ describe('Validation Middleware', () => {
   });
 
   it('should validate nested objects correctly', async () => {
-    // Arrange
     const nestedSchema = z.object({
       user: z.object({
         name: z.string().min(3),
@@ -261,10 +242,8 @@ describe('Validation Middleware', () => {
       },
     };
 
-    // Act
     await validateMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-    // Assert
     expect(mockNext).toHaveBeenCalledTimes(1);
     expect(mockRequest.body).toEqual({
       user: {

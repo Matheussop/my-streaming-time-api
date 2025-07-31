@@ -36,7 +36,7 @@ const userStreamingHistorySchema = new Schema<IUserStreamingHistoryDocument, IUs
           of: {
             totalEpisodes: { type: Number, default: 0 },
             watchedEpisodes: { type: Number, default: 0 },
-            episodesWatched: { // Lista de episódios assistidos
+            episodesWatched: { 
               type: Map,
               of: {
                 episodeId: String,
@@ -257,14 +257,12 @@ userStreamingHistorySchema.static('removeEpisodeFromHistory', async function(
   contentId: string,
   episodeId: string
 ): Promise<WatchHistoryEntry | null> {
-  // Encontrar o histórico do usuário contendo a série
   const userHistory = await this.findOne({ userId, 'watchHistory.contentId': contentId });
 
   if (!userHistory) {
     return null;
   }
 
-  // Encontrar a entrada específica da série e o episódio dentro dela
   const seriesEntry = userHistory.watchHistory.find(entry => entry.contentId.toString() === contentId.toString());
   if (!seriesEntry || !seriesEntry.seriesProgress) {
     return null;
@@ -289,7 +287,6 @@ userStreamingHistorySchema.static('removeEpisodeFromHistory', async function(
   const episodePath = `watchHistory.$[elem].seriesProgress.${contentId}.episodesWatched.${episodeId}`;
   const watchedEpisodesPath = `watchHistory.$[elem].seriesProgress.${contentId}.watchedEpisodes`;
 
-  // Executar a atualização
   const result = await this.findOneAndUpdate(
     { userId },
     {
@@ -322,7 +319,6 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
   seriesId: string,
   episodeData: EpisodeWatched
 ): Promise<WatchHistoryEntry | null> {
-  // Verificar se a série já existe no histórico do usuário
   const userHistory = await this.findOne({
     userId,
     'watchHistory.contentId': seriesId,
@@ -331,8 +327,6 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
   
   const now = new Date();
   if (!userHistory) {
-    // Se não existir, criar uma nova entrada para a série
-    // Primeiro precisamos obter os dados básicos da série
     const seriesData = await Series.findById(seriesId);
     
     if (!seriesData) {
@@ -361,14 +355,13 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       contentType: 'series',
       title: seriesData.title,
       watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
-      completionPercentage: 0, // Será calculado depois
+      completionPercentage: 0,
       seriesProgress
     });
 
     return watchHistoryEntry?.watchHistory[0] || null;
     
   } else {
-    // Série já existe, atualizar progresso
     const seriesEntryIndex = userHistory.watchHistory.findIndex(
       entry => entry.contentId.toString() === seriesId.toString() && entry.contentType === 'series'
     );
@@ -379,26 +372,21 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
       episodesWatched: [],
       completed: false
     };
-    // Verificar se este episódio já foi assistido
     const episodeExists = seriesProgress.episodesWatched instanceof Map
       && (seriesProgress.episodesWatched as Map<string, EpisodeWatched>).has(episodeData.episodeId)
 
     const now = new Date();
-    // Preparar dados para atualização
     const episodeToUpdate = {
       ...episodeData,
       watchedAt: now
     };
     
-    // Construir o caminho para atualização
     const seriesEntryPath = `watchHistory.${seriesEntryIndex}.seriesProgress.${seriesId}`;
     
     const updateObj: any = {};
     
-    // Atualizar último episódio assistido
     updateObj[`${seriesEntryPath}.lastWatched`] = episodeToUpdate;
     
-    // Adicionar ou atualizar episódio na lista de assistidos
     if (!episodeExists) {
     // Episódio não assistido anteriormente - incrementar contador
     updateObj[`${seriesEntryPath}.watchedEpisodes`] = (seriesProgress.watchedEpisodes || 0) + 1;
@@ -406,7 +394,6 @@ userStreamingHistorySchema.static('updateEpisodeProgress', async function(
 
     updateObj[`${seriesEntryPath}.episodesWatched.${episodeData.episodeId}`] = episodeToUpdate;
     
-    // Calcular e atualizar progresso geral da série
     // TODO depende de como vamos definir "completionPercentage" para a série
     const updatedHistory = await this.findOneAndUpdate(
       { userId },

@@ -547,7 +547,7 @@ describe('UserStreamingHistory Model', () => {
         title: 'Test Series 2',
         genre: [1],
         totalSeasons: 1,
-        totalEpisodes: null // series without episodes
+        totalEpisodes: null
       });
       const newSeriesId = newSeries._id.toString();
 
@@ -952,7 +952,7 @@ describe('UserStreamingHistory Model', () => {
       }]);
     
       const progress = result!.seriesProgress?.get(seriesId);
-      expect(progress!.watchedEpisodes).toBe(1); // ainda 1
+      expect(progress!.watchedEpisodes).toBe(1);
     });
     
     it('should increment watchedDurationInMinutes and totalWatchTimeInMinutes correctly', async () => {

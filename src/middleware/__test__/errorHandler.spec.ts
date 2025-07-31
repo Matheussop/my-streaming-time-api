@@ -116,7 +116,6 @@ describe('Error Handling', () => {
       const mongoError = new Error('Duplicate key error') as any;
       mongoError.name = 'MongoServerError';
       mongoError.code = 11000;
-      // keyValue is undefined
 
       errorHandler(mongoError, mockRequest as Request, mockResponse as Response, mockNext);
 

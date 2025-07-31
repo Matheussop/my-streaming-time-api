@@ -314,7 +314,7 @@ describe('userStreamingHistoryUpdateSchema', () => {
           contentId: objectId,
           contentType: 'movie',
           title: 'Movie',
-          watchedDurationInMinutes: -10 // Invalid duration
+          watchedDurationInMinutes: -10
         }
       ]
     };

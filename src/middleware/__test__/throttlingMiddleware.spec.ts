@@ -1,16 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import throttlingMiddleware, { getLastRequestTime, setLastRequestTime } from '../throttlingMiddleware';
 import LastRequestTime from '../../models/lastRequestTimeModel';
 import { SeriesService } from '../../services/seriesService';
 import { MovieService } from '../../services/movieService';
 import { StreamingServiceError } from '../errorHandler';
 
-// Extensão do tipo para incluir propriedades de mock
-type MockedClass<T> = {
-  mock: {
-    instances: Array<jest.Mocked<T>>;
-  };
-};
 
 let mockFetchAndSaveExternalSeries = jest.fn().mockResolvedValue(undefined);
 // Mock dos serviços
@@ -48,16 +42,13 @@ describe('Throttling Middleware', () => {
     };
     mockNext = jest.fn();
 
-    // Suprimir logs durante os testes
     originalConsoleLog = console.log;
     originalConsoleError = console.error;
     console.log = jest.fn();
     console.error = jest.fn();
 
-    // Reset mocks
     jest.clearAllMocks();
     
-    // Reset o estado do middleware para cada teste
     throttlingMiddleware.setLastRequestTime(0);
   });
 
@@ -74,13 +65,10 @@ describe('Throttling Middleware', () => {
 
       await throttlingMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      // Verifica se SeriesService.fetchAndSaveExternalSeries não foi chamado
       expect(mockFetchAndSaveExternalSeries).not.toHaveBeenCalled();
 
-      // Verifica se MovieService.fetchAndSaveExternalMovies não foi chamado
       expect(mockFetchAndSaveExternalMovies).not.toHaveBeenCalled();
 
-      // Verifica se next() foi chamado
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
 
@@ -92,59 +80,46 @@ describe('Throttling Middleware', () => {
 
       await throttlingMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      // Verifica se seriesService foi instanciado e o método fetchAndSaveExternalSeries foi chamado
       expect(SeriesService).toHaveBeenCalled();
       expect(mockFetchAndSaveExternalSeries).toHaveBeenCalledTimes(1);
 
-      // Verifica se movieService foi instanciado e o método fetchAndSaveExternalMovies foi chamado
       expect(MovieService).toHaveBeenCalled();
       expect(mockFetchAndSaveExternalMovies).toHaveBeenCalledTimes(1);
 
-      // Verifica se next() foi chamado
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
 
     it('should not fetch data if already fetching', async () => {
       const now = Date.now();
-      // Define o último tempo de requisição para 8 dias atrás
       const eightDaysAgo = now - (8 * 24 * 60 * 60 * 1000);
       throttlingMiddleware.setLastRequestTime(eightDaysAgo);
 
-      // Primeira chamada vai iniciar o processo de fetch
       const firstPromise = throttlingMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
       
-      // Segunda chamada não deve iniciar outro processo de fetch
       const secondPromise = throttlingMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
       
       await Promise.all([firstPromise, secondPromise]);
 
-      // Verifica se seriesService.fetchAndSaveExternalSeries foi chamado apenas uma vez
       expect(mockFetchAndSaveExternalSeries).toHaveBeenCalledTimes(1);
 
-      // Verifica se movieService.fetchAndSaveExternalMovies foi chamado apenas uma vez
       expect(mockFetchAndSaveExternalMovies).toHaveBeenCalledTimes(1);
 
-      // Verifica se next() foi chamado duas vezes (uma para cada chamada do middleware)
       expect(mockNext).toHaveBeenCalledTimes(2);
     });
 
     it('should update lastRequestTime after fetching data', async () => {
       const now = Date.now();
-      // Define o último tempo de requisição para 8 dias atrás
       const eightDaysAgo = now - (8 * 24 * 60 * 60 * 1000);
       throttlingMiddleware.setLastRequestTime(eightDaysAgo);
 
-      // Mock do Date.now() para retornar um valor fixo
       const mockNow = Date.now();
       const originalDateNow = Date.now;
       Date.now = jest.fn(() => mockNow);
 
       await throttlingMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      // Restaura Date.now
       Date.now = originalDateNow;
 
-      // Verifica se lastRequestTime foi atualizado para o valor de mockNow
       expect(throttlingMiddleware.getLastRequestTime()).toBe(mockNow);
     });
 
@@ -153,15 +128,12 @@ describe('Throttling Middleware', () => {
       const eightDaysAgo = now - (8 * 24 * 60 * 60 * 1000);
       throttlingMiddleware.setLastRequestTime(eightDaysAgo);
 
-      // Fazer com que fetchAndSaveExternalSeries lance um erro
       mockFetchAndSaveExternalSeries.mockRejectedValueOnce(new StreamingServiceError('Test error', 500));
 
       await throttlingMiddleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      // Verifica se o erro foi registrado
       expect(console.error).toHaveBeenCalled();
       
-      // Verifica se ainda assim o next() foi chamado
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
   });

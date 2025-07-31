@@ -12,7 +12,6 @@ import { z } from 'zod';
 describe('Statistics Interfaces and Schemas', () => {
   describe('WatchTimeStatsSchema', () => {
     it('should validate valid watch time statistics data', () => {
-      // Arrange
       const validWatchTimeStats = {
         totalWatchTimeInMinutes: 1200,
         averageWatchTimePerDay: 60,
@@ -23,14 +22,12 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => WatchTimeStatsSchema.parse(validWatchTimeStats)).not.toThrow();
     });
 
     it('should reject invalid watch time statistics data', () => {
-      // Arrange
       const invalidWatchTimeStats = {
-        totalWatchTimeInMinutes: '1200', // Should be a number
+        totalWatchTimeInMinutes: '1200', 
         averageWatchTimePerDay: 60,
         averageWatchTimePerSession: 30,
         watchTimeByContentType: {
@@ -39,15 +36,12 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => WatchTimeStatsSchema.parse(invalidWatchTimeStats)).toThrow(z.ZodError);
     });
 
     it('should reject when required fields are missing', () => {
-      // Arrange
       const incompleteWatchTimeStats = {
         totalWatchTimeInMinutes: 1200,
-        // averageWatchTimePerDay is missing
         averageWatchTimePerSession: 30,
         watchTimeByContentType: {
           'series': 800,
@@ -55,14 +49,12 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => WatchTimeStatsSchema.parse(incompleteWatchTimeStats)).toThrow(z.ZodError);
     });
   });
 
   describe('ContentTypeDistributionSchema', () => {
     it('should validate valid content type distribution data', () => {
-      // Arrange
       const validContentTypeDistribution = {
         totalContent: 50,
         byType: {
@@ -75,12 +67,10 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => ContentTypeDistributionSchema.parse(validContentTypeDistribution)).not.toThrow();
     });
 
     it('should reject invalid content type distribution data', () => {
-      // Arrange
       const invalidContentTypeDistribution = {
         totalContent: 50,
         byType: {
@@ -93,14 +83,12 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => ContentTypeDistributionSchema.parse(invalidContentTypeDistribution)).toThrow(z.ZodError);
     });
   });
 
   describe('GenrePreferenceSchema', () => {
     it('should validate valid genre preference data', () => {
-      // Arrange
       const validGenrePreference = {
         genreCounts: {
           'action': 20,
@@ -129,12 +117,10 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => GenrePreferenceSchema.parse(validGenrePreference)).not.toThrow();
     });
 
     it('should validate valid data even without optional fields', () => {
-      // Arrange
       const validGenrePreferenceWithoutOptionals = {
         genreCounts: {
           'action': 20,
@@ -153,12 +139,10 @@ describe('Statistics Interfaces and Schemas', () => {
         ]
       };
 
-      // Act & Assert
       expect(() => GenrePreferenceSchema.parse(validGenrePreferenceWithoutOptionals)).not.toThrow();
     });
 
     it('should reject invalid genre preference data', () => {
-      // Arrange
       const invalidGenrePreference = {
         genreCounts: {
           'action': 20,
@@ -177,14 +161,12 @@ describe('Statistics Interfaces and Schemas', () => {
         ]
       };
 
-      // Act & Assert
       expect(() => GenrePreferenceSchema.parse(invalidGenrePreference)).toThrow(z.ZodError);
     });
   });
 
   describe('SeriesProgressItemSchema', () => {
     it('should validate valid series progress item data', () => {
-      // Arrange
       const validSeriesProgressItem = {
         title: 'Breaking Bad',
         totalEpisodes: 62,
@@ -194,12 +176,10 @@ describe('Statistics Interfaces and Schemas', () => {
         averageEpisodeLength: 60
       };
 
-      // Act & Assert
       expect(() => SeriesProgressItemSchema.parse(validSeriesProgressItem)).not.toThrow();
     });
 
     it('should reject invalid series progress item data', () => {
-      // Arrange
       const invalidSeriesProgressItem = {
         title: 'Breaking Bad',
         totalEpisodes: 62,
@@ -209,14 +189,12 @@ describe('Statistics Interfaces and Schemas', () => {
         averageEpisodeLength: 60
       };
 
-      // Act & Assert
       expect(() => SeriesProgressItemSchema.parse(invalidSeriesProgressItem)).toThrow(z.ZodError);
     });
   });
 
   describe('SeriesProgressStatsSchema', () => {
     it('should validate valid series progress statistics data', () => {
-      // Arrange
       const validSeriesProgressStats = {
         series: [
           {
@@ -255,12 +233,10 @@ describe('Statistics Interfaces and Schemas', () => {
         averageCompletionPercentage: 86.29
       };
 
-      // Act & Assert
       expect(() => SeriesProgressStatsSchema.parse(validSeriesProgressStats)).not.toThrow();
     });
 
     it('should validate valid data even without optional fields', () => {
-      // Arrange
       const validSeriesProgressStatsWithoutOptionals = {
         series: [
           {
@@ -275,18 +251,15 @@ describe('Statistics Interfaces and Schemas', () => {
         averageCompletionPercentage: 72.58
       };
 
-      // Act & Assert
       expect(() => SeriesProgressStatsSchema.parse(validSeriesProgressStatsWithoutOptionals)).not.toThrow();
     });
 
     it('should handle empty series array in series progress stats', () => {
-      // Arrange
       const seriesProgressStatsWithEmptyArray = {
         series: [], // Empty array
         averageCompletionPercentage: 0
       };
 
-      // Act & Assert
       // Doesn't throw because the schema doesn't require array with elements
       expect(() => SeriesProgressStatsSchema.parse(seriesProgressStatsWithEmptyArray)).not.toThrow();
     });
@@ -294,7 +267,6 @@ describe('Statistics Interfaces and Schemas', () => {
 
   describe('WatchingPatternStatsSchema', () => {
     it('should validate valid watching pattern statistics', () => {
-      // Arrange
       const validWatchingPatternStats = {
         mostActiveDate: new Date('2023-01-15'),
         mostActiveDay: 'Sunday',
@@ -318,12 +290,10 @@ describe('Statistics Interfaces and Schemas', () => {
         averageTimeBetweenEpisodes: 1440 // minutes (24 hours)
       };
 
-      // Act & Assert
       expect(() => WatchingPatternStatsSchema.parse(validWatchingPatternStats)).not.toThrow();
     });
 
     it('should validate valid data even without optional fields', () => {
-      // Arrange
       const validWatchingPatternStatsWithoutOptionals = {
         watchCountByDay: {
           'Monday': 5,
@@ -343,12 +313,10 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => WatchingPatternStatsSchema.parse(validWatchingPatternStatsWithoutOptionals)).not.toThrow();
     });
 
     it('should reject invalid watching pattern statistics', () => {
-      // Arrange
       const invalidWatchingPatternStats = {
         mostActiveDate: '2023-01-15', // Should be a Date object
         mostActiveDay: 'Sunday',
@@ -363,14 +331,12 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => WatchingPatternStatsSchema.parse(invalidWatchingPatternStats)).toThrow(z.ZodError);
     });
   });
 
   describe('UserWatchingStatsSchema', () => {
     it('should validate valid complete user watching statistics', () => {
-      // Arrange
       const validUserWatchingStats = {
         watchTimeStats: {
           totalWatchTimeInMinutes: 7080,
@@ -470,12 +436,10 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => UserWatchingStatsSchema.parse(validUserWatchingStats)).not.toThrow();
     });
 
     it('should validate valid data even without optional fields', () => {
-      // Arrange
       const validUserWatchingStatsWithoutOptionals = {
         watchTimeStats: {
           totalWatchTimeInMinutes: 7080,
@@ -530,12 +494,10 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => UserWatchingStatsSchema.parse(validUserWatchingStatsWithoutOptionals)).not.toThrow();
     });
 
     it('should reject invalid complete user watching statistics', () => {
-      // Arrange
       const invalidUserWatchingStats = {
         watchTimeStats: {
           totalWatchTimeInMinutes: 7080,
@@ -572,7 +534,6 @@ describe('Statistics Interfaces and Schemas', () => {
         }
       };
 
-      // Act & Assert
       expect(() => UserWatchingStatsSchema.parse(invalidUserWatchingStats)).toThrow(z.ZodError);
     });
   });
