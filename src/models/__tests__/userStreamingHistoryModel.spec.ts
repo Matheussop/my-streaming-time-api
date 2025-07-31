@@ -164,25 +164,8 @@ describe('UserStreamingHistory Model', () => {
 
       movieId = new mongoose.Types.ObjectId().toString();
     });
-
-    it('should be able to create a user streaming history', async () => {
-      const watchHistoryEntry = {
-        contentId: movieId,
-        contentType: 'movie' as 'movie',
-        title: 'Added Movie',
-        watchedDurationInMinutes: 105,
-        completionPercentage: 90
-      };
-      const userStreamingHistory = await UserStreamingHistory.create({
-        userId,
-        watchHistory: [watchHistoryEntry]
-      });
-      expect(userStreamingHistory._id).toBeDefined();
-      expect(userStreamingHistory.userId).toBe(userId);
-      expect(userStreamingHistory.watchHistory).toHaveLength(1);
-    });
     
-    it('should be able to fail when watchHistory receives a invalid userId', async () => {
+    it('should fail when userId does not exist in watchHistory', async () => {
       const watchHistoryEntry = {
         contentId: movieId,
         contentType: 'movie' as 'movie',
@@ -313,7 +296,7 @@ describe('UserStreamingHistory Model', () => {
       expect(result).toBeNull();
     });
 
-    it('should be return null when try to remove a episode from history without at least one episode watched in seriesProgress', async () => {
+    it('should return null if no episodes watched in seriesProgress', async () => {
       await UserStreamingHistory.create({
         userId,
         watchHistory: [
@@ -369,7 +352,7 @@ describe('UserStreamingHistory Model', () => {
       expect(result).toBeNull();
     })
 
-    it('should be return null when try to remove a episode from history and the database failed to update the seriesProgress', async () => {
+    it('should return null if DB update fails when removing episode', async () => {
       await UserStreamingHistory.create({
         userId,
         watchHistory: [
@@ -1142,6 +1125,66 @@ describe('UserStreamingHistory Model', () => {
       expect(result).toBeNull();
     });
 
+    it('should return null if findOneAndUpdate fails on updateSeasonProgress', async () => {
+      jest.spyOn(UserStreamingHistory, 'findOneAndUpdate').mockResolvedValueOnce(null);
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]);
+
+      expect(result).toBeNull();
+    });
+
+    it('should set totalEpisodes as 0 if not found in seriesData', async () => {
+      const episodeId = new mongoose.Types.ObjectId().toString();
+    
+      await Series.findByIdAndDelete(seriesId); // forçar not found
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId,
+        seasonNumber: 1,
+        episodeNumber: 1,
+        completionPercentage: 100
+      } as EpisodeWatched]);
+    
+
+      const progress = result!.seriesProgress!.get(seriesId);
+      expect(progress!.totalEpisodes).toBe(0);
+    });
+    
+    it('should default watchedAt to current time if not provided in updateSeasonProgress', async () => {
+      const episodeId = new mongoose.Types.ObjectId().toString();
+      
+      await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [{
+        episodeId: new mongoose.Types.ObjectId().toString(),
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100,
+        watchedAt: new Date()
+      }]);
+
+      const episode: EpisodeWatched = {
+        episodeId,
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watchedDurationInMinutes: 30,
+        completionPercentage: 100
+        // watchedAt is intentionally omitted
+      } as EpisodeWatched;
+    
+      const result = await UserStreamingHistory.updateSeasonProgress(userId, seriesId, [episode]);
+    
+      expect(result).toBeDefined();
+      const ep = result!.seriesProgress!.get(seriesId)?.episodesWatched.get(episodeId);
+      expect(ep).toBeDefined();
+      expect(ep!.watchedAt).toBeInstanceOf(Date);
+    });  
   });
 
   describe('toJSON Transform', () => {

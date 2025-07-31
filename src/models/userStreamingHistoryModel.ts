@@ -478,7 +478,7 @@ userStreamingHistorySchema.static("updateSeasonProgress", async function(
     const alreadyWatched = updatedEpisodesMap.has(ep.episodeId);
     if (!alreadyWatched) {
       newWatchedCount++;
-      addDuration += ep.watchedDurationInMinutes || 0;
+      addDuration += ep.watchedDurationInMinutes;
   
       updatedEpisodesMap.set(ep.episodeId, {
         ...ep,
@@ -539,7 +539,7 @@ userStreamingHistorySchema.static("unMarkSeasonAsWatched", async function(
 
   for (const [episodeId, episode] of updatedEpisodesMap) {
     if (episode.seasonNumber === seasonNumber) {
-      removedDuration += episode.watchedDurationInMinutes || 0;
+      removedDuration += episode.watchedDurationInMinutes;
       updatedEpisodesMap.delete(episodeId);
       removedCount++;
     }
@@ -557,11 +557,11 @@ userStreamingHistorySchema.static("unMarkSeasonAsWatched", async function(
   updateObj[`${seriesEntryPath}.lastWatched`] = lastWatched;
   updateObj[`${seriesEntryPath}.completed`] = updatedWatchedEpisodes === seriesProgress.totalEpisodes;
 
-  const currentDuration = seriesEntry.watchedDurationInMinutes || 0;
+  const currentDuration = seriesEntry.watchedDurationInMinutes;
   updateObj[`${baseEntryPath}.watchedDurationInMinutes`] = Math.max(currentDuration - removedDuration, 0);
 
   const totalWatchPath = 'totalWatchTimeInMinutes';
-  const currentTotalWatch = userHistory.totalWatchTimeInMinutes || 0;
+  const currentTotalWatch = userHistory.totalWatchTimeInMinutes!;
   updateObj[totalWatchPath] = Math.max(currentTotalWatch - removedDuration, 0);
 
   const updated = await this.findOneAndUpdate(
