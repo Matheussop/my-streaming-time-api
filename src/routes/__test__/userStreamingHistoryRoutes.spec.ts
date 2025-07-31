@@ -13,7 +13,9 @@ const mockImplementations = {
   getByUserIdAndStreamingId: jest.fn(),
   addEpisodeToHistory: jest.fn(),
   removeEpisodeFromHistory: jest.fn(),
-  getEpisodesWatched: jest.fn()
+  getEpisodesWatched: jest.fn(),
+  markSeasonAsWatched: jest.fn(),
+  unMarkSeasonAsWatched: jest.fn()
 };
 
 jest.mock('../../controllers/userStreamingHistoryController', () => ({
@@ -280,6 +282,101 @@ describe('User Streaming History Routes', () => {
     });
   });
 
+  describe('POST /mark-season-watched', () => {
+    it('should mark season as watched', async () => {
+      const payload = {
+        userId: mockUserId.toString(),
+        contentId: mockContentId.toString(),
+        seasonNumber: 1,
+      };
+
+      mockImplementations.markSeasonAsWatched.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json({ message: 'Season marked as watched' });
+      });
+
+      const response = await request(app)
+        .post('/streaming-history/mark-season-watched')
+        .send(payload)
+        .expect(HttpStatus.OK);
+
+      expect(response.body).toEqual({ message: 'Season marked as watched' });
+    });
+
+    it('should mark all episodes of a season as watched', async () => {
+      const payload = {
+        userId: mockUserId.toString(),
+        contentId: mockContentId.toString(),
+        seasonNumber: 1
+      };
+  
+      const mockResponse = {
+        contentId: payload.contentId,
+        contentType: 'series',
+        watchedDurationInMinutes: 150,
+        seriesProgress: {
+          [payload.contentId]: {
+            watchedEpisodes: 3,
+            completed: true
+          }
+        }
+      };
+  
+      mockImplementations.markSeasonAsWatched.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockResponse);
+      });
+  
+      const response = await request(app)
+        .post('/streaming-history/mark-season-watched')
+        .send(payload)
+        .expect(HttpStatus.OK);
+  
+      expect(response.body).toEqual(expect.objectContaining({
+        contentId: payload.contentId,
+        watchedDurationInMinutes: 150,
+        contentType: 'series'
+      }));
+  
+      expect(mockImplementations.markSeasonAsWatched).toHaveBeenCalled();
+    });
+  });
+
+  describe('DELETE /unmark-season-watched', () => {
+    it('should unmark all episodes of a season as watched', async () => {
+      const payload = {
+        userId: mockUserId.toString(),
+        contentId: mockContentId.toString(),
+        seasonNumber: 1
+      };
+  
+      const mockResponse = {
+        message: 'Season unmarked successfully',
+        updatedHistory: {
+          contentId: payload.contentId,
+          watchedDurationInMinutes: 0,
+          seriesProgress: {
+            [payload.contentId]: {
+              watchedEpisodes: 0,
+              episodesWatched: {},
+              completed: false
+            }
+          }
+        }
+      };
+  
+      mockImplementations.unMarkSeasonAsWatched.mockImplementation((req: Request, res: Response) => {
+        res.status(HttpStatus.OK).json(mockResponse);
+      });
+  
+      const response = await request(app)
+        .delete('/streaming-history/unmark-season-watched')
+        .send(payload)
+        .expect(HttpStatus.OK);
+  
+      expect(response.body).toEqual(mockResponse);
+      expect(mockImplementations.unMarkSeasonAsWatched).toHaveBeenCalled();
+    });
+  });
+  
   describe('GET /total-watch-time/:userId', () => {
     it('should return total watch time for user', async () => {
       const mockTotalWatchTime = {

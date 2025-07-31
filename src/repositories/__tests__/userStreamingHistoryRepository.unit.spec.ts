@@ -324,4 +324,71 @@ describe('UserStreamingHistoryRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('updateSeasonProgress', () => {
+    it('should update season progress', async () => {
+      const episodesWatched: EpisodeWatched[] = [mockEpisodeWatched];
+  
+      jest.spyOn(UserStreamingHistory, 'updateSeasonProgress').mockResolvedValue(mockWatchHistoryEntry);
+  
+      const result = await repository.updateSeasonProgress(
+        mockHistory.userId.toString(),
+        mockWatchHistoryEntry.contentId.toString(),
+        episodesWatched
+      );
+  
+      expect(UserStreamingHistory.updateSeasonProgress).toHaveBeenCalledWith(
+        mockHistory.userId.toString(),
+        mockWatchHistoryEntry.contentId.toString(),
+        episodesWatched
+      );
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+  
+    it('should return null if season progress not updated', async () => {
+      const episodesWatched: EpisodeWatched[] = [mockEpisodeWatched];
+  
+      jest.spyOn(UserStreamingHistory, 'updateSeasonProgress').mockResolvedValue(null);
+  
+      const result = await repository.updateSeasonProgress(
+        mockHistory.userId.toString(),
+        mockWatchHistoryEntry.contentId.toString(),
+        episodesWatched
+      );
+  
+      expect(result).toBeNull();
+    });
+  });
+  
+  describe('unMarkSeasonAsWatched', () => {
+    it('should unmark season as watched', async () => {
+      jest.spyOn(UserStreamingHistory, 'unMarkSeasonAsWatched').mockResolvedValue(mockWatchHistoryEntry);
+  
+      const result = await repository.unMarkSeasonAsWatched(
+        mockHistory.userId.toString(),
+        mockWatchHistoryEntry.contentId.toString(),
+        1
+      );
+  
+      expect(UserStreamingHistory.unMarkSeasonAsWatched).toHaveBeenCalledWith(
+        mockHistory.userId.toString(),
+        mockWatchHistoryEntry.contentId.toString(),
+        1
+      );
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+  
+    it('should return null if unmark fails', async () => {
+      jest.spyOn(UserStreamingHistory, 'unMarkSeasonAsWatched').mockResolvedValue(null);
+  
+      const result = await repository.unMarkSeasonAsWatched(
+        mockHistory.userId.toString(),
+        mockWatchHistoryEntry.contentId.toString(),
+        1
+      );
+  
+      expect(result).toBeNull();
+    });
+  });
+  
 }); 

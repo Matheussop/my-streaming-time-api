@@ -10,6 +10,24 @@ import { MovieRepository } from '../../repositories/movieRepository';
 
 jest.mock('../../services/userStreamingHistoryService');
 
+function createMockWatchHistoryEntry(
+  overrides: Partial<WatchHistoryEntry> = {}
+): WatchHistoryEntry {
+  const defaultId = new Types.ObjectId(generateValidObjectId());
+
+  return {
+    contentId: defaultId,
+    contentType: 'series',
+    title: 'Mock Title',
+    watchedDurationInMinutes: 100,
+    completionPercentage: 80,
+    rating: 4,
+    watchedAt: new Date(),
+    seriesProgress: new Map(),
+    ...overrides
+  };
+}
+
 describe('UserStreamingHistoryController', () => {
   let controller: UserStreamingHistoryController;
   let mockService: jest.Mocked<UserStreamingHistoryService>;
@@ -53,13 +71,13 @@ describe('UserStreamingHistoryController', () => {
       completed: false
     }
 
-    mockWatchHistoryEntry = [{
-      contentId: validId,
-      contentType: 'movie',
-      title: 'Test Movie',
-      watchedDurationInMinutes: 120,
-      completionPercentage: 100,
-    }];
+    mockWatchHistoryEntry = [
+      createMockWatchHistoryEntry({
+        watchedDurationInMinutes: 0,
+        completionPercentage: 0,
+        rating: 0,
+      })
+    ];
   });
   beforeEach(() => {
     mockHistory = {
@@ -174,16 +192,12 @@ describe('UserStreamingHistoryController', () => {
         episodeId: episodeId.toString()
       };
 
-      const watchHistoryEntry: WatchHistoryEntry = {
-        contentId: contentId,
-        contentType: 'series',
-        title: 'Test Series',
+      const watchHistoryEntry = createMockWatchHistoryEntry({
+        contentId,
         watchedDurationInMinutes: 45,
         completionPercentage: 100,
         rating: 5,
-        watchedAt: new Date(),
-        seriesProgress: new Map()
-      };
+      });
 
       mockService.removeEpisodeFromHistory.mockResolvedValue(watchHistoryEntry);
 
@@ -252,16 +266,12 @@ describe('UserStreamingHistoryController', () => {
       };
       mockReq.body = { userId, contentId, episodeData };
 
-      const watchHistoryEntry: WatchHistoryEntry = {
-        contentId: contentId,
-        contentType: 'series',
-        title: 'Test Series',
+      const watchHistoryEntry = createMockWatchHistoryEntry({
+        contentId,
         watchedDurationInMinutes: episodeData.watchedDurationInMinutes,
         completionPercentage: episodeData.completionPercentage,
         rating: 5,
-        watchedAt: new Date(),
-        seriesProgress: new Map()
-      };
+      });
 
       mockService.addEpisodeToHistory.mockResolvedValue(watchHistoryEntry);
 
@@ -279,6 +289,63 @@ describe('UserStreamingHistoryController', () => {
       });
     });
   });
+
+  describe('markSeasonAsWatched', () => {
+    it('should mark season as watched', async () => {
+      const userId = validId;
+      const contentId = validId;
+      const seasonNumber = 1;
+      mockReq.body = { userId, contentId, seasonNumber };
+
+      const watchHistoryEntry = createMockWatchHistoryEntry({
+        contentId,
+        watchedDurationInMinutes: 0,
+        completionPercentage: 0,
+        rating: 0,
+      });
+
+      mockService.markSeasonAsWatched.mockResolvedValue(watchHistoryEntry);
+
+      await controller.markSeasonAsWatched(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockService.markSeasonAsWatched).toHaveBeenCalledWith(userId, contentId, seasonNumber);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'Season marked as watched', history: watchHistoryEntry });
+    });
+  });
+
+  describe('unMarkSeasonAsWatched', () => {
+    it('should unmark a season as watched', async () => {
+      const userId = validId;
+      const contentId = validId;
+      const seasonNumber = 1;
+  
+      mockReq.body = { userId, contentId, seasonNumber };
+  
+      const watchHistoryEntry = createMockWatchHistoryEntry({
+        contentId,
+        watchedDurationInMinutes: 0,
+        completionPercentage: 0,
+        rating: 0,
+      });
+  
+      mockService.unMarkSeasonAsWatched.mockResolvedValue(watchHistoryEntry);
+  
+      await controller.unMarkSeasonAsWatched(mockReq as Request, mockRes as Response, mockNext);
+  
+      expect(mockService.unMarkSeasonAsWatched).toHaveBeenCalledWith(
+        userId,
+        contentId,
+        seasonNumber
+      );
+  
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: 'Season unmarked as watched',
+        history: watchHistoryEntry
+      });
+    });
+  });  
 
   describe('getEpisodesWatched', () => {
     it('should get episodes watched', async () => {

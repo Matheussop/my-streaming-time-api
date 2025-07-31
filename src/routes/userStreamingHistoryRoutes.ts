@@ -8,11 +8,12 @@ import { validateObjectId } from '../middleware/objectIdValidationMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import { paginationSchema } from '../validators';
 import { 
-  userStreamingHistoryAddEntrySchema, 
+  userStreamingHistoryAddEntrySchema,
   userStreamingHistoryRemoveEntrySchema,
   userStreamingHistoryGetByUserIdAndStreamingIdSchema,
   userStreamingHistoryAddEpisodeSchema,
-  userStreamingHistoryRemoveEpisodeSchema, 
+  userStreamingHistoryRemoveEpisodeSchema,
+  userStreamingHistoryMarkSeasonSchema,
 } from '../validators/userStreamingHistorySchema';
 
 const router: Router = Router();
@@ -24,7 +25,14 @@ const controller = new UserStreamingHistoryController(userStreamingHistoryServic
 
 /**
  * @swagger
- * /streaming-history/get-episodes-watched:
+ * tags:
+ *   name: Streaming History
+ *   description: User streaming history management
+ */
+
+/**
+ * @swagger
+ * /user-streaming-history/get-episodes-watched:
  *   get:
  *     summary: Get episodes watched by user
  *     tags: [Streaming History]
@@ -50,14 +58,7 @@ router.get('/get-episodes-watched',
 
 /**
  * @swagger
- * tags:
- *   name: Streaming History
- *   description: User streaming history management
- */
-
-/**
- * @swagger
- * /streaming-history/{userId}:
+ * /user-streaming-history/{userId}:
  *   get:
  *     summary: Get user's streaming history
  *     tags: [Streaming History]
@@ -83,7 +84,7 @@ router.get('/:userId',
 
 /**
  * @swagger
- * /streaming-history:
+ * /user-streaming-history:
  *   post:
  *     summary: Add streaming entry to user's history
  *     tags: [Streaming History]
@@ -123,7 +124,7 @@ router.post(
 
 /**
  * @swagger
- * /streaming-history/remove-entry:
+ * /user-streaming-history/remove-entry:
  *   delete:
  *     summary: Remove streaming entry from user's history
  *     tags: [Streaming History]
@@ -154,7 +155,7 @@ router.delete(
 
 /**
  * @swagger
- * /streaming-history/remove-episode:
+ * /user-streaming-history/remove-episode:
  *   delete:
  *     summary: Remove streaming episode from user's history
  *     tags: [Streaming History]
@@ -187,7 +188,7 @@ router.delete(
 
 /**
  * @swagger
- * /streaming-history:
+ * /user-streaming-history:
  *   get:
  *     summary: Get user's streaming view by id
  *     tags: [Streaming History]
@@ -218,7 +219,7 @@ router.get(
 
 /**
  * @swagger
- * /streaming-history/add-episode:
+ * /user-streaming-history/add-episode:
  *   post:
  *     summary: Add episode to user's history
  *     tags: [Streaming History]
@@ -248,7 +249,69 @@ router.post(
 
 /**
  * @swagger
- * /streaming-history/total-watch-time/{userId}:
+ * /user-streaming-history/mark-season-watched:
+ *   post:
+ *     summary: Mark all episodes from a season as watched
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - contentId
+ *               - seasonNumber
+ *     responses:
+ *       200:
+ *         description: Season marked as watched
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+
+router.post(
+  '/mark-season-watched',
+  validate(userStreamingHistoryMarkSeasonSchema),
+  controller.markSeasonAsWatched,
+);
+
+/**
+ * @swagger
+ * /user-streaming-history/unmark-season-watched:
+ *   post:
+ *     summary: UnMark all episodes from a season as watched
+ *     tags: [Streaming History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - contentId
+ *               - seasonNumber
+ *     responses:
+ *       200:
+ *         description: A history object
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Server error
+ */
+
+router.delete(
+  '/unmark-season-watched',
+  validate(userStreamingHistoryMarkSeasonSchema),
+  controller.unMarkSeasonAsWatched,
+);
+
+/**
+ * @swagger
+ * /user-streaming-history/total-watch-time/{userId}:
  *   get:
  *     summary: Get user's total watch time
  *     tags: [Streaming History]

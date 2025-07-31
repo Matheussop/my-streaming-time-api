@@ -9,6 +9,8 @@ import { ISeriesResponse } from '../../interfaces/series/series';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';
 import { IGenreReference } from '../../interfaces/streamingTypes';
 import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
+import season from '../../models/series/season';
+import { ErrorMessages } from '../../constants/errorMessages';
 
 jest.mock('../../repositories/movieRepository');
 jest.mock('../../repositories/seriesRepository');
@@ -296,6 +298,81 @@ describe('UserStreamingHistoryService', () => {
         .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
     });
   });
+
+  describe('markSeasonAsWatched', () => {
+    it('should mark season as watched', async () => {
+      const episodes = [{
+        _id: mockEpisodeId.toString(),
+        episodeNumber: 1,
+        durationInMinutes: 45,
+      }];
+      const season = { episodes, _id: mockContentId } as any;
+      jest.spyOn(mockUserStreamingHistoryRepository, 'updateSeasonProgress').mockResolvedValue(mockWatchHistoryEntry);
+      const seasonRepo = (userStreamingHistoryService as any).seasonRepository;
+      jest.spyOn(seasonRepo, 'findEpisodesBySeasonNumber').mockResolvedValue(season);
+
+      const result = await userStreamingHistoryService.markSeasonAsWatched(mockUserId, mockContentId, 1);
+
+      expect(seasonRepo.findEpisodesBySeasonNumber).toHaveBeenCalledWith(mockContentId, 1);
+      expect(mockUserStreamingHistoryRepository.updateSeasonProgress).toHaveBeenCalled();
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+
+    it('should throw an error if season not found', async () => {
+      const seasonRepo = (userStreamingHistoryService as any).seasonRepository;
+      jest.spyOn(seasonRepo, 'findEpisodesBySeasonNumber').mockResolvedValue(null);
+
+      mockUserStreamingHistoryRepository.updateSeasonProgress.mockResolvedValue(null);
+  
+      await expect(
+        userStreamingHistoryService.markSeasonAsWatched(mockUserId, mockContentId, 1)
+      ).rejects.toThrow(new StreamingServiceError('Season not found', 404));
+    });
+
+    it('should throw an error if update fails', async () => {
+      const episodes = [{
+        _id: mockEpisodeId.toString(),
+        episodeNumber: 1,
+      }];
+      const season = { episodes, _id: mockContentId } as any;
+      const seasonRepo = (userStreamingHistoryService as any).seasonRepository;
+      jest.spyOn(seasonRepo, 'findEpisodesBySeasonNumber').mockResolvedValue(season);
+
+      mockUserStreamingHistoryRepository.updateSeasonProgress.mockResolvedValue(null);
+  
+      await expect(
+        userStreamingHistoryService.markSeasonAsWatched(mockUserId, mockContentId, 1)
+      ).rejects.toThrow(new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404));
+    });
+  });
+
+  describe('unMarkSeasonAsWatched', () => {
+    it('should unmark season as watched successfully', async () => {
+      mockUserStreamingHistoryRepository.unMarkSeasonAsWatched.mockResolvedValue(mockWatchHistoryEntry);
+  
+      const result = await userStreamingHistoryService.unMarkSeasonAsWatched(
+        mockUserId,
+        mockContentId,
+        1
+      );
+  
+      expect(mockUserStreamingHistoryRepository.unMarkSeasonAsWatched).toHaveBeenCalledWith(
+        mockUserId,
+        mockContentId,
+        1
+      );
+      expect(result).toEqual(mockWatchHistoryEntry);
+    });
+  
+    it('should throw an error if update fails', async () => {
+      mockUserStreamingHistoryRepository.unMarkSeasonAsWatched.mockResolvedValue(null);
+  
+      await expect(
+        userStreamingHistoryService.unMarkSeasonAsWatched(mockUserId, mockContentId, 1)
+      ).rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+    });
+  });
+  
 
   describe('getEpisodesWatched', () => {
     it('should return episodes watched for a series', async () => {

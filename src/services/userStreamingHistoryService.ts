@@ -5,15 +5,19 @@ import { EpisodeWatched, IUserStreamingHistoryResponse, WatchHistoryEntry } from
 import { StreamingServiceError } from '../middleware/errorHandler';
 import { MovieRepository } from '../repositories/movieRepository';
 import { SeriesRepository } from '../repositories/seriesRepository';
+import { SeasonRepository } from '../repositories/seasonRepository';
 import { UserStreamingHistoryRepository } from '../repositories/userStreamingHistoryRepository';
 import { IMovieResponse } from '../interfaces/movie';
 import { ISeriesResponse } from '../interfaces/series/series';
+import { ErrorMessages } from '../constants/errorMessages';
+import { Messages } from '../constants/messages';
 
 export class UserStreamingHistoryService implements IUserStreamingHistoryService {
   constructor(
     private repository: UserStreamingHistoryRepository,
     private movieRepository: MovieRepository,
     private seriesRepository: SeriesRepository,
+    private seasonRepository: SeasonRepository = new SeasonRepository(),
   ) {}
 
   async getUserHistory(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse> {
@@ -105,6 +109,61 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       episodeId: episodeData.episodeId
     });
     return updatedHistory;
+  }
+
+  async markSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null> {
+    const season = await this.seasonRepository.findEpisodesBySeasonNumber(contentId, seasonNumber);
+    if (!season || !season.episodes) {
+      throw new StreamingServiceError('Season not found', 404);
+    }
+    const seasonId = season._id.toString();
+    const episodesWatches: EpisodeWatched[] = season.episodes.map(episode => {
+      return { 
+        episodeId: episode._id.toString(),
+        seasonNumber: seasonNumber,
+        episodeNumber: episode.episodeNumber,
+        watchedDurationInMinutes: episode.durationInMinutes || 0,
+        completionPercentage: 100,
+        watchedAt: new Date(),
+      }
+    });
+    const updatedHistory = await this.repository.updateSeasonProgress(userId, contentId, episodesWatches);
+    if (!updatedHistory) {
+      logger.error({
+        message: ErrorMessages.HISTORY_SEASON_MARK_WATCHED,
+        error: ErrorMessages.HISTORY_UPDATE_FAILED,
+        userId,
+        contentId,
+        seasonId
+      });
+      throw new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404);
+    }
+    logger.info({
+      message: Messages.HISTORY_STREAMING_MARKED_SUCCESSFULLY,
+      userId,
+      contentId,
+      seasonId
+    });
+    return updatedHistory;
+  }
+
+  async unMarkSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null> {
+    const updatedHistory = await this.repository.unMarkSeasonAsWatched(userId, contentId, seasonNumber);
+    if (!updatedHistory) {
+      logger.error({
+        message: ErrorMessages.HISTORY_SEASON_UNMARK_WATCHED,
+        error: ErrorMessages.HISTORY_UPDATE_FAILED,
+        userId,
+        contentId,
+      });
+      throw new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404);
+    }
+    logger.info({
+      message: Messages.HISTORY_STREAMING_UNMARKED_SUCCESSFULLY,
+      userId,
+      contentId,
+    });
+    return updatedHistory
   }
 
   async getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null> {

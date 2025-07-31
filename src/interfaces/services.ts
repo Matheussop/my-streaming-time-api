@@ -22,6 +22,8 @@ export interface IUserStreamingHistoryService {
   removeEpisodeFromHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeId: string | Types.ObjectId): Promise<WatchHistoryEntry | null>;
   getTotalWatchTime(userId: string | Types.ObjectId): Promise<number>;
   addEpisodeToHistory(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, episodeData: EpisodeWatched): Promise<WatchHistoryEntry | null>;
+  markSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null>;
+  unMarkSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null>;
   getEpisodesWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId): Promise<Map<string, EpisodeWatched> | null>;
 }
 
