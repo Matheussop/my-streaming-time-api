@@ -583,11 +583,11 @@ describe('userStreamingHistoryMarkSeasonSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should fail when seasonNumber is less than 1', () => {
+  it('should fail when seasonNumber is less than 0', () => {
     const input = {
       userId: validId,
       contentId: validId,
-      seasonNumber: 0
+      seasonNumber: -1
     };
 
     const result = userStreamingHistoryMarkSeasonSchema.safeParse(input);

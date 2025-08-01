@@ -340,8 +340,8 @@ describe('User Streaming History Routes', () => {
     });
   });
 
-  describe('DELETE /unmark-season-watched', () => {
-    it('should unmark all episodes of a season as watched', async () => {
+  describe('POST /unMark-season-watched', () => {
+    it('should unMark all episodes of a season as watched', async () => {
       const payload = {
         userId: mockUserId.toString(),
         contentId: mockContentId.toString(),
@@ -349,7 +349,7 @@ describe('User Streaming History Routes', () => {
       };
   
       const mockResponse = {
-        message: 'Season unmarked successfully',
+        message: 'Season unMarked successfully',
         updatedHistory: {
           contentId: payload.contentId,
           watchedDurationInMinutes: 0,
@@ -368,7 +368,7 @@ describe('User Streaming History Routes', () => {
       });
   
       const response = await request(app)
-        .delete('/streaming-history/unmark-season-watched')
+        .post('/streaming-history/unMark-season-watched')
         .send(payload)
         .expect(HttpStatus.OK);
   

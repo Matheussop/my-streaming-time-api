@@ -304,7 +304,7 @@ router.post(
  */
 
 router.post(
-  '/unmark-season-watched',
+  '/unMark-season-watched',
   validate(userStreamingHistoryMarkSeasonSchema),
   controller.unMarkSeasonAsWatched,
 );
