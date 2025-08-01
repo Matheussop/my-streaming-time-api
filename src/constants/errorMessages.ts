@@ -17,6 +17,7 @@ export const ErrorMessages = {
   HISTORY_SEASON_MARK_WATCHED: "Failed marking season as watched",
   HISTORY_SEASON_UNMARK_WATCHED: "Failed unmarking season as watched",
   HISTORY_UPDATE_FAILED: "Failed to update history",
+  HISTORY_USER_NOT_FOUND: "User history not found",
   // Genre errors
   GENRE_NOT_FOUND: "Genre is not found",
   GENRE_NAME_REQUIRED: "Genre name is required",
@@ -27,8 +28,13 @@ export const ErrorMessages = {
   GENRE_ID_INVALID: "Genre id is invalid",
   GENRE_ID_MISMATCH: (provided: number, stored: number) => `Genre externalID mismatch: provided ${provided}, but stored is ${stored}`,
   GENRE_NAME_MISMATCH: (provided: string, stored: string) => `Genre name mismatch: provided "${provided}", but stored is "${stored}"`,
+
+  // Streaming
+  STREAMING_TITLE_MISMATCH: (provided: string, stored: string) => `Streaming title mismatch: provided "${provided}", but stored is "${stored}"`,
+  STREAMING_CONTENT_TYPE_MISMATCH: (provided: string, stored: string) => `Streaming content type mismatch: provided "${provided}", but stored is "${stored}"`,
   // Season erros
   SEASON_NUMBER_REQUIRED: "Season number is required",
+  SEASON_NOT_FOUND: "Season not found",
   SEASON_TITLE_REQUIRED: "Season title is required",
   SEASON_ID_REQUIRED: "Season id is required",
   SEASON_ID_INVALID: "Season id is invalid",
@@ -51,6 +57,7 @@ export const ErrorMessages = {
   SERIES_GENRE_REQUIRED: 'Genre is required',
   SERIES_GENRE_INVALID: 'Genre is not valid or not registered in the database',
   SERIES_FETCH_LIMIT_EXCEEDED: 'Limit cannot exceed 100 items',
+  EPISODE_NOT_FOUND: "Episode not found in history",
 
   // Movies errors
   MOVIE_NOT_FOUND: 'Movie not found',

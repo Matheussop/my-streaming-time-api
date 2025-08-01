@@ -23,7 +23,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   async getUserHistory(userId: string | Types.ObjectId): Promise<IUserStreamingHistoryResponse> {
     const history = await this.repository.findByUserId(userId);
     if (!history) {
-      throw new StreamingServiceError('User history not found', 404);
+      throw new StreamingServiceError(ErrorMessages.HISTORY_USER_NOT_FOUND, 404);
     }
     return history;
   }
@@ -36,7 +36,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     if (history) {
       const streamingInHistory = history.watchHistory.find((entry) => entry.contentId.toString() === streamingData.contentId.toString());
       if (streamingInHistory) {
-        throw new StreamingServiceError('Streaming already in history', 400);
+        throw new StreamingServiceError(ErrorMessages.STREAMING_TYPE_ALREADY_EXISTS, 400);
       }
     }
     const newHistory = await this.repository.addWatchHistoryEntry(userId, streamingData);
@@ -50,13 +50,13 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
     const streaming = history.watchHistory.find((entry) => entry.contentId.toString() === contentId.toString());
     if (!streaming) {
-      throw new StreamingServiceError('Streaming not found in history', 404);
+      throw new StreamingServiceError(Messages.STREAMING_NOT_FOUND, 404);
     }
 
     const updatedHistory = await this.repository.removeWatchHistoryEntry(userId, contentId);
     
     if (!updatedHistory) {
-      throw new StreamingServiceError('Failed to update history', 404);
+      throw new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404);
     }
     return updatedHistory;
   }
@@ -78,13 +78,13 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       }
     });
     if (!episodeWatched) {
-      throw new StreamingServiceError('Episode not found in history', 404);
+      throw new StreamingServiceError(ErrorMessages.EPISODE_NOT_FOUND, 404);
     }
 
     const updatedHistory = await this.repository.removeEpisodeFromHistory(userId, contentId, episodeId);
     
     if (!updatedHistory) {
-      throw new StreamingServiceError('Failed to update history', 404);
+      throw new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404);
     }
     return updatedHistory;
   }
@@ -94,8 +94,8 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
     const updatedHistory = await this.repository.updateEpisodeProgress(userId, contentId, episodeData);
     if (!updatedHistory) {
       logger.error({
-        message: 'Erro ao adicionar episódio ao histórico',
-        error: new Error('Failed to update history'),
+        message: ErrorMessages.HISTORY_UPDATE_FAILED,
+        error: new Error(ErrorMessages.HISTORY_UPDATE_FAILED),
         userId,
         contentId,
         episodeData
@@ -103,7 +103,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
       throw new StreamingServiceError('Failed to update history', 404);
     }
     logger.info({
-      message: 'Episódio adicionado ao histórico',
+      message: Messages.STREAMING_ADDED_SUCCESSFULLY,
       userId,
       contentId,
       episodeId: episodeData.episodeId
@@ -114,10 +114,16 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
   async markSeasonAsWatched(userId: string | Types.ObjectId, contentId: string | Types.ObjectId, seasonNumber: number): Promise<WatchHistoryEntry | null> {
     const season = await this.seasonRepository.findEpisodesBySeasonNumber(contentId, seasonNumber);
     if (!season || !season.episodes) {
-      throw new StreamingServiceError('Season not found', 404);
+      throw new StreamingServiceError(ErrorMessages.SEASON_NOT_FOUND, 404);
     }
     const seasonId = season._id.toString();
-    const episodesWatches: EpisodeWatched[] = season.episodes.map(episode => {
+    
+    // Filtrar apenas episódios que já foram lançados
+    const releasedEpisodes = season.episodes.filter(episode => {
+      return episode.releaseDate && new Date(episode.releaseDate) <= new Date();
+    });
+    
+    const episodesWatches: EpisodeWatched[] = releasedEpisodes.map(episode => {
       return { 
         episodeId: episode._id.toString(),
         seasonNumber: seasonNumber,
@@ -127,6 +133,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
         watchedAt: new Date(),
       }
     });
+    
     const updatedHistory = await this.repository.updateSeasonProgress(userId, contentId, episodesWatches);
     if (!updatedHistory) {
       logger.error({
@@ -192,7 +199,7 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
                       await this.seriesRepository.findById(contentId);
     
     if (!streaming) {
-      throw new StreamingServiceError('Streaming not found', 404);
+      throw new StreamingServiceError(Messages.STREAMING_NOT_FOUND, 404);
     }
     
     return streaming;
@@ -200,11 +207,12 @@ export class UserStreamingHistoryService implements IUserStreamingHistoryService
 
   private validateStreamingData(streaming: IMovieResponse | ISeriesResponse, streamingData: WatchHistoryEntry): void {
     if (streaming.title !== streamingData.title) {
-      throw new StreamingServiceError('Streaming title does not match', 400);
+      throw new StreamingServiceError(ErrorMessages.STREAMING_TITLE_MISMATCH(streaming.title, streamingData.title), 400);
     }
     
     if (streaming.contentType !== streamingData.contentType) {
-      throw new StreamingServiceError('Content type does not match', 400);
+      const contentType = streaming.contentType || ""
+      throw new StreamingServiceError(ErrorMessages.STREAMING_CONTENT_TYPE_MISMATCH(contentType, streamingData.contentType), 400);
     }
     
     // TODO: Validate the rest of history entry data

@@ -9,8 +9,8 @@ import { ISeriesResponse } from '../../interfaces/series/series';
 import { IUserStreamingHistoryResponse, WatchHistoryEntry, EpisodeWatched, SeriesProgress } from '../../interfaces/userStreamingHistory';
 import { IGenreReference } from '../../interfaces/streamingTypes';
 import { generateValidObjectId } from '../../util/__tests__/generateValidObjectId';
-import season from '../../models/series/season';
 import { ErrorMessages } from '../../constants/errorMessages';
+import { Messages } from '../../constants/messages';
 
 jest.mock('../../repositories/movieRepository');
 jest.mock('../../repositories/seriesRepository');
@@ -121,7 +121,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(null);
 
       await expect(userStreamingHistoryService.getUserHistory(mockUserId))
-        .rejects.toThrow(new StreamingServiceError('User history not found', 404));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.HISTORY_USER_NOT_FOUND, 404));
     });
   });
 
@@ -156,7 +156,7 @@ describe('UserStreamingHistoryService', () => {
       mockSeriesRepository.findById.mockResolvedValue(null);
 
       await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntry))
-        .rejects.toThrow(new StreamingServiceError('Streaming not found', 404));
+        .rejects.toThrow(new StreamingServiceError(Messages.STREAMING_NOT_FOUND, 404));
     });
 
     it('should throw an error if streaming title in history is different', async () => {
@@ -169,7 +169,7 @@ describe('UserStreamingHistoryService', () => {
       } as unknown as WatchHistoryEntry;
 
       await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntryWithDifferentTitle))
-        .rejects.toThrow(new StreamingServiceError('Streaming title does not match', 400));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TITLE_MISMATCH(mockSeries.title, 'Different Title'), 400));
     });
 
     it('should throw an error if streaming title in history is different', async () => {
@@ -182,7 +182,7 @@ describe('UserStreamingHistoryService', () => {
       } as unknown as WatchHistoryEntry;
 
       await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntryWithDifferentTitle))
-        .rejects.toThrow(new StreamingServiceError('Content type does not match', 400));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_CONTENT_TYPE_MISMATCH(mockMovie.contentType || "", 'series'), 400));
     });
 
     it('should throw an error if streaming is already in history', async () => {
@@ -190,7 +190,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
 
       await expect(userStreamingHistoryService.addStreamingToHistory(mockUserId, mockWatchHistoryEntry))
-        .rejects.toThrow(new StreamingServiceError('Streaming already in history', 400));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.STREAMING_TYPE_ALREADY_EXISTS, 400));
     });
     
   });
@@ -211,7 +211,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutStreaming);
 
       await expect(userStreamingHistoryService.removeStreamingFromHistory(mockUserId, mockContentId))
-        .rejects.toThrow(new StreamingServiceError('Streaming not found in history', 404));
+        .rejects.toThrow(new StreamingServiceError(Messages.STREAMING_NOT_FOUND, 404));
     });
 
     it('should throw an error if removeWatchHistoryEntry fails', async () => {
@@ -227,7 +227,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.removeWatchHistoryEntry.mockResolvedValue(null);
 
       await expect(userStreamingHistoryService.removeStreamingFromHistory(mockUserId, mockContentId))
-        .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404));
     });
   });
 
@@ -253,7 +253,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(mockUserHistory);
 
       await expect(userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId))
-        .rejects.toThrow(new StreamingServiceError('Episode not found in history', 404));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.EPISODE_NOT_FOUND, 404));
     });
 
     it('should throw an error if seriesProgress is null', async () => {
@@ -261,7 +261,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.findByUserId.mockResolvedValue(historyWithoutSeriesProgress);
 
       await expect(userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId))
-        .rejects.toThrow(new StreamingServiceError('Episode not found in history', 404));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.EPISODE_NOT_FOUND, 404));
     });
 
     it('should throw an error if removeEpisodeFromHistory returns null', async () => {
@@ -277,7 +277,7 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.removeEpisodeFromHistory.mockResolvedValue(null);
 
       await expect(userStreamingHistoryService.removeEpisodeFromHistory(mockUserId, mockContentId, mockEpisodeId))
-        .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404));
     });
   });
 
@@ -295,16 +295,21 @@ describe('UserStreamingHistoryService', () => {
       mockUserStreamingHistoryRepository.updateEpisodeProgress.mockResolvedValue(null);
 
       await expect(userStreamingHistoryService.addEpisodeToHistory(mockUserId, mockContentId, mockEpisodeWatched))
-        .rejects.toThrow(new StreamingServiceError('Failed to update history', 404));
+        .rejects.toThrow(new StreamingServiceError(ErrorMessages.HISTORY_UPDATE_FAILED, 404));
     });
   });
 
   describe('markSeasonAsWatched', () => {
-    it('should mark season as watched', async () => {
+    it('should mark season as watched for released episodes', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 10);
+      const pastDateStr = pastDate.toISOString().split('T')[0];
+      
       const episodes = [{
         _id: mockEpisodeId.toString(),
         episodeNumber: 1,
         durationInMinutes: 45,
+        releaseDate: pastDateStr,
       }];
       const season = { episodes, _id: mockContentId } as any;
       jest.spyOn(mockUserStreamingHistoryRepository, 'updateSeasonProgress').mockResolvedValue(mockWatchHistoryEntry);
@@ -330,9 +335,14 @@ describe('UserStreamingHistoryService', () => {
     });
 
     it('should throw an error if update fails', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 10);
+      const pastDateStr = pastDate.toISOString().split('T')[0];
+      
       const episodes = [{
         _id: mockEpisodeId.toString(),
         episodeNumber: 1,
+        releaseDate: pastDateStr,
       }];
       const season = { episodes, _id: mockContentId } as any;
       const seasonRepo = (userStreamingHistoryService as any).seasonRepository;
