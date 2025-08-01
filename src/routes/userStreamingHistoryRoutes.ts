@@ -303,7 +303,7 @@ router.post(
  *         description: Server error
  */
 
-router.delete(
+router.post(
   '/unmark-season-watched',
   validate(userStreamingHistoryMarkSeasonSchema),
   controller.unMarkSeasonAsWatched,

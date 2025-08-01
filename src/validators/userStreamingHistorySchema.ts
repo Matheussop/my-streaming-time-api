@@ -77,7 +77,7 @@ export const userStreamingHistoryAddEpisodeSchema = z.object({
 });
 
 export const userStreamingHistoryMarkSeasonSchema = userContentIdentifierSchema.extend({
-  seasonNumber: z.number().min(1),
+  seasonNumber: z.number().min(0),
 });
 
 export type UserStreamingHistoryMarkSeasonPayload = z.infer<typeof userStreamingHistoryMarkSeasonSchema>;
