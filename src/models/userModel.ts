@@ -1,21 +1,18 @@
-import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+import mongoose, { Schema, Model, Types } from 'mongoose';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import { IUserResponse } from '../interfaces/user';
+import { IUserCreate, IUserResponse } from '../interfaces/user';
 import { ErrorMessages } from '../constants/errorMessages';
 
-interface IUserSchema extends Document, IUserResponse {
-  _id: string | Types.ObjectId;
-  password?: string;
-  correctPassword(candidatePassword: string): Promise<boolean>;
-  changedPasswordAfter(JWTTimestamp: number): boolean;
-  createPasswordResetToken(): string;
-  createVerificationToken(): string;
+interface IUserSchema extends Omit<IUserCreate, 'password'> {
+  password: string;
   passwordConfirm?: string;
   verificationToken?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   passwordChangedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
   __v?: number;
 }
 
