@@ -23,6 +23,19 @@ interface IUserMethods {
   createVerificationToken(): string;
 }
 
+type SanitizedUser = Omit<
+  IUserSchema,
+  'password' | 'passwordConfirm' | 'passwordChangedAt' | 'passwordResetToken' | 'passwordResetExpires' | 'verificationToken' | '__v'
+> & {
+  password?: string;
+  passwordConfirm?: string;
+  passwordChangedAt?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  verificationToken?: string;
+  __v?: number;
+};
+
 export interface IUserModel extends Model<IUserSchema, {}, IUserMethods> {
   findByEmail(email: string): Promise<IUserResponse | null>;
   findByLogin: (login: string) => Promise<IUserResponse | null>;
@@ -149,14 +162,15 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
-        delete ret.__v;
-        delete ret.password;
-        delete ret.passwordConfirm;
-        delete ret.passwordChangedAt;
-        delete ret.passwordResetToken;
-        delete ret.passwordResetExpires;
-        delete ret.verificationToken;
-        return ret;
+        const sanitizedRet = ret as SanitizedUser;
+        delete sanitizedRet.__v;
+        delete sanitizedRet.password;
+        delete sanitizedRet.passwordConfirm;
+        delete sanitizedRet.passwordChangedAt;
+        delete sanitizedRet.passwordResetToken;
+        delete sanitizedRet.passwordResetExpires;
+        delete sanitizedRet.verificationToken;
+        return sanitizedRet;
       },
     },
   },
